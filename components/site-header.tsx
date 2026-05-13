@@ -13,7 +13,8 @@ export function SiteHeader() {
         <nav className="hidden items-center gap-6 text-sm text-white/65 sm:flex">
           <Link className="transition hover:text-white" href="/eventos">Eventos</Link>
           <a className="transition hover:text-white" href="/#destacados">Destacados</a>
-          <Link className="transition hover:text-white" href="/admin">Admin</Link>
+          <Link className="transition hover:text-white" href="/contacto">Contacto</Link>
+          <Link className="transition hover:text-white" href="/preguntas-frecuentes">FAQ</Link>
         </nav>
         <Link
           href="/eventos"

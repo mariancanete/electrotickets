@@ -7,11 +7,12 @@ export function SiteFooter() {
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
             <p className="font-semibold text-white">ElectroTickets</p>
-            <p>Curaduría de eventos electrónicos y links oficiales de compra.</p>
+            <p>Eventos electrónicos, links oficiales de compra y acceso rápido a cada fecha.</p>
           </div>
           <div className="flex gap-4">
             <Link className="hover:text-white" href="/eventos">Eventos</Link>
-            <Link className="hover:text-white" href="/admin">Admin</Link>
+            <Link className="hover:text-white" href="/contacto">Contacto</Link>
+            <Link className="hover:text-white" href="/preguntas-frecuentes">FAQ</Link>
           </div>
         </div>
         <p className="text-xs text-white/35">

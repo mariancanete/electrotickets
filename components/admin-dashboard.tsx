@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import type { VenueRecord, GenreRecord } from "@/types/catalog";
 import type { EventRecord } from "@/types/event";
 
 type FormState = {
@@ -10,6 +11,7 @@ type FormState = {
   description: string;
   flyer_url: string;
   lineup: string;
+  venue_id: string;
   venue_name: string;
   venue_address: string;
   city: string;
@@ -24,12 +26,21 @@ type FormState = {
   published: boolean;
 };
 
+type VenueFormState = {
+  name: string;
+  address: string;
+  city: string;
+  province: string;
+  map_url: string;
+};
+
 const emptyForm: FormState = {
   title: "",
   slug: "",
   description: "",
   flyer_url: "",
   lineup: "",
+  venue_id: "",
   venue_name: "",
   venue_address: "",
   city: "Buenos Aires",
@@ -44,12 +55,34 @@ const emptyForm: FormState = {
   published: true
 };
 
-export function AdminDashboard({ initialEvents }: { initialEvents: EventRecord[] }) {
+const emptyVenueForm: VenueFormState = {
+  name: "",
+  address: "",
+  city: "Buenos Aires",
+  province: "CABA",
+  map_url: ""
+};
+
+export function AdminDashboard({
+  initialEvents,
+  initialVenues,
+  initialGenres
+}: {
+  initialEvents: EventRecord[];
+  initialVenues: VenueRecord[];
+  initialGenres: GenreRecord[];
+}) {
   const [events, setEvents] = useState(initialEvents);
+  const [venues, setVenues] = useState(initialVenues);
+  const [genres, setGenres] = useState(initialGenres);
   const [form, setForm] = useState<FormState>(emptyForm);
+  const [venueForm, setVenueForm] = useState<VenueFormState>(emptyVenueForm);
+  const [newGenre, setNewGenre] = useState("");
   const [flyerFile, setFlyerFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+  const [catalogLoading, setCatalogLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [catalogMessage, setCatalogMessage] = useState("");
 
   const isEditing = Boolean(form.id);
 
@@ -58,11 +91,38 @@ export function AdminDashboard({ initialEvents }: { initialEvents: EventRecord[]
     [events]
   );
 
+  const sortedVenues = useMemo(
+    () => [...venues].sort((a, b) => a.name.localeCompare(b.name, "es")),
+    [venues]
+  );
+
+  const sortedGenres = useMemo(
+    () => [...genres].sort((a, b) => a.sort_order - b.sort_order || a.name.localeCompare(b.name, "es")),
+    [genres]
+  );
+
+  const genreIsFromCatalog = sortedGenres.some((genre) => genre.name === form.genre);
+  const genreSelectValue = form.genre && genreIsFromCatalog ? form.genre : form.genre ? "__custom" : "";
+
   function updateField<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((current) => ({ ...current, [key]: value }));
   }
 
+  function updateVenueForm<K extends keyof VenueFormState>(key: K, value: VenueFormState[K]) {
+    setVenueForm((current) => ({ ...current, [key]: value }));
+  }
+
+  function findVenueForEvent(event: EventRecord) {
+    return venues.find((venue) => {
+      const sameName = event.venue_name && venue.name.toLowerCase() === event.venue_name.toLowerCase();
+      const sameAddress = !event.venue_address || !venue.address || venue.address.toLowerCase() === event.venue_address.toLowerCase();
+      return Boolean(sameName && sameAddress);
+    });
+  }
+
   function selectEvent(event: EventRecord) {
+    const matchedVenue = findVenueForEvent(event);
+
     setForm({
       id: event.id,
       title: event.title,
@@ -70,6 +130,7 @@ export function AdminDashboard({ initialEvents }: { initialEvents: EventRecord[]
       description: event.description || "",
       flyer_url: event.flyer_url || "",
       lineup: event.lineup?.join("\n") || "",
+      venue_id: matchedVenue?.id || "",
       venue_name: event.venue_name || "",
       venue_address: event.venue_address || "",
       city: event.city || "Buenos Aires",
@@ -84,6 +145,87 @@ export function AdminDashboard({ initialEvents }: { initialEvents: EventRecord[]
       published: event.published
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function applyVenue(venueId: string) {
+    if (!venueId) {
+      setForm((current) => ({ ...current, venue_id: "" }));
+      return;
+    }
+
+    const venue = venues.find((item) => item.id === venueId);
+    if (!venue) return;
+
+    setForm((current) => ({
+      ...current,
+      venue_id: venue.id,
+      venue_name: venue.name,
+      venue_address: venue.address || "",
+      city: venue.city || current.city || "Buenos Aires",
+      province: venue.province || current.province || "CABA",
+      map_url: venue.map_url || ""
+    }));
+  }
+
+  async function createVenue() {
+    setCatalogLoading(true);
+    setCatalogMessage("");
+
+    try {
+      const response = await fetch("/api/admin/catalog", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "venue", venue: venueForm })
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "No se pudo guardar el venue.");
+
+      const saved = result.venue as VenueRecord;
+      setVenues((current) => [...current, saved]);
+      setVenueForm(emptyVenueForm);
+      setCatalogMessage("Venue guardado. Ya podés reutilizarlo en próximos eventos.");
+      setForm((current) => ({
+        ...current,
+        venue_id: saved.id,
+        venue_name: saved.name,
+        venue_address: saved.address || "",
+        city: saved.city || current.city || "Buenos Aires",
+        province: saved.province || current.province || "CABA",
+        map_url: saved.map_url || ""
+      }));
+    } catch (error) {
+      setCatalogMessage(error instanceof Error ? error.message : "No se pudo guardar el venue.");
+    } finally {
+      setCatalogLoading(false);
+    }
+  }
+
+  async function createGenre() {
+    const name = newGenre.trim();
+    if (!name) return;
+
+    setCatalogLoading(true);
+    setCatalogMessage("");
+
+    try {
+      const response = await fetch("/api/admin/catalog", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "genre", genre: { name, sort_order: genres.length + 1 } })
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "No se pudo guardar el género.");
+
+      const saved = result.genre as GenreRecord;
+      setGenres((current) => [...current, saved]);
+      setNewGenre("");
+      updateField("genre", saved.name);
+      setCatalogMessage("Género guardado. Ya queda disponible para futuras cargas.");
+    } catch (error) {
+      setCatalogMessage(error instanceof Error ? error.message : "No se pudo guardar el género.");
+    } finally {
+      setCatalogLoading(false);
+    }
   }
 
   async function uploadFlyer() {
@@ -167,7 +309,7 @@ export function AdminDashboard({ initialEvents }: { initialEvents: EventRecord[]
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-violet-200/70">Panel privado</p>
           <h1 className="mt-3 text-4xl font-black tracking-tight sm:text-5xl">Cargar eventos</h1>
-          <p className="mt-3 text-white/55">Subí flyer, pegá link de Bombo y publicá en menos de un minuto.</p>
+          <p className="mt-3 text-white/55">Subí flyer, elegí venue/género, pegá link de Bombo y publicá rápido.</p>
         </div>
         <button
           onClick={async () => {
@@ -200,7 +342,28 @@ export function AdminDashboard({ initialEvents }: { initialEvents: EventRecord[]
               <input required type="datetime-local" value={form.starts_at} onChange={(event) => updateField("starts_at", event.target.value)} className="input" />
             </Field>
             <Field label="Género">
-              <input value={form.genre} onChange={(event) => updateField("genre", event.target.value)} className="input" placeholder="Techno, House..." />
+              <select
+                value={genreSelectValue}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  updateField("genre", value === "__custom" ? "" : value);
+                }}
+                className="input"
+              >
+                <option value="">Seleccionar género</option>
+                {sortedGenres.map((genre) => (
+                  <option key={genre.id} value={genre.name}>{genre.name}</option>
+                ))}
+                <option value="__custom">Otro / manual</option>
+              </select>
+              {genreSelectValue === "__custom" || !form.genre ? (
+                <input
+                  value={form.genre}
+                  onChange={(event) => updateField("genre", event.target.value)}
+                  className="input mt-2"
+                  placeholder="Ej: Hard Groove"
+                />
+              ) : null}
             </Field>
           </div>
 
@@ -209,13 +372,22 @@ export function AdminDashboard({ initialEvents }: { initialEvents: EventRecord[]
           </Field>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Venue">
-              <input value={form.venue_name} onChange={(event) => updateField("venue_name", event.target.value)} className="input" />
+            <Field label="Venue guardado">
+              <select value={form.venue_id} onChange={(event) => applyVenue(event.target.value)} className="input">
+                <option value="">Carga manual</option>
+                {sortedVenues.map((venue) => (
+                  <option key={venue.id} value={venue.id}>{venue.name}</option>
+                ))}
+              </select>
             </Field>
             <Field label="Banda de precios">
               <input value={form.price_label} onChange={(event) => updateField("price_label", event.target.value)} className="input" placeholder="$20.000 - $35.000" />
             </Field>
           </div>
+
+          <Field label="Venue">
+            <input value={form.venue_name} onChange={(event) => updateField("venue_name", event.target.value)} className="input" placeholder="Ej: The Bow" />
+          </Field>
 
           <Field label="Dirección / ubicación">
             <input value={form.venue_address} onChange={(event) => updateField("venue_address", event.target.value)} className="input" />
@@ -234,13 +406,38 @@ export function AdminDashboard({ initialEvents }: { initialEvents: EventRecord[]
             <input value={form.map_url} onChange={(event) => updateField("map_url", event.target.value)} className="input" placeholder="https://maps.google.com/..." />
           </Field>
 
+          <details className="rounded-3xl border border-white/10 bg-black/20 p-4">
+            <summary className="cursor-pointer text-sm font-bold text-white/80">Guardar nuevo venue para próximas cargas</summary>
+            <div className="mt-4 grid gap-3">
+              <input value={venueForm.name} onChange={(event) => updateVenueForm("name", event.target.value)} className="input" placeholder="Nombre del venue" />
+              <input value={venueForm.address} onChange={(event) => updateVenueForm("address", event.target.value)} className="input" placeholder="Dirección" />
+              <div className="grid gap-3 sm:grid-cols-2">
+                <input value={venueForm.city} onChange={(event) => updateVenueForm("city", event.target.value)} className="input" placeholder="Ciudad" />
+                <input value={venueForm.province} onChange={(event) => updateVenueForm("province", event.target.value)} className="input" placeholder="Provincia" />
+              </div>
+              <input value={venueForm.map_url} onChange={(event) => updateVenueForm("map_url", event.target.value)} className="input" placeholder="Google Maps URL" />
+              <button type="button" disabled={catalogLoading} onClick={createVenue} className="rounded-full border border-white/15 px-4 py-3 text-sm font-bold text-white/80 hover:bg-white/10 disabled:opacity-50">
+                Guardar venue y usarlo
+              </button>
+            </div>
+          </details>
+
+          <details className="rounded-3xl border border-white/10 bg-black/20 p-4">
+            <summary className="cursor-pointer text-sm font-bold text-white/80">Agregar género rápido</summary>
+            <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+              <input value={newGenre} onChange={(event) => setNewGenre(event.target.value)} className="input" placeholder="Ej: Hard Groove" />
+              <button type="button" disabled={catalogLoading} onClick={createGenre} className="rounded-full border border-white/15 px-4 py-3 text-sm font-bold text-white/80 hover:bg-white/10 disabled:opacity-50">
+                Guardar
+              </button>
+            </div>
+          </details>
+
+          {catalogMessage ? <p className="rounded-2xl bg-violet-400/10 px-4 py-3 text-sm text-violet-100">{catalogMessage}</p> : null}
+
           <Field label="Lineup">
             <textarea value={form.lineup} onChange={(event) => updateField("lineup", event.target.value)} className="input min-h-24" placeholder="Un artista por línea" />
           </Field>
 
-          <Field label="Descripción breve">
-            <textarea value={form.description} onChange={(event) => updateField("description", event.target.value)} className="input min-h-24" />
-          </Field>
 
           <Field label="Videoset YouTube URL">
             <input value={form.video_url} onChange={(event) => updateField("video_url", event.target.value)} className="input" placeholder="https://youtube.com/watch?v=..." />
@@ -270,7 +467,10 @@ export function AdminDashboard({ initialEvents }: { initialEvents: EventRecord[]
         </form>
 
         <section className="space-y-4">
-          <h2 className="text-2xl font-black">Eventos cargados</h2>
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <h2 className="text-2xl font-black">Eventos cargados</h2>
+            <p className="text-sm text-white/45">{venues.length} venues · {genres.length} géneros guardados</p>
+          </div>
           {sortedEvents.map((event) => (
             <article key={event.id} className="glass grid gap-4 rounded-[1.6rem] p-4 sm:grid-cols-[92px_1fr]">
               <div className="aspect-square overflow-hidden rounded-2xl bg-white/5">
@@ -281,7 +481,7 @@ export function AdminDashboard({ initialEvents }: { initialEvents: EventRecord[]
                   <div>
                     <h3 className="font-bold">{event.title}</h3>
                     <p className="mt-1 text-sm text-white/50">{new Date(event.starts_at).toLocaleString("es-AR")} · {event.genre}</p>
-                    <p className="mt-1 text-xs text-white/38">Clicks: {event.clicks_count || 0}</p>
+                    <p className="mt-1 text-xs text-white/38">{event.venue_name || "Sin venue"} · Clicks: {event.clicks_count || 0}</p>
                   </div>
                   <span className={`rounded-full px-3 py-1 text-xs font-bold ${event.published ? "bg-emerald-400/15 text-emerald-200" : "bg-zinc-400/15 text-zinc-200"}`}>
                     {event.published ? "Publicado" : "Oculto"}
@@ -310,6 +510,10 @@ export function AdminDashboard({ initialEvents }: { initialEvents: EventRecord[]
         }
         .input:focus {
           border-color: rgba(255, 255, 255, 0.35);
+        }
+        .input option {
+          background: #09090b;
+          color: white;
         }
       `}</style>
     </div>

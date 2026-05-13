@@ -15,7 +15,7 @@ export function Hero() {
           className="max-w-4xl"
         >
           <div className="mb-6 inline-flex rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/70 backdrop-blur">
-            Tickets de electrónica · Argentina · Curado para vender rápido
+            Tickets de electrónica · Argentina · Compra directa por Bombo
           </div>
           <h1 className="text-balance text-5xl font-black tracking-[-0.06em] text-white sm:text-7xl lg:text-8xl">
             Encontrá la próxima fecha antes que todos.
