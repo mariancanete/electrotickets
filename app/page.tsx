@@ -9,7 +9,7 @@ export const revalidate = 60;
 
 export default async function HomePage() {
   const events = await getPublishedEvents();
-  const featuredEvents = events.filter((event) => event.featured).slice(0, 3);
+  const featuredEvents = events.filter((event) => event.featured).slice(0, 6);
   const nextEvents = events.slice(0, 6);
 
   return (
