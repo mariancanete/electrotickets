@@ -1,11 +1,30 @@
+import type { Metadata } from "next";
 import { EventCard } from "@/components/event-card";
 import { Hero } from "@/components/hero";
 import { MotionReveal } from "@/components/motion-reveal";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getPublishedEvents } from "@/lib/events";
+import { absoluteUrl, siteConfig } from "@/lib/site";
 
 export const revalidate = 60;
+
+const homeTitle = "ElectroTickets · Tickets de electrónica en Argentina";
+const homeImage = absoluteUrl("/og-home.png");
+
+export const metadata: Metadata = {
+  title: homeTitle,
+  description: siteConfig.description,
+  alternates: { canonical: siteConfig.url },
+  openGraph: {
+    title: homeTitle,
+    description: siteConfig.description,
+    url: siteConfig.url,
+    siteName: siteConfig.name,
+    type: "website",
+    images: [{ url: homeImage, width: 1200, height: 630, alt: "ElectroTickets" }]
+  }
+};
 
 export default async function HomePage() {
   const events = await getPublishedEvents();

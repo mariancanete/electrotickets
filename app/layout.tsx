@@ -1,12 +1,15 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import "./globals.css";
-import { siteConfig } from "@/lib/site";
+import { absoluteUrl, siteConfig } from "@/lib/site";
+
+const homeTitle = "ElectroTickets · Tickets de electrónica en Argentina";
+const homeImage = absoluteUrl("/og-home.png");
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   title: {
-    default: "ElectroTickets · Tickets de electrónica en Argentina",
+    default: homeTitle,
     template: "%s · ElectroTickets"
   },
   description: siteConfig.description,
@@ -23,13 +26,9 @@ export const metadata: Metadata = {
     locale: "es_AR",
     url: siteConfig.url,
     siteName: siteConfig.name,
-    title: "ElectroTickets · Tickets de electrónica en Argentina",
-    description: siteConfig.description
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "ElectroTickets · Tickets de electrónica en Argentina",
-    description: siteConfig.description
+    title: homeTitle,
+    description: siteConfig.description,
+    images: [{ url: homeImage, width: 1200, height: 630, alt: "ElectroTickets" }]
   }
 };
 
