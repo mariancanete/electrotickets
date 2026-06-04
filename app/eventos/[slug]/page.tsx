@@ -4,7 +4,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { formatEventLongDate } from "@/lib/dates";
 import { getEventBySlug, getPublishedEvents } from "@/lib/events";
-import { siteConfig } from "@/lib/site";
+import { absoluteUrl, siteConfig } from "@/lib/site";
 import { getYoutubeEmbedUrl } from "@/lib/video";
 import { buildWhatsappDirectUrl } from "@/lib/whatsapp";
 
@@ -28,25 +28,23 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   const title = `${event.title} · Tickets`;
-  const description = `${event.title}${event.venue_name ? ` en ${event.venue_name}` : ""}. Lineup, ubicación, precios y compra oficial desde ElectroTickets.`;
-  const image = event.flyer_url || undefined;
+  const venue = event.venue_name || "venue a confirmar";
+  const city = event.city || siteConfig.defaultCity;
+  const description = `Comprá tickets para ${event.title} en ${venue}, ${city}. Información del evento y compra oficial desde ElectroTickets.`;
+  const canonicalUrl = absoluteUrl(`/eventos/${event.slug}`);
+  const image = absoluteUrl(event.flyer_url || "/og-home.png");
 
   return {
     title,
     description,
-    alternates: { canonical: `/eventos/${event.slug}` },
+    alternates: { canonical: canonicalUrl },
     openGraph: {
       title,
       description,
-      type: "article",
-      url: `${siteConfig.url}/eventos/${event.slug}`,
-      images: image ? [{ url: image, width: 1200, height: 1500, alt: event.title }] : []
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-      images: image ? [image] : []
+      siteName: "ElectroTickets",
+      type: "website",
+      url: canonicalUrl,
+      images: [{ url: image, width: 1200, height: 1500, alt: `Flyer de ${event.title}` }]
     }
   };
 }
@@ -72,7 +70,7 @@ export default async function EventDetailPage({ params }: PageProps) {
     startDate: event.starts_at,
     eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
     eventStatus: "https://schema.org/EventScheduled",
-    image: event.flyer_url ? [event.flyer_url] : undefined,
+    image: [absoluteUrl(event.flyer_url || "/og-home.png")],
     location: {
       "@type": "Place",
       name: event.venue_name || "Venue a confirmar",
