@@ -4,7 +4,7 @@ import "./globals.css";
 import { absoluteUrl, siteConfig } from "@/lib/site";
 
 const homeTitle = "ElectroTickets · Tickets de electrónica en Argentina";
-const homeImage = absoluteUrl("/og-home.png");
+const homeImage = absoluteUrl("/og-logo");
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
@@ -29,6 +29,10 @@ export const metadata: Metadata = {
     title: homeTitle,
     description: siteConfig.description,
     images: [{ url: homeImage, width: 1200, height: 630, alt: "ElectroTickets" }]
+  },
+  icons: {
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg"
   }
 };
 

@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const city = event.city || siteConfig.defaultCity;
   const description = `Comprá tickets para ${event.title} en ${venue}, ${city}. Información del evento y compra oficial desde ElectroTickets.`;
   const canonicalUrl = absoluteUrl(`/eventos/${event.slug}`);
-  const image = absoluteUrl(event.flyer_url || "/og-home.png");
+  const image = absoluteUrl(event.flyer_url || "/og-logo");
 
   return {
     title,
@@ -70,7 +70,7 @@ export default async function EventDetailPage({ params }: PageProps) {
     startDate: event.starts_at,
     eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
     eventStatus: "https://schema.org/EventScheduled",
-    image: [absoluteUrl(event.flyer_url || "/og-home.png")],
+    image: [absoluteUrl(event.flyer_url || "/og-logo")],
     location: {
       "@type": "Place",
       name: event.venue_name || "Venue a confirmar",
