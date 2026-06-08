@@ -10,7 +10,7 @@ import { absoluteUrl, siteConfig } from "@/lib/site";
 export const revalidate = 60;
 
 const homeTitle = "ElectroTickets · Tickets de electrónica en Argentina";
-const homeImage = absoluteUrl("/og-home.png");
+const homeImage = absoluteUrl("/og-logo");
 
 export const metadata: Metadata = {
   title: homeTitle,
