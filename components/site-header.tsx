@@ -76,9 +76,9 @@ export function SiteHeader() {
           <Link className="transition hover:text-white" href="/eventos">
             Eventos
           </Link>
-          <a className="transition hover:text-white" href="/#destacados">
+          <Link className="transition hover:text-white" href="/destacados">
             Destacados
-          </a>
+          </Link>
           <Link className="transition hover:text-white" href="/contacto">
             Contacto
           </Link>
