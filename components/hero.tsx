@@ -8,7 +8,8 @@ import type { EventRecord } from "@/types/event";
 const timeFormatter = new Intl.DateTimeFormat("es-AR", {
   timeZone: "America/Argentina/Buenos_Aires",
   hour: "2-digit",
-  minute: "2-digit"
+  minute: "2-digit",
+  hourCycle: "h23"
 });
 
 const microBenefits = [
@@ -55,7 +56,7 @@ export function Hero({ featuredEvents }: { featuredEvents: EventRecord[] }) {
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.65, ease: "easeOut" }}
-          className="pt-0 lg:pt-1"
+          className="flex flex-col pt-0 lg:min-h-[558px] lg:pt-1 xl:min-h-[566px]"
         >
           <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.045] px-3.5 py-1.5 text-xs font-semibold text-white/68 backdrop-blur sm:text-sm">
             <span className="h-1.5 w-1.5 rounded-full bg-violet-500 shadow-[0_0_18px_rgba(139,92,246,0.85)]" />
@@ -83,7 +84,7 @@ export function Hero({ featuredEvents }: { featuredEvents: EventRecord[] }) {
             </Link>
           </div>
 
-          <div className="mt-7 grid max-w-2xl gap-0 overflow-hidden rounded-2xl border border-white/10 bg-black/20 backdrop-blur sm:grid-cols-3">
+          <div className="mt-7 grid max-w-2xl gap-0 overflow-hidden rounded-2xl border border-white/10 bg-black/20 backdrop-blur sm:grid-cols-3 lg:mt-auto">
             {microBenefits.map((item) => (
               <div key={item.title} className="flex items-center gap-3 border-white/10 px-4 py-3 text-white/78 sm:border-r sm:last:border-r-0">
                 <span className="text-violet-200">{item.icon}</span>
@@ -124,7 +125,7 @@ export function Hero({ featuredEvents }: { featuredEvents: EventRecord[] }) {
             )}
           </div>
 
-          <div className="mt-4 flex items-center justify-between gap-4 rounded-3xl border border-white/10 bg-white/[0.035] px-4 py-3.5 backdrop-blur">
+          <div className="mt-4 flex flex-col items-start justify-between gap-3 rounded-3xl border border-white/10 bg-white/[0.035] px-4 py-3.5 backdrop-blur sm:flex-row sm:items-center sm:gap-4">
             <div className="flex min-w-0 items-center gap-3">
               <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-violet-300/30 bg-violet-500/10 text-violet-100">
                 <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" aria-hidden="true">
@@ -133,8 +134,8 @@ export function Hero({ featuredEvents }: { featuredEvents: EventRecord[] }) {
                 </svg>
               </div>
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-white/78 sm:text-base">Compra directa por Bombo</p>
-                <p className="mt-1 truncate text-xs text-white/48 sm:text-sm">Tickets 100% oficiales · Sin recargos · Soporte real</p>
+                <p className="text-sm font-semibold text-white/78 sm:text-base">Compra desde Bombo</p>
+                <p className="mt-1 text-xs leading-5 text-white/48 sm:text-sm">Links oficiales · Compra segura · Consulta por WhatsApp</p>
               </div>
             </div>
             <div className="shrink-0 text-right text-sm font-black leading-[0.85] tracking-[0.18em] text-white sm:text-base">
@@ -150,13 +151,14 @@ export function Hero({ featuredEvents }: { featuredEvents: EventRecord[] }) {
 
 function FeaturedEventRow({ event, priority }: { event: EventRecord; priority: boolean }) {
   const badge = getDayBadge(event.starts_at);
-  const eventTime = timeFormatter.format(new Date(event.starts_at));
+  const eventTime = formatHeroEventTime(event.starts_at);
+  const startingPrice = getStartingPrice(event.price_label);
   const tags = [event.genre, event.city].filter(Boolean).slice(0, 2) as string[];
 
   return (
-    <article className="group overflow-hidden rounded-3xl border border-white/10 bg-white/[0.035] shadow-2xl shadow-black/15 backdrop-blur transition duration-300 hover:border-violet-300/30 hover:bg-white/[0.06]">
-      <div className="flex flex-col gap-3 p-2.5 sm:grid sm:min-h-[128px] sm:grid-cols-[180px_56px_minmax(0,1fr)_104px] sm:items-center sm:gap-4 sm:p-3 lg:grid-cols-[190px_58px_minmax(0,1fr)_108px] xl:grid-cols-[210px_60px_minmax(0,1fr)_112px]">
-        <Link href={`/eventos/${event.slug}`} className="relative h-32 overflow-hidden rounded-2xl bg-white/5 sm:h-[108px] sm:w-full">
+    <article className="group w-full max-w-full overflow-hidden rounded-3xl border border-white/10 bg-white/[0.035] shadow-2xl shadow-black/15 backdrop-blur transition duration-300 hover:border-violet-300/30 hover:bg-white/[0.06]">
+      <div className="flex min-w-0 flex-col gap-3 p-3 sm:grid sm:min-h-[128px] sm:grid-cols-[180px_56px_minmax(0,1fr)_104px] sm:items-center sm:gap-4 lg:grid-cols-[190px_58px_minmax(0,1fr)_108px] xl:grid-cols-[210px_60px_minmax(0,1fr)_112px]">
+        <Link href={`/eventos/${event.slug}`} className="relative h-32 w-full overflow-hidden rounded-2xl bg-white/5 sm:h-[108px] sm:w-full">
           {event.flyer_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -189,7 +191,7 @@ function FeaturedEventRow({ event, priority }: { event: EventRecord; priority: b
             </span>
             <span className="inline-flex min-w-0 items-center gap-1">
               <PinIcon />
-              <span className="truncate">{event.venue_name || "Venue a confirmar"}</span>
+              <span className="min-w-0 break-words sm:truncate">{event.venue_name || "Venue a confirmar"}</span>
             </span>
           </div>
           <div className="mt-3 flex flex-wrap gap-2">
@@ -197,14 +199,14 @@ function FeaturedEventRow({ event, priority }: { event: EventRecord; priority: b
           </div>
         </div>
 
-        <div className="flex items-center justify-between gap-3 px-1 sm:flex-col sm:items-end sm:px-0">
-          <div className="text-left sm:text-right">
+        <div className="flex min-w-0 flex-col gap-3 px-1 sm:items-end sm:px-0">
+          <div className="min-w-0 text-left sm:text-right">
             <p className="text-xs text-white/45">Desde</p>
-            <p className="mt-0.5 text-sm font-black text-violet-200 sm:text-base">{event.price_label || "Consultar"}</p>
+            <p className="mt-0.5 break-words text-sm font-black text-violet-200 sm:text-base">{startingPrice}</p>
           </div>
           <Link
             href={`/go/${event.slug}`}
-            className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-violet-600 to-blue-600 px-4 py-2.5 text-xs font-black text-white shadow-[0_14px_30px_rgba(91,33,182,0.28)] transition hover:from-violet-500 hover:to-blue-500"
+            className="inline-flex w-full shrink-0 items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-violet-600 to-blue-600 px-4 py-2.5 text-xs font-black text-white shadow-[0_14px_30px_rgba(91,33,182,0.28)] transition hover:from-violet-500 hover:to-blue-500 sm:w-auto"
           >
             Comprar
             <span aria-hidden="true">→</span>
@@ -213,6 +215,22 @@ function FeaturedEventRow({ event, priority }: { event: EventRecord; priority: b
       </div>
     </article>
   );
+}
+
+function formatHeroEventTime(date: string) {
+  return timeFormatter.format(new Date(date)).replace(/[^\d:]/g, "").padStart(5, "0");
+}
+
+function getStartingPrice(priceLabel: string | null) {
+  if (!priceLabel) return "Consultar";
+
+  const firstCurrencyAmount = priceLabel.match(/(?:\$|ARS\s*)\s?[\d.,]+/i)?.[0];
+  if (firstCurrencyAmount) return firstCurrencyAmount.trim();
+
+  const [firstPrice] = priceLabel.split(/\s[-–—]\s|[-–—]/);
+  const normalizedPrice = firstPrice.trim().replace(/^desde\s+/i, "");
+
+  return normalizedPrice || priceLabel.trim() || "Consultar";
 }
 
 function ClockIcon() {
