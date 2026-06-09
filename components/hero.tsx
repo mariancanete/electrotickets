@@ -56,7 +56,7 @@ export function Hero({ featuredEvents }: { featuredEvents: EventRecord[] }) {
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.65, ease: "easeOut" }}
-          className="flex flex-col pt-0 lg:min-h-[558px] lg:pt-1 xl:min-h-[566px]"
+          className="flex flex-col pt-0 lg:min-h-[604px] lg:pt-1 xl:min-h-[612px]"
         >
           <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.045] px-3.5 py-1.5 text-xs font-semibold text-white/68 backdrop-blur sm:text-sm">
             <span className="h-1.5 w-1.5 rounded-full bg-violet-500 shadow-[0_0_18px_rgba(139,92,246,0.85)]" />
