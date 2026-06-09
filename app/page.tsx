@@ -28,41 +28,47 @@ export const metadata: Metadata = {
 
 export default async function HomePage() {
   const events = await getPublishedEvents();
-  const featuredEvents = events.filter((event) => event.featured).slice(0, 6);
-  const nextEvents = events.slice(0, 6);
+  const featuredEvents = events.filter((event) => event.featured);
+  const fallbackEvents = events.filter((event) => !event.featured);
+  const heroEvents = [...featuredEvents, ...fallbackEvents].slice(0, 3);
+  const heroEventIds = new Set(heroEvents.map((event) => event.id));
+  const nextEvents = events.filter((event) => !heroEventIds.has(event.id)).slice(0, 6);
 
   return (
     <>
       <SiteHeader />
       <main>
-        <Hero />
+        <Hero featuredEvents={heroEvents} />
 
-        <section id="destacados" className="px-4 py-12 sm:px-6 lg:px-8">
+        <section className="px-4 pb-14 pt-6 sm:px-6 lg:px-8 lg:pb-16 lg:pt-8">
           <div className="mx-auto max-w-7xl">
-            <MotionReveal className="mb-8">
-              <h2 className="text-4xl font-black tracking-tight sm:text-5xl">Eventos destacados</h2>
+            <MotionReveal className="mb-6 flex flex-col items-start justify-between gap-4 rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-5 sm:flex-row sm:items-end sm:p-6">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.35em] text-violet-200/80">Próximos eventos</p>
+                <h2 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">Próximos eventos</h2>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-white/55">
+                  Eventos publicados con links oficiales para comprar por Bombo y consultar detalles antes de decidir.
+                </p>
+              </div>
+              <a href="/eventos" className="rounded-full bg-white px-5 py-3 text-sm font-black text-black transition hover:bg-white/85">
+                Ver todos los eventos
+              </a>
             </MotionReveal>
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {(featuredEvents.length ? featuredEvents : nextEvents).map((event, index) => (
-                <MotionReveal key={event.id}>
-                  <EventCard event={event} priority={index === 0} />
-                </MotionReveal>
-              ))}
-            </div>
-          </div>
-        </section>
 
-        <section className="px-4 py-14 sm:px-6 lg:px-8">
-          <MotionReveal className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-5 rounded-[2rem] border border-white/10 bg-white/[0.03] p-6 sm:flex-row sm:items-center sm:p-8">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.35em] text-violet-200/80">Próximas fechas</p>
-              <h2 className="mt-3 text-2xl font-black tracking-tight sm:text-3xl">Encontrá tu próximo evento electrónico</h2>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-white/55">Explorá fechas destacadas, revisá ubicación, lineup y comprá desde el link oficial del evento.</p>
-            </div>
-            <a href="/eventos" className="rounded-full bg-white px-5 py-3 text-sm font-black text-black transition hover:bg-white/85">
-              Ver todos los eventos
-            </a>
-          </MotionReveal>
+            {nextEvents.length ? (
+              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {nextEvents.map((event) => (
+                  <MotionReveal key={event.id}>
+                    <EventCard event={event} />
+                  </MotionReveal>
+                ))}
+              </div>
+            ) : (
+              <MotionReveal className="rounded-[1.75rem] border border-dashed border-white/10 bg-white/[0.03] p-6 text-sm leading-6 text-white/60">
+                No hay más fechas publicadas por ahora. Revisá los destacados o volvé pronto para descubrir nuevos eventos.
+              </MotionReveal>
+            )}
+          </div>
         </section>
       </main>
       <SiteFooter />
