@@ -125,7 +125,7 @@ export function Hero({ featuredEvents }: { featuredEvents: EventRecord[] }) {
             )}
           </div>
 
-          <div className="mt-4 flex flex-col items-start justify-between gap-3 rounded-3xl border border-white/10 bg-white/[0.035] px-4 py-3.5 backdrop-blur sm:flex-row sm:items-center sm:gap-4">
+          <div className="mt-4 flex flex-col items-start justify-between gap-3 rounded-3xl border border-white/10 bg-white/[0.035] px-4 py-3.5 backdrop-blur sm:flex-row sm:items-center sm:gap-4 lg:mt-16">
             <div className="flex min-w-0 items-center gap-3">
               <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-violet-300/30 bg-violet-500/10 text-violet-100">
                 <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" aria-hidden="true">
