@@ -60,7 +60,7 @@ export default async function EventDetailPage({ params }: PageProps) {
     siteConfig.whatsappNumber,
     `Hola ${siteConfig.whatsappContactName}, quiero consultar por ${event.title}.`
   );
-  const metadataDescription = `${event.title}${event.venue_name ? ` en ${event.venue_name}` : ""}. Lineup, ubicación, precios y compra oficial.`;
+  const metadataDescription = `${event.title}${event.venue_name ? ` en ${event.venue_name}` : ""}. Lineup, ubicación y compra oficial.`;
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -80,8 +80,7 @@ export default async function EventDetailPage({ params }: PageProps) {
     offers: {
       "@type": "Offer",
       url: `${siteConfig.url}/go/${event.slug}`,
-      availability: "https://schema.org/InStock",
-      priceCurrency: "ARS"
+      availability: "https://schema.org/InStock"
     }
   };
 
@@ -110,12 +109,14 @@ export default async function EventDetailPage({ params }: PageProps) {
               </div>
               <h1 className="mt-5 text-4xl font-black tracking-tight sm:text-6xl">{event.title}</h1>
 
-              <div className="mt-8 grid gap-4 sm:grid-cols-2">
+              <div className="mt-8 grid gap-4 md:grid-cols-3">
                 <InfoCard label="Fecha y horario" value={formatEventLongDate(event.starts_at)} />
                 <InfoCard label="Venue" value={`${event.venue_name || "A confirmar"}${event.city ? ` · ${event.city}` : ""}`} />
-                <InfoCard label="Precios" value={event.price_label || "Ver fases en Bombo"} />
                 <InfoCard label="Ubicación" value={event.venue_address || event.city || "Argentina"} />
               </div>
+              <p className="mt-4 text-sm leading-6 text-white/45">
+                El valor final y la disponibilidad se confirman en Bombo al momento de comprar.
+              </p>
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <a
@@ -166,14 +167,19 @@ export default async function EventDetailPage({ params }: PageProps) {
               </div>
             </div>
 
-            <div className="glass rounded-[2rem] p-6 sm:p-8">
-              <h2 className="text-2xl font-black">Cómo comprar</h2>
+            <details className="group glass rounded-[2rem] p-6 sm:p-8">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-2xl font-black marker:hidden">
+                <span>Cómo comprar</span>
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/10 bg-black/25 text-base text-white/70 transition group-open:rotate-45 group-open:bg-white group-open:text-black" aria-hidden="true">
+                  +
+                </span>
+              </summary>
               <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                <StepCard number="1" title="Revisá la fecha" description="Confirmá lineup, venue, horario y banda de precios." />
+                <StepCard number="1" title="Revisá la fecha" description="Confirmá lineup, venue, horario y detalles del evento." />
                 <StepCard number="2" title="Tocá comprar" description="Te llevamos al link oficial de Bombo del evento." />
                 <StepCard number="3" title="Finalizá en Bombo" description="La compra y emisión del ticket se completan fuera de ElectroTickets." />
               </div>
-            </div>
+            </details>
 
             {event.lineup?.length ? (
               <div className="glass rounded-[2rem] p-6 sm:p-8">
