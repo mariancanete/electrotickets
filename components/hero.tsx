@@ -66,7 +66,7 @@ export function Hero({ featuredEvents }: { featuredEvents: EventRecord[] }) {
             Encontrá la próxima fecha antes que todos.
           </h1>
           <p className="mt-5 max-w-xl text-base leading-7 text-white/64 sm:text-lg">
-            Agenda de fiestas electrónicas con links <span className="font-semibold text-violet-200">oficiales</span>, lineup, ubicación, <span className="font-semibold text-violet-200">precios</span> y videosets para decidir rápido y comprar sin vueltas.
+            Agenda de fiestas electrónicas con links <span className="font-semibold text-violet-200">oficiales</span>, lineup, ubicación y <span className="font-semibold text-violet-200">videosets</span> para decidir rápido y comprar sin vueltas.
           </p>
           <div className="mt-7 flex flex-col gap-3 sm:flex-row">
             <Link
@@ -152,12 +152,11 @@ export function Hero({ featuredEvents }: { featuredEvents: EventRecord[] }) {
 function FeaturedEventRow({ event, priority }: { event: EventRecord; priority: boolean }) {
   const badge = getDayBadge(event.starts_at);
   const eventTime = formatHeroEventTime(event.starts_at);
-  const startingPrice = getStartingPrice(event.price_label);
   const tags = [event.genre, event.city].filter(Boolean).slice(0, 2) as string[];
 
   return (
     <article className="group w-full max-w-full overflow-hidden rounded-3xl border border-white/10 bg-white/[0.035] shadow-2xl shadow-black/15 backdrop-blur transition duration-300 hover:border-violet-300/30 hover:bg-white/[0.06]">
-      <div className="flex min-w-0 flex-col gap-3 p-3 sm:grid sm:min-h-[128px] sm:grid-cols-[180px_56px_minmax(0,1fr)_104px] sm:items-center sm:gap-4 lg:grid-cols-[190px_58px_minmax(0,1fr)_108px] xl:grid-cols-[210px_60px_minmax(0,1fr)_112px]">
+      <div className="flex min-w-0 flex-col gap-3 p-3 sm:grid sm:min-h-[128px] sm:grid-cols-[180px_56px_minmax(0,1fr)_auto] sm:items-center sm:gap-4 lg:grid-cols-[190px_58px_minmax(0,1fr)_auto] xl:grid-cols-[210px_60px_minmax(0,1fr)_auto]">
         <Link href={`/eventos/${event.slug}`} className="relative h-32 w-full overflow-hidden rounded-2xl bg-white/5 sm:h-[108px] sm:w-full">
           {event.flyer_url ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -173,6 +172,10 @@ function FeaturedEventRow({ event, priority }: { event: EventRecord; priority: b
             </div>
           )}
           {event.featured ? <span className="absolute left-3 top-3 rounded-full bg-gradient-to-r from-violet-600 to-blue-600 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-white">Destacado</span> : null}
+          <span className={`absolute left-3 ${event.featured ? "top-10" : "top-3"} grid min-w-9 place-items-center rounded-xl border border-white/10 bg-black/70 px-2 py-1.5 text-center shadow-lg shadow-black/25 backdrop-blur sm:hidden`}>
+            <span className="text-lg font-black leading-none text-white">{badge.day}</span>
+            <span className="mt-0.5 text-[8px] font-black uppercase tracking-[0.16em] text-white/65">{badge.month}</span>
+          </span>
         </Link>
 
         <div className="hidden text-center sm:block">
@@ -199,11 +202,7 @@ function FeaturedEventRow({ event, priority }: { event: EventRecord; priority: b
           </div>
         </div>
 
-        <div className="flex min-w-0 flex-col gap-3 px-1 sm:items-end sm:px-0">
-          <div className="min-w-0 text-left sm:text-right">
-            <p className="text-xs text-white/45">Desde</p>
-            <p className="mt-0.5 break-words text-sm font-black text-violet-200 sm:text-base">{startingPrice}</p>
-          </div>
+        <div className="flex min-w-0 px-1 sm:justify-end sm:px-0">
           <Link
             href={`/go/${event.slug}`}
             className="inline-flex w-full shrink-0 items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-violet-600 to-blue-600 px-4 py-2.5 text-xs font-black text-white shadow-[0_14px_30px_rgba(91,33,182,0.28)] transition hover:from-violet-500 hover:to-blue-500 sm:w-auto"
@@ -219,18 +218,6 @@ function FeaturedEventRow({ event, priority }: { event: EventRecord; priority: b
 
 function formatHeroEventTime(date: string) {
   return timeFormatter.format(new Date(date)).replace(/[^\d:]/g, "").padStart(5, "0");
-}
-
-function getStartingPrice(priceLabel: string | null) {
-  if (!priceLabel) return "Consultar";
-
-  const firstCurrencyAmount = priceLabel.match(/(?:\$|ARS\s*)\s?[\d.,]+/i)?.[0];
-  if (firstCurrencyAmount) return firstCurrencyAmount.trim();
-
-  const [firstPrice] = priceLabel.split(/\s[-–—]\s|[-–—]/);
-  const normalizedPrice = firstPrice.trim().replace(/^desde\s+/i, "");
-
-  return normalizedPrice || priceLabel.trim() || "Consultar";
 }
 
 function ClockIcon() {

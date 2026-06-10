@@ -41,7 +41,6 @@ export function EventCard({ event, priority = false }: { event: EventRecord; pri
           <div className="space-y-2 text-sm text-white/60">
             <p>{formatEventDate(event.starts_at)}</p>
             <p>{event.venue_name || "Venue a confirmar"}{event.city ? ` · ${event.city}` : ""}</p>
-            {event.price_label ? <p className="font-semibold text-white/80">{event.price_label}</p> : null}
           </div>
           <div className="flex items-center justify-between pt-2">
             <span className="text-sm text-white/50">Ver detalles</span>
