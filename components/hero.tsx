@@ -172,9 +172,9 @@ function FeaturedEventRow({ event, priority }: { event: EventRecord; priority: b
             </div>
           )}
           {event.featured ? <span className="absolute left-3 top-3 rounded-full bg-gradient-to-r from-violet-600 to-blue-600 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-white">Destacado</span> : null}
-          <span className={`absolute left-3 ${event.featured ? "top-11" : "top-3"} grid min-w-12 place-items-center rounded-2xl border border-white/10 bg-black/70 px-3 py-2 text-center shadow-lg shadow-black/25 backdrop-blur sm:hidden`}>
-            <span className="text-2xl font-black leading-none text-white">{badge.day}</span>
-            <span className="mt-0.5 text-[10px] font-black uppercase tracking-[0.18em] text-white/65">{badge.month}</span>
+          <span className={`absolute left-3 ${event.featured ? "top-10" : "top-3"} grid min-w-9 place-items-center rounded-xl border border-white/10 bg-black/70 px-2 py-1.5 text-center shadow-lg shadow-black/25 backdrop-blur sm:hidden`}>
+            <span className="text-lg font-black leading-none text-white">{badge.day}</span>
+            <span className="mt-0.5 text-[8px] font-black uppercase tracking-[0.16em] text-white/65">{badge.month}</span>
           </span>
         </Link>
 
