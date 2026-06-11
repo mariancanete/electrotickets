@@ -1,3 +1,8 @@
+export const bomboAppLinks = {
+  ios: "https://apps.apple.com/ar/app/bombo/id6444416394",
+  android: "https://play.google.com/store/apps/details?id=com.infinixsoft.bombo&hl=es_AR"
+};
+
 export const siteConfig = {
   name: "ElectroTickets",
   description:

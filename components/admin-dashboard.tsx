@@ -23,6 +23,7 @@ type FormState = {
   video_url: string;
   bombo_url: string;
   featured: boolean;
+  last_tickets: boolean;
   published: boolean;
 };
 
@@ -52,6 +53,7 @@ const emptyForm: FormState = {
   video_url: "",
   bombo_url: "",
   featured: false,
+  last_tickets: false,
   published: true
 };
 
@@ -142,6 +144,7 @@ export function AdminDashboard({
       video_url: event.video_url || "",
       bombo_url: event.bombo_url,
       featured: event.featured,
+      last_tickets: Boolean(event.last_tickets),
       published: event.published
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -448,10 +451,17 @@ export function AdminDashboard({
             <input value={form.flyer_url} onChange={(event) => updateField("flyer_url", event.target.value)} className="input mt-2" placeholder="O pegá una URL de imagen" />
           </Field>
 
-          <div className="grid gap-3 rounded-3xl border border-white/10 bg-black/25 p-4 sm:grid-cols-2">
+          <div className="grid gap-3 rounded-3xl border border-white/10 bg-black/25 p-4 sm:grid-cols-3">
             <label className="flex items-center gap-3 text-sm text-white/75">
               <input type="checkbox" checked={form.featured} onChange={(event) => updateField("featured", event.target.checked)} />
               Destacado en home
+            </label>
+            <label className="flex items-start gap-3 text-sm text-white/75">
+              <input type="checkbox" checked={form.last_tickets} onChange={(event) => updateField("last_tickets", event.target.checked)} className="mt-1" />
+              <span>
+                <span className="block">Últimas entradas</span>
+                <span className="mt-1 block text-xs leading-5 text-white/42">Mostrar badge de urgencia en la web pública.</span>
+              </span>
             </label>
             <label className="flex items-center gap-3 text-sm text-white/75">
               <input type="checkbox" checked={form.published} onChange={(event) => updateField("published", event.target.checked)} />
@@ -483,9 +493,14 @@ export function AdminDashboard({
                     <p className="mt-1 text-sm text-white/50">{new Date(event.starts_at).toLocaleString("es-AR")} · {event.genre}</p>
                     <p className="mt-1 text-xs text-white/38">{event.venue_name || "Sin venue"} · Clicks: {event.clicks_count || 0}</p>
                   </div>
-                  <span className={`rounded-full px-3 py-1 text-xs font-bold ${event.published ? "bg-emerald-400/15 text-emerald-200" : "bg-zinc-400/15 text-zinc-200"}`}>
-                    {event.published ? "Publicado" : "Oculto"}
-                  </span>
+                  <div className="flex flex-wrap justify-end gap-2">
+                    {Boolean(event.last_tickets) ? (
+                      <span className="rounded-full bg-red-500/15 px-3 py-1 text-xs font-bold text-red-100">Últimas entradas</span>
+                    ) : null}
+                    <span className={`rounded-full px-3 py-1 text-xs font-bold ${event.published ? "bg-emerald-400/15 text-emerald-200" : "bg-zinc-400/15 text-zinc-200"}`}>
+                      {event.published ? "Publicado" : "Oculto"}
+                    </span>
+                  </div>
                 </div>
                 <div className="mt-4 flex flex-wrap gap-2">
                   <a href={`/eventos/${event.slug}`} target="_blank" className="rounded-full border border-white/10 px-3 py-2 text-xs text-white/70 hover:bg-white/10">Ver</a>

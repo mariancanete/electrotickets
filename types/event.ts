@@ -17,6 +17,7 @@ export type EventRecord = {
   video_url: string | null;
   bombo_url: string;
   featured: boolean;
+  last_tickets: boolean;
   published: boolean;
   clicks_count: number;
   sort_order: number;

@@ -59,7 +59,7 @@ export default async function HomePage() {
               <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                 {nextEvents.map((event) => (
                   <MotionReveal key={event.id}>
-                    <EventCard event={event} />
+                    <EventCard event={event} showDetailsLink={false} />
                   </MotionReveal>
                 ))}
               </div>

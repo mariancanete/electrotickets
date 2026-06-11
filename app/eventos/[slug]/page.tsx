@@ -4,7 +4,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { formatEventLongDate } from "@/lib/dates";
 import { getEventBySlug, getPublishedEvents } from "@/lib/events";
-import { absoluteUrl, siteConfig } from "@/lib/site";
+import { absoluteUrl, bomboAppLinks, siteConfig } from "@/lib/site";
 import { getYoutubeEmbedUrl } from "@/lib/video";
 import { buildWhatsappDirectUrl } from "@/lib/whatsapp";
 
@@ -58,8 +58,9 @@ export default async function EventDetailPage({ params }: PageProps) {
   const embedUrl = getYoutubeEmbedUrl(event.video_url);
   const contactUrl = buildWhatsappDirectUrl(
     siteConfig.whatsappNumber,
-    `Hola ${siteConfig.whatsappContactName}, quiero consultar por ${event.title}.`
+    `Hola Marian, quiero consultar por ${event.title}. ¿Hay disponibilidad de entradas o mesas VIP?`
   );
+  const hasLastTickets = Boolean(event.last_tickets);
   const metadataDescription = `${event.title}${event.venue_name ? ` en ${event.venue_name}` : ""}. Lineup, ubicación y compra oficial.`;
 
   const jsonLd = {
@@ -106,6 +107,7 @@ export default async function EventDetailPage({ params }: PageProps) {
               <div className="flex flex-wrap gap-3">
                 <span className="rounded-full bg-violet-400/15 px-3 py-1 text-sm text-violet-100">{event.genre || "Electrónica"}</span>
                 {event.featured ? <span className="rounded-full bg-white px-3 py-1 text-sm font-bold text-black">Destacado</span> : null}
+                {hasLastTickets ? <span className="rounded-full bg-red-600 px-3 py-1 text-sm font-black text-white shadow-lg shadow-red-950/30">Últimas entradas</span> : null}
               </div>
               <h1 className="mt-5 text-4xl font-black tracking-tight sm:text-6xl">{event.title}</h1>
 
@@ -118,25 +120,48 @@ export default async function EventDetailPage({ params }: PageProps) {
                 El valor final y la disponibilidad se confirman en Bombo al momento de comprar.
               </p>
 
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <a
-                  href={`/go/${event.slug}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-full bg-white px-6 py-4 text-center text-sm font-black text-black transition hover:scale-[1.01] hover:bg-white/85"
-                >
-                  Comprar tickets
-                </a>
-                {event.map_url ? (
+              <div className="mt-8 space-y-4">
+                <div className="flex flex-col gap-3 sm:flex-row">
                   <a
-                    href={event.map_url}
+                    href={`/go/${event.slug}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="rounded-full border border-white/15 px-6 py-4 text-center text-sm font-bold text-white/80 transition hover:bg-white/10"
+                    className="rounded-full bg-white px-6 py-4 text-center text-sm font-black text-black transition hover:scale-[1.01] hover:bg-white/85"
                   >
-                    Ver ubicación
+                    Comprar tickets
                   </a>
-                ) : null}
+                  {event.map_url ? (
+                    <a
+                      href={event.map_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="rounded-full border border-white/15 px-6 py-4 text-center text-sm font-bold text-white/80 transition hover:bg-white/10"
+                    >
+                      Ver ubicación
+                    </a>
+                  ) : null}
+                </div>
+                <div className="rounded-3xl border border-white/10 bg-black/20 p-4 text-sm text-white/48">
+                  <p>La compra se completa en Bombo. Si no tenés la app:</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <a
+                      href={bomboAppLinks.ios}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-2 text-xs font-bold text-white/72 transition hover:border-white/25 hover:text-white"
+                    >
+                      App Store
+                    </a>
+                    <a
+                      href={bomboAppLinks.android}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-2 text-xs font-bold text-white/72 transition hover:border-white/25 hover:text-white"
+                    >
+                      Google Play
+                    </a>
+                  </div>
+                </div>
               </div>
             </div>
 

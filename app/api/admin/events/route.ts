@@ -88,6 +88,7 @@ function normalizePayload(input: EventInput) {
     video_url: input.video_url?.trim() || null,
     bombo_url: input.bombo_url.trim(),
     featured: Boolean(input.featured),
+    last_tickets: Boolean(input.last_tickets),
     published: Boolean(input.published),
     sort_order: Number(input.sort_order || 0),
     updated_at: new Date().toISOString()
