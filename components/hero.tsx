@@ -153,6 +153,7 @@ function FeaturedEventRow({ event, priority }: { event: EventRecord; priority: b
   const badge = getDayBadge(event.starts_at);
   const eventTime = formatHeroEventTime(event.starts_at);
   const tags = [event.genre, event.city].filter(Boolean).slice(0, 2) as string[];
+  const hasLastTickets = Boolean(event.last_tickets);
 
   return (
     <article className="group w-full max-w-full overflow-hidden rounded-3xl border border-white/10 bg-white/[0.035] shadow-2xl shadow-black/15 backdrop-blur transition duration-300 hover:border-violet-300/30 hover:bg-white/[0.06]">
@@ -171,8 +172,11 @@ function FeaturedEventRow({ event, priority }: { event: EventRecord; priority: b
               ET
             </div>
           )}
-          {event.featured ? <span className="absolute left-3 top-3 rounded-full bg-gradient-to-r from-violet-600 to-blue-600 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-white">Destacado</span> : null}
-          <span className={`absolute left-3 ${event.featured ? "top-10" : "top-3"} grid min-w-9 place-items-center rounded-xl border border-white/10 bg-black/70 px-2 py-1.5 text-center shadow-lg shadow-black/25 backdrop-blur sm:hidden`}>
+          <div className="absolute left-3 top-3 flex flex-wrap gap-2">
+            {event.featured ? <span className="rounded-full bg-gradient-to-r from-violet-600 to-blue-600 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-white">Destacado</span> : null}
+            {hasLastTickets ? <span className="rounded-full bg-red-600 px-2.5 py-1 text-[10px] font-black text-white shadow-lg shadow-red-950/30">Últimas entradas</span> : null}
+          </div>
+          <span className={`absolute left-3 ${event.featured || hasLastTickets ? "top-12" : "top-3"} grid min-w-9 place-items-center rounded-xl border border-white/10 bg-black/70 px-2 py-1.5 text-center shadow-lg shadow-black/25 backdrop-blur sm:hidden`}>
             <span className="text-lg font-black leading-none text-white">{badge.day}</span>
             <span className="mt-0.5 text-[8px] font-black uppercase tracking-[0.16em] text-white/65">{badge.month}</span>
           </span>
@@ -198,6 +202,7 @@ function FeaturedEventRow({ event, priority }: { event: EventRecord; priority: b
             </span>
           </div>
           <div className="mt-3 flex flex-wrap gap-2">
+            {hasLastTickets ? <span className="rounded-full border border-red-300/20 bg-red-500/15 px-2.5 py-1 text-[11px] font-bold text-red-100">Últimas entradas</span> : null}
             {tags.length ? tags.map((tag) => <span key={tag} className="rounded-full border border-violet-300/15 bg-violet-500/10 px-2.5 py-1 text-[11px] font-medium text-violet-100/80">{tag}</span>) : null}
           </div>
         </div>
