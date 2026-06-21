@@ -4,3 +4,8 @@ export function buildWhatsappDirectUrl(phoneNumber: string, message: string) {
 
   return `https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`;
 }
+
+
+export function buildEventWhatsappMessage(eventTitle: string) {
+  return `Hola Marian, quiero consultar por ${eventTitle}. ¿Hay disponibilidad de entradas o mesas VIP?`;
+}

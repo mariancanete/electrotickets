@@ -3,10 +3,10 @@ import { notFound } from "next/navigation";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { formatEventLongDate } from "@/lib/dates";
-import { getEventBySlug, getPublishedEvents } from "@/lib/events";
+import { getEventBySlug, getUpcomingPublishedEvents, isUpcomingEvent } from "@/lib/events";
 import { absoluteUrl, bomboAppLinks, siteConfig } from "@/lib/site";
 import { getYoutubeEmbedUrl } from "@/lib/video";
-import { buildWhatsappDirectUrl } from "@/lib/whatsapp";
+import { buildEventWhatsappMessage, buildWhatsappDirectUrl } from "@/lib/whatsapp";
 
 export const revalidate = 60;
 
@@ -15,7 +15,7 @@ type PageProps = {
 };
 
 export async function generateStaticParams() {
-  const events = await getPublishedEvents();
+  const events = await getUpcomingPublishedEvents();
   return events.map((event) => ({ slug: event.slug }));
 }
 
@@ -53,14 +53,15 @@ export default async function EventDetailPage({ params }: PageProps) {
   const { slug } = await params;
   const event = await getEventBySlug(slug);
 
-  if (!event) notFound();
+  if (!event || !isUpcomingEvent(event)) notFound();
 
   const embedUrl = getYoutubeEmbedUrl(event.video_url);
   const contactUrl = buildWhatsappDirectUrl(
     siteConfig.whatsappNumber,
-    `Hola Marian, quiero consultar por ${event.title}. ¿Hay disponibilidad de entradas o mesas VIP?`
+    buildEventWhatsappMessage(event.title)
   );
-  const hasLastTickets = Boolean(event.last_tickets);
+  const isSoldOut = Boolean(event.sold_out);
+  const hasLastTickets = Boolean(event.last_tickets) && !isSoldOut;
   const metadataDescription = `${event.title}${event.venue_name ? ` en ${event.venue_name}` : ""}. Lineup, ubicación y compra oficial.`;
 
   const jsonLd = {
@@ -81,7 +82,7 @@ export default async function EventDetailPage({ params }: PageProps) {
     offers: {
       "@type": "Offer",
       url: `${siteConfig.url}/go/${event.slug}`,
-      availability: "https://schema.org/InStock"
+      availability: isSoldOut ? "https://schema.org/SoldOut" : "https://schema.org/InStock"
     }
   };
 
@@ -107,7 +108,7 @@ export default async function EventDetailPage({ params }: PageProps) {
               <div className="flex flex-wrap gap-3">
                 <span className="rounded-full bg-violet-400/15 px-3 py-1 text-sm text-violet-100">{event.genre || "Electrónica"}</span>
                 {event.featured ? <span className="rounded-full bg-white px-3 py-1 text-sm font-bold text-black">Destacado</span> : null}
-                {hasLastTickets ? <span className="rounded-full bg-red-600 px-3 py-1 text-sm font-black text-white shadow-lg shadow-red-950/30">Últimas entradas</span> : null}
+                {isSoldOut ? <span className="rounded-full bg-red-700 px-3 py-1 text-sm font-black text-white shadow-lg shadow-red-950/40">Sold Out</span> : hasLastTickets ? <span className="rounded-full bg-red-600 px-3 py-1 text-sm font-black text-white shadow-lg shadow-red-950/30">Últimas entradas</span> : null}
               </div>
               <h1 className="mt-5 text-4xl font-black tracking-tight sm:text-6xl">{event.title}</h1>
 
@@ -123,12 +124,12 @@ export default async function EventDetailPage({ params }: PageProps) {
               <div className="mt-8 space-y-4">
                 <div className="flex flex-col gap-3 sm:flex-row">
                   <a
-                    href={`/go/${event.slug}`}
+                    href={isSoldOut ? contactUrl || siteConfig.whatsappGroup : `/go/${event.slug}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="rounded-full bg-white px-6 py-4 text-center text-sm font-black text-black transition hover:scale-[1.01] hover:bg-white/85"
                   >
-                    Comprar tickets
+                    {isSoldOut ? "Consultar por Mesas" : "Comprar tickets"}
                   </a>
                   {event.map_url ? (
                     <a
@@ -240,12 +241,12 @@ export default async function EventDetailPage({ params }: PageProps) {
 
       <div className="fixed inset-x-4 bottom-4 z-50 sm:hidden">
         <a
-          href={`/go/${event.slug}`}
+          href={isSoldOut ? contactUrl || siteConfig.whatsappGroup : `/go/${event.slug}`}
           target="_blank"
           rel="noopener noreferrer"
           className="block rounded-full bg-white px-5 py-4 text-center text-sm font-black text-black shadow-2xl shadow-black/50"
         >
-          Comprar tickets
+          {isSoldOut ? "Consultar por Mesas" : "Comprar tickets"}
         </a>
       </div>
       <SiteFooter />

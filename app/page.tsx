@@ -4,7 +4,7 @@ import { Hero } from "@/components/hero";
 import { MotionReveal } from "@/components/motion-reveal";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import { getPublishedEvents } from "@/lib/events";
+import { getUpcomingPublishedEvents } from "@/lib/events";
 import { absoluteUrl, siteConfig } from "@/lib/site";
 
 export const revalidate = 60;
@@ -27,12 +27,11 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const events = await getPublishedEvents();
+  const events = await getUpcomingPublishedEvents();
   const featuredEvents = events.filter((event) => event.featured);
   const fallbackEvents = events.filter((event) => !event.featured);
   const heroEvents = [...featuredEvents, ...fallbackEvents].slice(0, 3);
-  const heroEventIds = new Set(heroEvents.map((event) => event.id));
-  const nextEvents = events.filter((event) => !heroEventIds.has(event.id)).slice(0, 6);
+  const nextEvents = events;
 
   return (
     <>

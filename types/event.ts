@@ -18,6 +18,7 @@ export type EventRecord = {
   bombo_url: string;
   featured: boolean;
   last_tickets: boolean;
+  sold_out?: boolean;
   published: boolean;
   clicks_count: number;
   sort_order: number;

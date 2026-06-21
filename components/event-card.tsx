@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { EventRecord } from "@/types/event";
 import { formatEventDate, getDayBadge } from "@/lib/dates";
+import { absoluteUrl, siteConfig } from "@/lib/site";
+import { buildEventWhatsappMessage, buildWhatsappDirectUrl } from "@/lib/whatsapp";
 
 type EventCardProps = {
   event: EventRecord;
@@ -10,7 +12,10 @@ type EventCardProps = {
 
 export function EventCard({ event, priority = false, showDetailsLink = true }: EventCardProps) {
   const badge = getDayBadge(event.starts_at);
-  const hasLastTickets = Boolean(event.last_tickets);
+  const isSoldOut = Boolean(event.sold_out);
+  const hasLastTickets = Boolean(event.last_tickets) && !isSoldOut;
+  const contactUrl = buildWhatsappDirectUrl(siteConfig.whatsappNumber, buildEventWhatsappMessage(event.title));
+  const ctaHref = isSoldOut ? contactUrl || absoluteUrl(`/eventos/${event.slug}`) : `/go/${event.slug}`;
 
   return (
     <article className="group overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.045] shadow-2xl shadow-black/25 transition duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-white/[0.07]">
@@ -35,7 +40,11 @@ export function EventCard({ event, priority = false, showDetailsLink = true }: E
             <p className="text-xs uppercase text-white/60">{badge.month}</p>
           </div>
           <div className="absolute right-4 top-4 flex max-w-[calc(100%-7.5rem)] flex-col items-end gap-2">
-            {hasLastTickets ? (
+            {isSoldOut ? (
+              <span className="rounded-full bg-red-700 px-3 py-1 text-xs font-black text-white shadow-lg shadow-red-950/40">
+                Sold Out
+              </span>
+            ) : hasLastTickets ? (
               <span className="rounded-full bg-red-600 px-3 py-1 text-xs font-black text-white shadow-lg shadow-red-950/35">
                 Últimas entradas
               </span>
@@ -69,10 +78,12 @@ export function EventCard({ event, priority = false, showDetailsLink = true }: E
             <span className="text-sm text-white/40">Compra oficial</span>
           )}
           <Link
-            href={`/go/${event.slug}`}
-            className="rounded-full bg-white/10 px-4 py-2 text-sm font-bold transition hover:bg-white hover:text-black"
+            href={ctaHref}
+            target={isSoldOut ? "_blank" : undefined}
+            rel={isSoldOut ? "noopener noreferrer" : undefined}
+            className="rounded-full bg-white/10 px-4 py-2 text-center text-sm font-bold transition hover:bg-white hover:text-black"
           >
-            Comprar
+            {isSoldOut ? "Consultar por Mesas" : "Comprar"}
           </Link>
         </div>
       </div>

@@ -4,6 +4,19 @@ import type { EventRecord } from "@/types/event";
 
 const eventSelect = "*";
 
+export function isUpcomingEvent(event: Pick<EventRecord, "starts_at">) {
+  if (!event.starts_at) return false;
+
+  const startsAt = new Date(event.starts_at).getTime();
+  if (Number.isNaN(startsAt)) return false;
+
+  return startsAt > Date.now();
+}
+
+export function filterUpcomingEvents<T extends Pick<EventRecord, "starts_at">>(events: T[]) {
+  return events.filter(isUpcomingEvent);
+}
+
 export async function getPublishedEvents(): Promise<EventRecord[]> {
   if (!isSupabasePublicConfigured) {
     return demoEvents.filter((event) => event.published).sort(sortEvents);
@@ -25,6 +38,11 @@ export async function getPublishedEvents(): Promise<EventRecord[]> {
   }
 
   return (data || []) as EventRecord[];
+}
+
+export async function getUpcomingPublishedEvents(): Promise<EventRecord[]> {
+  const events = await getPublishedEvents();
+  return filterUpcomingEvents(events);
 }
 
 export async function getEventBySlug(slug: string, includeUnpublished = false): Promise<EventRecord | null> {

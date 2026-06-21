@@ -24,6 +24,7 @@ type FormState = {
   bombo_url: string;
   featured: boolean;
   last_tickets: boolean;
+  sold_out: boolean;
   published: boolean;
 };
 
@@ -54,6 +55,7 @@ const emptyForm: FormState = {
   bombo_url: "",
   featured: false,
   last_tickets: false,
+  sold_out: false,
   published: true
 };
 
@@ -145,6 +147,7 @@ export function AdminDashboard({
       bombo_url: event.bombo_url,
       featured: event.featured,
       last_tickets: Boolean(event.last_tickets),
+      sold_out: Boolean(event.sold_out),
       published: event.published
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -261,7 +264,8 @@ export function AdminDashboard({
         lineup: form.lineup
           .split(/\n|,/)
           .map((artist) => artist.trim())
-          .filter(Boolean)
+          .filter(Boolean),
+        sold_out: Boolean(form.sold_out)
       };
 
       const response = await fetch("/api/admin/events", {
@@ -451,7 +455,7 @@ export function AdminDashboard({
             <input value={form.flyer_url} onChange={(event) => updateField("flyer_url", event.target.value)} className="input mt-2" placeholder="O pegá una URL de imagen" />
           </Field>
 
-          <div className="grid gap-3 rounded-3xl border border-white/10 bg-black/25 p-4 sm:grid-cols-3">
+          <div className="grid gap-3 rounded-3xl border border-white/10 bg-black/25 p-4 sm:grid-cols-2">
             <label className="flex items-center gap-3 text-sm text-white/75">
               <input type="checkbox" checked={form.featured} onChange={(event) => updateField("featured", event.target.checked)} />
               Destacado en home
@@ -461,6 +465,13 @@ export function AdminDashboard({
               <span>
                 <span className="block">Últimas entradas</span>
                 <span className="mt-1 block text-xs leading-5 text-white/42">Mostrar badge de urgencia en la web pública.</span>
+              </span>
+            </label>
+            <label className="flex items-start gap-3 text-sm text-white/75">
+              <input type="checkbox" checked={form.sold_out} onChange={(event) => updateField("sold_out", event.target.checked)} className="mt-1" />
+              <span>
+                <span className="block">Sold Out</span>
+                <span className="mt-1 block text-xs leading-5 text-white/42">Mostrar badge de evento agotado en la web pública.</span>
               </span>
             </label>
             <label className="flex items-center gap-3 text-sm text-white/75">
@@ -494,7 +505,9 @@ export function AdminDashboard({
                     <p className="mt-1 text-xs text-white/38">{event.venue_name || "Sin venue"} · Clicks: {event.clicks_count || 0}</p>
                   </div>
                   <div className="flex flex-wrap justify-end gap-2">
-                    {Boolean(event.last_tickets) ? (
+                    {Boolean(event.sold_out) ? (
+                      <span className="rounded-full bg-red-600/25 px-3 py-1 text-xs font-bold text-red-50">Sold Out</span>
+                    ) : Boolean(event.last_tickets) ? (
                       <span className="rounded-full bg-red-500/15 px-3 py-1 text-xs font-bold text-red-100">Últimas entradas</span>
                     ) : null}
                     <span className={`rounded-full px-3 py-1 text-xs font-bold ${event.published ? "bg-emerald-400/15 text-emerald-200" : "bg-zinc-400/15 text-zinc-200"}`}>
