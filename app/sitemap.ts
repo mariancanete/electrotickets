@@ -1,9 +1,9 @@
 import type { MetadataRoute } from "next";
-import { getPublishedEvents } from "@/lib/events";
+import { getUpcomingPublishedEvents } from "@/lib/events";
 import { siteConfig } from "@/lib/site";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const events = await getPublishedEvents();
+  const events = await getUpcomingPublishedEvents();
   const baseRoutes: MetadataRoute.Sitemap = [
     {
       url: siteConfig.url,

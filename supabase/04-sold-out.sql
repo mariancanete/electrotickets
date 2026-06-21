@@ -1,0 +1,2 @@
+ALTER TABLE events
+ADD COLUMN IF NOT EXISTS sold_out boolean NOT NULL DEFAULT false;

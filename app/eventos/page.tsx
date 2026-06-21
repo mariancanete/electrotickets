@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { EventBrowser } from "@/components/event-browser";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import { getPublishedEvents } from "@/lib/events";
+import { getUpcomingPublishedEvents } from "@/lib/events";
 
 export const revalidate = 60;
 
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 };
 
 export default async function EventsPage() {
-  const events = await getPublishedEvents();
+  const events = await getUpcomingPublishedEvents();
 
   return (
     <>
