@@ -7,6 +7,7 @@ import { getEventBySlug, getUpcomingPublishedEvents, isUpcomingEvent } from "@/l
 import { absoluteUrl, bomboAppLinks, siteConfig } from "@/lib/site";
 import { getYoutubeEmbedUrl } from "@/lib/video";
 import { buildEventWhatsappMessage, buildWhatsappDirectUrl } from "@/lib/whatsapp";
+import type { EventFaqItem, EventRecord } from "@/types/event";
 
 export const revalidate = 60;
 
@@ -27,15 +28,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return { title: "Evento no encontrado" };
   }
 
-  const title = `${event.title} · Tickets`;
-  const venue = event.venue_name || "venue a confirmar";
-  const city = event.city || siteConfig.defaultCity;
-  const description = `Comprá tickets para ${event.title} en ${venue}, ${city}. Información del evento y compra oficial desde ElectroTickets.`;
+  const title = buildSeoTitle(event);
+  const description = buildSeoDescription(event);
   const canonicalUrl = absoluteUrl(`/eventos/${event.slug}`);
-  const image = absoluteUrl(event.flyer_url || "/og-logo");
+  const image = absoluteUrl(event.flyer_url || "/og-home.jpg");
 
   return {
-    title,
+    title: { absolute: title },
     description,
     alternates: { canonical: canonicalUrl },
     openGraph: {
@@ -45,6 +44,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       type: "website",
       url: canonicalUrl,
       images: [{ url: image, width: 1200, height: 1500, alt: `Flyer de ${event.title}` }]
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [image]
     }
   };
 }
@@ -62,28 +67,59 @@ export default async function EventDetailPage({ params }: PageProps) {
   );
   const isSoldOut = Boolean(event.sold_out);
   const hasLastTickets = Boolean(event.last_tickets) && !isSoldOut;
-  const metadataDescription = `${event.title}${event.venue_name ? ` en ${event.venue_name}` : ""}. Lineup, ubicación y compra oficial.`;
+  const seoDescription = buildSeoDescription(event);
+  const aboutEvent = buildAboutEvent(event);
+  const faqItems = buildEventFaq(event, isSoldOut);
+  const eventUrl = absoluteUrl(`/eventos/${event.slug}`);
+  const goUrl = absoluteUrl(`/go/${event.slug}`);
+  const eventImage = absoluteUrl(event.flyer_url || "/og-home.jpg");
+  const venueName = event.venue_name || "Venue a confirmar";
 
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "MusicEvent",
     name: event.title,
-    description: metadataDescription,
+    description: seoDescription,
+    url: eventUrl,
     startDate: event.starts_at,
+    endDate: event.end_at || undefined,
     eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
     eventStatus: "https://schema.org/EventScheduled",
-    image: [absoluteUrl(event.flyer_url || "/og-logo")],
+    image: [eventImage],
     location: {
       "@type": "Place",
-      name: event.venue_name || "Venue a confirmar",
-      address: event.venue_address || event.city || "Argentina"
+      name: venueName,
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: event.venue_address || undefined,
+        addressLocality: event.city || siteConfig.defaultCity,
+        addressRegion: event.province || undefined,
+        addressCountry: "AR"
+      }
     },
-    performer: event.lineup?.map((artist) => ({ "@type": "Person", name: artist })),
+    performer: event.lineup?.map((artist) => ({ "@type": "MusicGroup", name: artist })),
+    organizer: {
+      "@type": "Organization",
+      name: "ElectroTickets",
+      url: siteConfig.url
+    },
     offers: {
       "@type": "Offer",
-      url: `${siteConfig.url}/go/${event.slug}`,
+      url: goUrl,
       availability: isSoldOut ? "https://schema.org/SoldOut" : "https://schema.org/InStock"
     }
+  };
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqItems.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.answer
+      }
+    }))
   };
 
   return (
@@ -91,6 +127,7 @@ export default async function EventDetailPage({ params }: PageProps) {
       <SiteHeader />
       <main className="px-4 py-10 pb-28 sm:px-6 sm:pb-10 lg:px-8">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.9fr_1.1fr]">
           <div className="lg:sticky lg:top-24 lg:self-start">
             <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 shadow-2xl shadow-black/30">
@@ -167,6 +204,11 @@ export default async function EventDetailPage({ params }: PageProps) {
             </div>
 
             <div className="glass rounded-[2rem] p-6 sm:p-8">
+              <h2 className="text-2xl font-black">Sobre el evento</h2>
+              <p className="mt-4 text-sm leading-7 text-white/62">{aboutEvent}</p>
+            </div>
+
+            <div className="glass rounded-[2rem] p-6 sm:p-8">
               <h2 className="text-2xl font-black">¿Tenés dudas sobre este evento?</h2>
               <p className="mt-3 text-sm leading-6 text-white/55">
                 Escribime por WhatsApp para consultar por la fecha o sumate al grupo de difusión para recibir próximos eventos.
@@ -206,6 +248,23 @@ export default async function EventDetailPage({ params }: PageProps) {
                 <StepCard number="3" title="Finalizá en Bombo" description="La compra y emisión del ticket se completan fuera de ElectroTickets." />
               </div>
             </details>
+
+            <div className="glass rounded-[2rem] p-6 sm:p-8">
+              <h2 className="text-2xl font-black">Preguntas frecuentes del evento</h2>
+              <div className="mt-5 divide-y divide-white/10">
+                {faqItems.map((item) => (
+                  <details key={item.question} className="group py-4 first:pt-0 last:pb-0">
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-bold text-white marker:hidden">
+                      <span>{item.question}</span>
+                      <span className="text-xl text-white/45 transition group-open:rotate-45" aria-hidden="true">
+                        +
+                      </span>
+                    </summary>
+                    <p className="mt-3 text-sm leading-6 text-white/55">{item.answer}</p>
+                  </details>
+                ))}
+              </div>
+            </div>
 
             {event.lineup?.length ? (
               <div className="glass rounded-[2rem] p-6 sm:p-8">
@@ -252,6 +311,78 @@ export default async function EventDetailPage({ params }: PageProps) {
       <SiteFooter />
     </>
   );
+}
+
+function buildSeoTitle(event: EventRecord) {
+  return `${buildEventTitleWithVenue(event)} | Comprar entradas · ElectroTickets`;
+}
+
+function buildSeoDescription(event: EventRecord) {
+  const venue = event.venue_name?.trim();
+
+  if (!venue) {
+    return `Comprá entradas para ${event.title}. Fecha, ubicación, links oficiales de Bombo y consulta por mesas VIP desde ElectroTickets.`;
+  }
+
+  return `Comprá entradas para ${event.title} en ${venue}. Fecha, ubicación, links oficiales de Bombo y consulta por mesas VIP desde ElectroTickets.`;
+}
+
+function buildAboutEvent(event: EventRecord) {
+  if (event.description?.trim()) return event.description.trim();
+
+  const venue = event.venue_name?.trim() || event.city || siteConfig.defaultCity;
+  const genre = event.genre || "música electrónica";
+  const lineup = event.lineup?.length ? ` con ${event.lineup.join(", ")}` : "";
+
+  return `${event.title} llega a ${venue} con una propuesta de ${genre}${lineup}. En esta página encontrás la fecha, ubicación, lineup y el acceso oficial para comprar tus entradas desde ElectroTickets.`;
+}
+
+function buildEventFaq(event: EventRecord, isSoldOut: boolean): EventFaqItem[] {
+  const venue = event.venue_name?.trim() || event.city || "el venue a confirmar";
+  const buyAnswer = isSoldOut
+    ? `La fecha figura como Sold Out. Podés consultar por WhatsApp si hay novedades o alternativas disponibles para ${event.title}.`
+    : `Tocá "Comprar tickets" y te llevamos al link oficial de Bombo para comprar entradas de ${event.title}. La compra se completa de forma externa en Bombo.`;
+
+  return [
+    {
+      question: `¿Dónde comprar entradas para ${event.title}?`,
+      answer: buyAnswer
+    },
+    {
+      question: `¿Cuándo es ${event.title}?`,
+      answer: `${event.title} es el ${formatEventLongDate(event.starts_at)}.`
+    },
+    {
+      question: `¿Dónde es ${event.title}?`,
+      answer: `El evento se realiza en ${venue}${event.venue_address ? `, en ${event.venue_address}` : ""}.`
+    },
+    {
+      question: "¿Puedo consultar por WhatsApp?",
+      answer: "Sí. Podés escribir por WhatsApp para consultar por la fecha o sumarte al grupo de difusión para recibir próximos eventos."
+    }
+  ];
+}
+
+function buildEventTitleWithVenue(event: EventRecord) {
+  const venue = event.venue_name?.trim();
+
+  if (!venue) {
+    const city = event.city?.trim();
+    return city && !includesNormalized(event.title, city) ? `${event.title} en ${city}` : event.title;
+  }
+
+  return includesNormalized(event.title, venue) ? event.title : `${event.title} en ${venue}`;
+}
+
+function includesNormalized(value: string, search: string) {
+  return normalizeForComparison(value).includes(normalizeForComparison(search));
+}
+
+function normalizeForComparison(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
 }
 
 function InfoCard({ label, value }: { label: string; value: string }) {

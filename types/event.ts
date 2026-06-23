@@ -31,3 +31,8 @@ export type EventInput = Partial<EventRecord> & {
   starts_at: string;
   bombo_url: string;
 };
+
+export type EventFaqItem = {
+  question: string;
+  answer: string;
+};
