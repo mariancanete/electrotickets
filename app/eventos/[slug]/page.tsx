@@ -204,6 +204,11 @@ export default async function EventDetailPage({ params }: PageProps) {
             </div>
 
             <div className="glass rounded-[2rem] p-6 sm:p-8">
+              <h2 className="text-2xl font-black">Sobre el evento</h2>
+              <p className="mt-4 text-sm leading-7 text-white/62">{aboutEvent}</p>
+            </div>
+
+            <div className="glass rounded-[2rem] p-6 sm:p-8">
               <h2 className="text-2xl font-black">¿Tenés dudas sobre este evento?</h2>
               <p className="mt-3 text-sm leading-6 text-white/55">
                 Escribime por WhatsApp para consultar por la fecha o sumate al grupo de difusión para recibir próximos eventos.
@@ -244,6 +249,23 @@ export default async function EventDetailPage({ params }: PageProps) {
               </div>
             </details>
 
+            <div className="glass rounded-[2rem] p-6 sm:p-8">
+              <h2 className="text-2xl font-black">Preguntas frecuentes del evento</h2>
+              <div className="mt-5 divide-y divide-white/10">
+                {faqItems.map((item) => (
+                  <details key={item.question} className="group py-4 first:pt-0 last:pb-0">
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-bold text-white marker:hidden">
+                      <span>{item.question}</span>
+                      <span className="text-xl text-white/45 transition group-open:rotate-45" aria-hidden="true">
+                        +
+                      </span>
+                    </summary>
+                    <p className="mt-3 text-sm leading-6 text-white/55">{item.answer}</p>
+                  </details>
+                ))}
+              </div>
+            </div>
+
             {event.lineup?.length ? (
               <div className="glass rounded-[2rem] p-6 sm:p-8">
                 <h2 className="text-2xl font-black">Lineup</h2>
@@ -274,30 +296,6 @@ export default async function EventDetailPage({ params }: PageProps) {
             ) : null}
           </section>
         </div>
-
-        <section className="mx-auto mt-8 grid max-w-7xl gap-8 lg:grid-cols-2">
-          <div className="glass rounded-[2rem] p-6 sm:p-8">
-            <h2 className="text-2xl font-black">Sobre el evento</h2>
-            <p className="mt-4 text-sm leading-7 text-white/62">{aboutEvent}</p>
-          </div>
-
-          <div className="glass rounded-[2rem] p-6 sm:p-8">
-            <h2 className="text-2xl font-black">Preguntas frecuentes del evento</h2>
-            <div className="mt-5 divide-y divide-white/10">
-              {faqItems.map((item) => (
-                <details key={item.question} className="group py-4 first:pt-0 last:pb-0">
-                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-bold text-white marker:hidden">
-                    <span>{item.question}</span>
-                    <span className="text-xl text-white/45 transition group-open:rotate-45" aria-hidden="true">
-                      +
-                    </span>
-                  </summary>
-                  <p className="mt-3 text-sm leading-6 text-white/55">{item.answer}</p>
-                </details>
-              ))}
-            </div>
-          </div>
-        </section>
       </main>
 
       <div className="fixed inset-x-4 bottom-4 z-50 sm:hidden">
