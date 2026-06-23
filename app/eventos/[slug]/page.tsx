@@ -257,28 +257,6 @@ export default async function EventDetailPage({ params }: PageProps) {
               </div>
             ) : null}
 
-            <div className="glass rounded-[2rem] p-6 sm:p-8">
-              <h2 className="text-2xl font-black">Sobre el evento</h2>
-              <p className="mt-4 text-sm leading-7 text-white/62">{aboutEvent}</p>
-            </div>
-
-            <div className="glass rounded-[2rem] p-6 sm:p-8">
-              <h2 className="text-2xl font-black">Preguntas frecuentes</h2>
-              <div className="mt-5 divide-y divide-white/10">
-                {faqItems.map((item) => (
-                  <details key={item.question} className="group py-4 first:pt-0 last:pb-0">
-                    <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-bold text-white marker:hidden">
-                      <span>{item.question}</span>
-                      <span className="text-xl text-white/45 transition group-open:rotate-45" aria-hidden="true">
-                        +
-                      </span>
-                    </summary>
-                    <p className="mt-3 text-sm leading-6 text-white/55">{item.answer}</p>
-                  </details>
-                ))}
-              </div>
-            </div>
-
             {embedUrl ? (
               <div className="glass rounded-[2rem] p-4 sm:p-5">
                 <h2 className="px-2 pb-4 text-2xl font-black">Videoset</h2>
@@ -296,6 +274,30 @@ export default async function EventDetailPage({ params }: PageProps) {
             ) : null}
           </section>
         </div>
+
+        <section className="mx-auto mt-8 grid max-w-7xl gap-8 lg:grid-cols-2">
+          <div className="glass rounded-[2rem] p-6 sm:p-8">
+            <h2 className="text-2xl font-black">Sobre el evento</h2>
+            <p className="mt-4 text-sm leading-7 text-white/62">{aboutEvent}</p>
+          </div>
+
+          <div className="glass rounded-[2rem] p-6 sm:p-8">
+            <h2 className="text-2xl font-black">Preguntas frecuentes del evento</h2>
+            <div className="mt-5 divide-y divide-white/10">
+              {faqItems.map((item) => (
+                <details key={item.question} className="group py-4 first:pt-0 last:pb-0">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-bold text-white marker:hidden">
+                    <span>{item.question}</span>
+                    <span className="text-xl text-white/45 transition group-open:rotate-45" aria-hidden="true">
+                      +
+                    </span>
+                  </summary>
+                  <p className="mt-3 text-sm leading-6 text-white/55">{item.answer}</p>
+                </details>
+              ))}
+            </div>
+          </div>
+        </section>
       </main>
 
       <div className="fixed inset-x-4 bottom-4 z-50 sm:hidden">
