@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { formatEventLongDate } from "@/lib/dates";
+import type { EventRecord } from "@/types/event";
 import { getEventBySlug, getPublishedEvents } from "@/lib/events";
 import { absoluteUrl, bomboAppLinks, siteConfig } from "@/lib/site";
 import { getYoutubeEmbedUrl } from "@/lib/video";
@@ -27,12 +28,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return { title: "Evento no encontrado" };
   }
 
-  const title = `${event.title} · Tickets`;
+  const title = buildSeoTitle(event);
   const venue = event.venue_name || "venue a confirmar";
   const city = event.city || siteConfig.defaultCity;
-  const description = `Comprá tickets para ${event.title} en ${venue}, ${city}. Información del evento y compra oficial desde ElectroTickets.`;
+  const description = `Comprá entradas para ${event.title} en ${venue}, ${city}. Fecha, ubicación, links oficiales de Bombo y consulta por mesas VIP desde ElectroTickets.`;
   const canonicalUrl = absoluteUrl(`/eventos/${event.slug}`);
-  const image = absoluteUrl(event.flyer_url || "/og-logo");
+  const image = absoluteUrl(event.flyer_url || "/og-home.png");
 
   return {
     title,
@@ -61,27 +62,47 @@ export default async function EventDetailPage({ params }: PageProps) {
     `Hola Marian, quiero consultar por ${event.title}. ¿Hay disponibilidad de entradas o mesas VIP?`
   );
   const hasLastTickets = Boolean(event.last_tickets);
-  const metadataDescription = `${event.title}${event.venue_name ? ` en ${event.venue_name}` : ""}. Lineup, ubicación y compra oficial.`;
+  const isSoldOut = Boolean(event.sold_out);
+  const eventDate = formatEventLongDate(event.starts_at);
+  const aboutParagraphs = buildAboutEventParagraphs(event, eventDate, isSoldOut);
+  const eventFaq = buildEventFaq(event, isSoldOut);
+  const metadataDescription = buildEventDescription(event, eventDate);
 
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "MusicEvent",
+    "@type": "Event",
     name: event.title,
     description: metadataDescription,
     startDate: event.starts_at,
+    ...(event.end_at ? { endDate: event.end_at } : {}),
     eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
     eventStatus: "https://schema.org/EventScheduled",
-    image: [absoluteUrl(event.flyer_url || "/og-logo")],
+    image: [absoluteUrl(event.flyer_url || "/og-home.png")],
     location: {
       "@type": "Place",
       name: event.venue_name || "Venue a confirmar",
-      address: event.venue_address || event.city || "Argentina"
+      ...(event.venue_address || event.city || event.province
+        ? {
+            address: {
+              "@type": "PostalAddress",
+              streetAddress: event.venue_address || undefined,
+              addressLocality: event.city || siteConfig.defaultCity,
+              addressRegion: event.province || undefined,
+              addressCountry: "AR"
+            }
+          }
+        : {})
     },
-    performer: event.lineup?.map((artist) => ({ "@type": "Person", name: artist })),
+    ...(event.lineup?.length ? { performer: event.lineup.map((artist) => ({ "@type": "Person", name: artist })) } : {}),
+    organizer: {
+      "@type": "Organization",
+      name: "ElectroTickets",
+      url: siteConfig.url
+    },
     offers: {
       "@type": "Offer",
       url: `${siteConfig.url}/go/${event.slug}`,
-      availability: "https://schema.org/InStock"
+      availability: isSoldOut ? "https://schema.org/SoldOut" : "https://schema.org/InStock"
     }
   };
 
@@ -165,7 +186,16 @@ export default async function EventDetailPage({ params }: PageProps) {
               </div>
             </div>
 
-            <div className="glass rounded-[2rem] p-6 sm:p-8">
+            <section className="glass rounded-[2rem] p-6 sm:p-8">
+              <h2 className="text-2xl font-black">Sobre el evento</h2>
+              <div className="mt-4 space-y-4 text-sm leading-7 text-white/58">
+                {aboutParagraphs.map((paragraph) => (
+                  <p key={paragraph}>{paragraph}</p>
+                ))}
+              </div>
+            </section>
+
+            <section className="glass rounded-[2rem] p-6 sm:p-8">
               <h2 className="text-2xl font-black">¿Tenés dudas sobre este evento?</h2>
               <p className="mt-3 text-sm leading-6 text-white/55">
                 Escribime por WhatsApp para consultar por la fecha o sumate al grupo de difusión para recibir próximos eventos.
@@ -190,7 +220,7 @@ export default async function EventDetailPage({ params }: PageProps) {
                   Grupo de difusión
                 </a>
               </div>
-            </div>
+            </section>
 
             <details className="group glass rounded-[2rem] p-6 sm:p-8">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-2xl font-black marker:hidden">
@@ -205,6 +235,21 @@ export default async function EventDetailPage({ params }: PageProps) {
                 <StepCard number="3" title="Finalizá en Bombo" description="La compra y emisión del ticket se completan fuera de ElectroTickets." />
               </div>
             </details>
+
+            <section className="glass rounded-[2rem] p-6 sm:p-8">
+              <h2 className="text-2xl font-black">Preguntas frecuentes del evento</h2>
+              <div className="mt-5 divide-y divide-white/10 overflow-hidden rounded-3xl border border-white/10 bg-black/20">
+                {eventFaq.map((item) => (
+                  <details key={item.question} className="group p-4 open:bg-white/[0.03]">
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-bold text-white marker:hidden">
+                      <span>{item.question}</span>
+                      <span className="text-lg text-white/45 transition group-open:rotate-45" aria-hidden="true">+</span>
+                    </summary>
+                    <p className="mt-3 text-sm leading-6 text-white/55">{item.answer}</p>
+                  </details>
+                ))}
+              </div>
+            </section>
 
             {event.lineup?.length ? (
               <div className="glass rounded-[2rem] p-6 sm:p-8">
@@ -270,4 +315,82 @@ function StepCard({ number, title, description }: { number: string; title: strin
       <p className="mt-2 text-sm leading-6 text-white/52">{description}</p>
     </div>
   );
+}
+
+
+function normalizeForSearch(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
+function buildSeoTitle(event: EventRecord) {
+  const venue = event.venue_name?.trim();
+  const city = event.city || siteConfig.defaultCity;
+  const normalizedTitle = normalizeForSearch(event.title);
+  const normalizedVenue = venue ? normalizeForSearch(venue) : "";
+  const alreadyMentionsVenue = Boolean(venue && normalizedTitle.includes(normalizedVenue));
+  const titleWithVenue = venue && !alreadyMentionsVenue ? `${event.title} en ${venue}` : event.title;
+
+  return `Entradas ${titleWithVenue} ${city} | ElectroTickets`;
+}
+
+function buildEventDescription(event: EventRecord, eventDate: string) {
+  const details = [
+    `${event.title}${event.venue_name ? ` en ${event.venue_name}` : ""}`,
+    eventDate,
+    event.genre ? `género ${event.genre}` : null,
+    event.lineup?.length ? `lineup: ${event.lineup.join(", ")}` : null,
+    event.venue_address || event.city ? `ubicación: ${event.venue_address || event.city}` : null
+  ].filter(Boolean);
+
+  return `${details.join(". ")}. Compra oficial mediante Bombo y consultas por WhatsApp desde ElectroTickets.`;
+}
+
+function buildAboutEventParagraphs(event: EventRecord, eventDate: string, isSoldOut: boolean) {
+  const venueText = event.venue_name ? ` llega a ${event.venue_name}, ${event.city || siteConfig.defaultCity},` : "";
+  const detailParts = [
+    "la información principal de la fecha",
+    event.venue_name || event.venue_address ? "ubicación" : null,
+    event.genre ? "género musical" : null,
+    event.lineup?.length ? "lineup" : null,
+    "y acceso oficial de compra mediante Bombo"
+  ].filter(Boolean);
+
+  const first = `${event.title}${venueText} el ${eventDate}. En ElectroTickets encontrás ${detailParts.join(", ").replace(", y", " y")}.`;
+  const second = isSoldOut
+    ? `Si buscás mesas VIP o alternativas para ${event.title}${event.venue_name ? ` en ${event.venue_name}` : ""}, podés consultar por WhatsApp desde esta página.`
+    : `Si buscás entradas para ${event.title}${event.venue_name ? ` en ${event.venue_name}` : ""}, podés comprar desde el botón principal o consultar por WhatsApp la disponibilidad de entradas o mesas VIP.`;
+
+  return [first, second];
+}
+
+function buildEventFaq(event: EventRecord, isSoldOut: boolean) {
+  const venue = event.venue_name || "el venue informado para la fecha";
+  const locationParts = [event.venue_address, event.city || siteConfig.defaultCity].filter(Boolean);
+  const locationAnswer = event.map_url
+    ? `El evento se realiza en ${venue}, ${locationParts.join(", ")}. También podés abrir la ubicación desde el botón “Ver ubicación”.`
+    : `El evento se realiza en ${venue}${locationParts.length ? `, ${locationParts.join(", ")}` : ""}.`;
+
+  return [
+    {
+      question: `¿Dónde comprar entradas para ${event.title}?`,
+      answer: isSoldOut
+        ? "El evento figura como Sold Out. Podés consultar por WhatsApp si hay disponibilidad de mesas VIP o alternativas."
+        : "Podés acceder al link oficial de compra desde ElectroTickets. La compra se completa en Bombo."
+    },
+    {
+      question: `¿Dónde es ${event.title}?`,
+      answer: locationAnswer
+    },
+    {
+      question: "¿Necesito la app de Bombo para comprar?",
+      answer: "Sí. Para completar la compra necesitás tener instalada la app de Bombo."
+    },
+    {
+      question: "¿Puedo consultar por mesas VIP?",
+      answer: "Sí. Podés consultar disponibilidad de entradas o mesas VIP por WhatsApp desde esta página."
+    }
+  ];
 }
