@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const image = absoluteUrl(event.flyer_url || "/og-home.jpg");
 
   return {
-    title,
+    title: { absolute: title },
     description,
     alternates: { canonical: canonicalUrl },
     openGraph: {
@@ -314,38 +314,43 @@ export default async function EventDetailPage({ params }: PageProps) {
 }
 
 function buildSeoTitle(event: EventRecord) {
-  const city = event.city || siteConfig.defaultCity;
-  return `${event.title} en ${city} | Comprar tickets`;
+  const place = getEventPrimaryPlace(event);
+  const titleWithPlace = shouldAppendPlaceToTitle(event.title, place)
+    ? `${event.title} en ${place}`
+    : event.title;
+
+  return `${titleWithPlace} | Comprar entradas · ${siteConfig.name}`;
 }
 
 function buildSeoDescription(event: EventRecord) {
-  const venue = event.venue_name || "venue a confirmar";
-  const city = event.city || siteConfig.defaultCity;
-  const genre = event.genre || "música electrónica";
-  return `Comprá tickets para ${event.title} en ${venue}, ${city}. Fecha, lineup, ubicación e información oficial de ${genre} en ElectroTickets.`;
+  const place = getEventPrimaryPlace(event);
+
+  if (!place) {
+    return `Comprá entradas para ${event.title}. Fecha, ubicación, links oficiales de Bombo y consulta por mesas VIP desde ElectroTickets.`;
+  }
+
+  return `Comprá entradas para ${event.title} en ${place}. Fecha, ubicación, links oficiales de Bombo y consulta por mesas VIP desde ElectroTickets.`;
 }
 
 function buildAboutEvent(event: EventRecord) {
   if (event.description?.trim()) return event.description.trim();
 
-  const city = event.city || siteConfig.defaultCity;
-  const venue = event.venue_name || "venue a confirmar";
+  const place = getEventPrimaryPlace(event) || "venue a confirmar";
   const genre = event.genre || "música electrónica";
   const lineup = event.lineup?.length ? ` con ${event.lineup.join(", ")}` : "";
 
-  return `${event.title} llega a ${venue}, ${city}, con una propuesta de ${genre}${lineup}. En esta página encontrás la fecha, ubicación, lineup y el acceso oficial para comprar tus tickets desde ElectroTickets.`;
+  return `${event.title} llega a ${place}, con una propuesta de ${genre}${lineup}. En esta página encontrás la fecha, ubicación, lineup y el acceso oficial para comprar tus entradas desde ElectroTickets.`;
 }
 
 function buildEventFaq(event: EventRecord, isSoldOut: boolean): EventFaqItem[] {
-  const venue = event.venue_name || "venue a confirmar";
-  const city = event.city || siteConfig.defaultCity;
+  const place = getEventPrimaryPlace(event) || "venue a confirmar";
   const buyAnswer = isSoldOut
     ? `La fecha figura como Sold Out. Podés consultar por WhatsApp si hay novedades o alternativas disponibles para ${event.title}.`
-    : `Tocá "Comprar tickets" y te llevamos al link oficial de Bombo para ${event.title}. La compra se completa de forma externa en Bombo.`;
+    : `Tocá "Comprar entradas" y te llevamos al link oficial de Bombo para ${event.title}. La compra se completa de forma externa en Bombo.`;
 
   return [
     {
-      question: `¿Dónde comprar tickets para ${event.title}?`,
+      question: `¿Dónde comprar entradas para ${event.title}?`,
       answer: buyAnswer
     },
     {
@@ -354,13 +359,30 @@ function buildEventFaq(event: EventRecord, isSoldOut: boolean): EventFaqItem[] {
     },
     {
       question: `¿Dónde se realiza ${event.title}?`,
-      answer: `${event.title} se realiza en ${venue}, ${city}${event.venue_address ? `, en ${event.venue_address}` : ""}.`
+      answer: `El evento se realiza en ${place}${event.venue_address ? `, en ${event.venue_address}` : ""}.`
     },
     {
       question: "¿Puedo consultar por WhatsApp?",
       answer: "Sí. Podés escribir por WhatsApp para consultar por la fecha o sumarte al grupo de difusión para recibir próximos eventos."
     }
   ];
+}
+
+function getEventPrimaryPlace(event: EventRecord) {
+  return event.venue_name?.trim() || event.city?.trim() || "";
+}
+
+function shouldAppendPlaceToTitle(title: string, place: string) {
+  if (!place) return false;
+
+  return !normalizeText(title).includes(normalizeText(place));
+}
+
+function normalizeText(text: string) {
+  return text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase("es-AR");
 }
 
 function InfoCard({ label, value }: { label: string; value: string }) {
