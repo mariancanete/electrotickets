@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { isUpcomingEvent } from "@/lib/event-dates";
 import { parseJsonResponse } from "@/lib/http";
 import type { EventPerformance, EventSaleRecord } from "@/types/analytics";
 import type { VenueRecord, GenreRecord } from "@/types/catalog";
@@ -122,6 +123,16 @@ export function AdminDashboard({
     [genres]
   );
 
+  const [listPeriod, setListPeriod] = useState<PeriodFilter>("upcoming");
+
+  const visibleEvents = useMemo(
+    () =>
+      sortedEvents.filter((event) =>
+        listPeriod === "all" ? true : listPeriod === "upcoming" ? isUpcomingEvent(event) : !isUpcomingEvent(event)
+      ),
+    [sortedEvents, listPeriod]
+  );
+
   const salesByEvent = useMemo(
     () =>
       sales.reduce<Record<string, number>>((acc, sale) => {
@@ -145,6 +156,7 @@ export function AdminDashboard({
 
           return {
             event,
+            upcoming: isUpcomingEvent(event),
             clicks,
             clicksLast7Days: stats?.clicksLast7Days ?? 0,
             ticketsSold,
@@ -581,7 +593,27 @@ export function AdminDashboard({
             <h2 className="text-2xl font-black">Eventos cargados</h2>
             <p className="text-sm text-white/45">{venues.length} venues · {genres.length} géneros guardados</p>
           </div>
-          {sortedEvents.map((event) => (
+          <div className="inline-flex rounded-full border border-white/10 bg-black/25 p-1">
+            {periodOptions.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => setListPeriod(option.value)}
+                aria-pressed={listPeriod === option.value}
+                className={`rounded-full px-4 py-1.5 text-xs font-bold transition ${
+                  listPeriod === option.value ? "bg-white text-black" : "text-white/60 hover:text-white"
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+          {visibleEvents.length ? null : (
+            <p className="text-sm text-white/45">
+              No hay eventos {listPeriod === "upcoming" ? "vigentes" : "finalizados"} cargados.
+            </p>
+          )}
+          {visibleEvents.map((event) => (
             <article key={event.id} className="glass grid gap-4 rounded-[1.6rem] p-4 sm:grid-cols-[92px_1fr]">
               <div className="aspect-square overflow-hidden rounded-2xl bg-white/5">
                 {/* Miniatura del panel privado: el flyer puede venir de cualquier host pegado
@@ -630,6 +662,7 @@ function topKey(counts?: Record<string, number>) {
 
 type ReconciliationRow = {
   event: EventRecord;
+  upcoming: boolean;
   clicks: number;
   clicksLast7Days: number;
   ticketsSold: number;
@@ -637,6 +670,14 @@ type ReconciliationRow = {
   topPlacement: string | null;
   topSource: string | null;
 };
+
+type PeriodFilter = "upcoming" | "past" | "all";
+
+const periodOptions: { value: PeriodFilter; label: string }[] = [
+  { value: "upcoming", label: "Vigentes" },
+  { value: "past", label: "Finalizados" },
+  { value: "all", label: "Todos" }
+];
 
 /**
  * Panel de conversión. Cruza los clics hacia Bombo con las ventas que se cargan a mano
@@ -664,19 +705,43 @@ function ConversionPanel({
     tickets_sold: ""
   });
 
+  // Por defecto solo las fechas vigentes: son las únicas sobre las que todavía se puede
+  // actuar. Las finalizadas siguen disponibles porque su histórico es lo que da la base
+  // de comparación, pero no tienen por qué ensuciar la vista del día a día.
+  const [period, setPeriod] = useState<PeriodFilter>("upcoming");
+
+  const visibleRows = useMemo(
+    () =>
+      reconciliation.filter((row) =>
+        period === "all" ? true : period === "upcoming" ? row.upcoming : !row.upcoming
+      ),
+    [reconciliation, period]
+  );
+
+  const hiddenCount = reconciliation.length - visibleRows.length;
+
+  // Los totales acompañan al filtro: mezclar clics de fechas viejas con las vigentes daba
+  // una tasa global que no describía ningún período concreto.
   const totals = useMemo(
     () =>
-      reconciliation.reduce(
+      visibleRows.reduce(
         (acc, row) => ({
           clicks: acc.clicks + row.clicks,
           tickets: acc.tickets + row.ticketsSold
         }),
         { clicks: 0, tickets: 0 }
       ),
-    [reconciliation]
+    [visibleRows]
   );
 
   const globalConversion = totals.clicks > 0 ? totals.tickets / totals.clicks : null;
+
+  // El selector de ventas también arranca por vigentes, que es donde se cargan a diario.
+  const saleEvents = useMemo(() => {
+    const upcoming = events.filter(isUpcomingEvent);
+    const past = events.filter((event) => !isUpcomingEvent(event));
+    return { upcoming, past };
+  }, [events]);
 
   return (
     <section className="glass mb-8 rounded-[2rem] p-5 sm:p-6">
@@ -696,6 +761,29 @@ function ConversionPanel({
             value={globalConversion === null ? "—" : `${(globalConversion * 100).toFixed(1)}%`}
           />
         </div>
+      </div>
+
+      <div className="mt-5 flex flex-wrap items-center gap-3">
+        <div className="inline-flex rounded-full border border-white/10 bg-black/25 p-1">
+          {periodOptions.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => setPeriod(option.value)}
+              aria-pressed={period === option.value}
+              className={`rounded-full px-4 py-1.5 text-xs font-bold transition ${
+                period === option.value ? "bg-white text-black" : "text-white/60 hover:text-white"
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+        {hiddenCount > 0 ? (
+          <p className="text-xs text-white/40">
+            {hiddenCount} {hiddenCount === 1 ? "fecha oculta" : "fechas ocultas"} por este filtro
+          </p>
+        ) : null}
       </div>
 
       {!analyticsReady ? (
@@ -719,11 +807,24 @@ function ConversionPanel({
           className="input"
         >
           <option value="">Elegí un evento</option>
-          {events.map((event) => (
-            <option key={event.id} value={event.id}>
-              {event.title}
-            </option>
-          ))}
+          {saleEvents.upcoming.length ? (
+            <optgroup label="Vigentes">
+              {saleEvents.upcoming.map((event) => (
+                <option key={event.id} value={event.id}>
+                  {event.title}
+                </option>
+              ))}
+            </optgroup>
+          ) : null}
+          {saleEvents.past.length ? (
+            <optgroup label="Finalizados">
+              {saleEvents.past.map((event) => (
+                <option key={event.id} value={event.id}>
+                  {event.title}
+                </option>
+              ))}
+            </optgroup>
+          ) : null}
         </select>
         <input
           type="date"
@@ -752,7 +853,7 @@ function ConversionPanel({
         <p className="mt-3 rounded-2xl bg-white/10 px-4 py-3 text-sm text-white/75">{message}</p>
       ) : null}
 
-      {reconciliation.length ? (
+      {visibleRows.length ? (
         <div className="mt-5 overflow-x-auto">
           <table className="w-full min-w-[640px] text-left text-sm">
             <thead className="text-xs uppercase tracking-[0.15em] text-white/40">
@@ -767,9 +868,16 @@ function ConversionPanel({
               </tr>
             </thead>
             <tbody className="divide-y divide-white/10">
-              {reconciliation.map((row) => (
+              {visibleRows.map((row) => (
                 <tr key={row.event.id}>
-                  <td className="py-3 pr-4 font-semibold text-white/85">{row.event.title}</td>
+                  <td className="py-3 pr-4 font-semibold text-white/85">
+                    {row.event.title}
+                    {row.upcoming ? null : (
+                      <span className="ml-2 rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-bold text-white/50">
+                        finalizado
+                      </span>
+                    )}
+                  </td>
                   <td className="py-3 pr-4 text-white/70">{row.clicks}</td>
                   <td className="py-3 pr-4 text-white/50">{row.clicksLast7Days}</td>
                   <td className="py-3 pr-4 text-white/70">{row.ticketsSold}</td>
@@ -783,6 +891,11 @@ function ConversionPanel({
             </tbody>
           </table>
         </div>
+      ) : reconciliation.length ? (
+        <p className="mt-5 text-sm leading-6 text-white/45">
+          No hay fechas {period === "upcoming" ? "vigentes" : "finalizadas"} con actividad registrada. Probá con
+          otro filtro para ver el resto.
+        </p>
       ) : (
         <p className="mt-5 text-sm leading-6 text-white/45">
           Todavía no hay clics registrados en la ventana de análisis. Los datos aparecen acá a medida que la gente
