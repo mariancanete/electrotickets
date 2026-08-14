@@ -1,20 +1,56 @@
 import { demoEvents } from "@/lib/demo-events";
+import { normalizeText } from "@/lib/slugify";
 import { getSupabaseAdminClient, getSupabasePublicClient, isSupabasePublicConfigured } from "@/lib/supabase";
 import type { EventRecord } from "@/types/event";
 
 const eventSelect = "*";
 
-export function isUpcomingEvent(event: Pick<EventRecord, "starts_at">) {
-  if (!event.starts_at) return false;
+/**
+ * Una fiesta que empieza a las 23:59 se sigue vendiendo esa madrugada. Cortar en
+ * `starts_at` sacaba el evento del sitio justo la noche en que la gente lo busca, así que
+ * se usa `end_at` cuando existe y, si no, el horario de inicio más esta gracia.
+ */
+const DEFAULT_DURATION_HOURS = 8;
+
+/** Cuánto tiempo se mantiene un evento pasado como landing indexable antes de archivarlo. */
+export const PAST_EVENT_WINDOW_DAYS = 120;
+
+function getEventEndTime(event: Pick<EventRecord, "starts_at" | "end_at">) {
+  if (event.end_at) {
+    const endsAt = new Date(event.end_at).getTime();
+    if (!Number.isNaN(endsAt)) return endsAt;
+  }
 
   const startsAt = new Date(event.starts_at).getTime();
-  if (Number.isNaN(startsAt)) return false;
+  if (Number.isNaN(startsAt)) return Number.NaN;
 
-  return startsAt > Date.now();
+  return startsAt + DEFAULT_DURATION_HOURS * 60 * 60 * 1000;
 }
 
-export function filterUpcomingEvents<T extends Pick<EventRecord, "starts_at">>(events: T[]) {
+export function isUpcomingEvent(event: Pick<EventRecord, "starts_at" | "end_at">) {
+  if (!event.starts_at) return false;
+
+  const endTime = getEventEndTime(event);
+  if (Number.isNaN(endTime)) return false;
+
+  return endTime > Date.now();
+}
+
+export function isPastEvent(event: Pick<EventRecord, "starts_at" | "end_at">) {
+  return Boolean(event.starts_at) && !isUpcomingEvent(event);
+}
+
+export function filterUpcomingEvents<T extends Pick<EventRecord, "starts_at" | "end_at">>(events: T[]) {
   return events.filter(isUpcomingEvent);
+}
+
+/** Eventos ya terminados pero todavía recientes: sus URLs conservan tráfico y backlinks. */
+export function filterRecentPastEvents<T extends Pick<EventRecord, "starts_at" | "end_at">>(events: T[]) {
+  const cutoff = Date.now() - PAST_EVENT_WINDOW_DAYS * 24 * 60 * 60 * 1000;
+
+  return events
+    .filter((event) => isPastEvent(event) && new Date(event.starts_at).getTime() > cutoff)
+    .sort((a, b) => new Date(b.starts_at).getTime() - new Date(a.starts_at).getTime());
 }
 
 export async function getPublishedEvents(): Promise<EventRecord[]> {
@@ -43,6 +79,11 @@ export async function getPublishedEvents(): Promise<EventRecord[]> {
 export async function getUpcomingPublishedEvents(): Promise<EventRecord[]> {
   const events = await getPublishedEvents();
   return filterUpcomingEvents(events);
+}
+
+export async function getRecentPastPublishedEvents(): Promise<EventRecord[]> {
+  const events = await getPublishedEvents();
+  return filterRecentPastEvents(events);
 }
 
 export async function getEventBySlug(slug: string, includeUnpublished = false): Promise<EventRecord | null> {
@@ -79,6 +120,72 @@ export async function getAdminEvents(): Promise<EventRecord[]> {
     console.error("Admin events fallback", error);
     return demoEvents.sort(sortEvents);
   }
+}
+
+/**
+ * Eventos sugeridos al pie de una fecha. Antes la página de evento era un callejón sin
+ * salida: quien no compraba se iba del sitio.
+ *
+ * Prioriza mismo género, después mismo venue, después cercanía de fecha. Un evento que
+ * comparte género y venue puntúa más alto que uno que solo comparte fecha.
+ */
+export function getRelatedEvents(event: EventRecord, candidates: EventRecord[], limit = 3) {
+  const normalize = normalizeText;
+  const genre = normalize(event.genre);
+  const venue = normalize(event.venue_name);
+  const city = normalize(event.city);
+  const startsAt = new Date(event.starts_at).getTime();
+  const lineup = new Set((event.lineup || []).map(normalize).filter(Boolean));
+
+  return candidates
+    .filter((candidate) => candidate.id !== event.id)
+    .map((candidate) => {
+      let score = 0;
+
+      if (genre && normalize(candidate.genre) === genre) score += 40;
+      if (venue && normalize(candidate.venue_name) === venue) score += 25;
+      if (city && normalize(candidate.city) === city) score += 10;
+      if ((candidate.lineup || []).some((artist) => lineup.has(normalize(artist)))) score += 35;
+
+      const daysApart = Math.abs(new Date(candidate.starts_at).getTime() - startsAt) / (24 * 60 * 60 * 1000);
+      if (daysApart <= 7) score += 20;
+      else if (daysApart <= 21) score += 12;
+      else if (daysApart <= 45) score += 5;
+
+      if (candidate.featured) score += 8;
+      if (candidate.sold_out) score -= 15;
+
+      return { candidate, score };
+    })
+    .sort((a, b) => b.score - a.score || new Date(a.candidate.starts_at).getTime() - new Date(b.candidate.starts_at).getTime())
+    .slice(0, limit)
+    .map((item) => item.candidate);
+}
+
+const weekdayFormatter = new Intl.DateTimeFormat("en-US", {
+  timeZone: "America/Argentina/Buenos_Aires",
+  weekday: "short"
+});
+
+/**
+ * Agrupaciones comerciales de la agenda. Solo dos, deliberadamente: con más secciones, la
+ * mayoría quedaría vacía con el inventario actual y una sección vacía se ve peor que
+ * ninguna.
+ */
+export function getWeekendEvents(events: EventRecord[]) {
+  const horizon = Date.now() + 7 * 24 * 60 * 60 * 1000;
+  const weekendDays = new Set(["Fri", "Sat", "Sun"]);
+
+  return events.filter((event) => {
+    const startsAt = new Date(event.starts_at).getTime();
+    if (Number.isNaN(startsAt) || startsAt > horizon) return false;
+
+    return weekendDays.has(weekdayFormatter.format(new Date(event.starts_at)));
+  });
+}
+
+export function getLastTicketsEvents(events: EventRecord[]) {
+  return events.filter((event) => event.last_tickets && !event.sold_out);
 }
 
 function sortEvents(a: EventRecord, b: EventRecord) {

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { EventBrowser } from "@/components/event-browser";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -27,7 +28,9 @@ export default async function FeaturedEventsPage() {
               Fechas seleccionadas para comprar desde links oficiales y encontrar rápido tu próxima salida.
             </p>
           </div>
-          <EventBrowser events={featuredEvents} />
+          <Suspense fallback={null}>
+            <EventBrowser events={featuredEvents} placement="featured_list" />
+          </Suspense>
         </div>
       </main>
       <SiteFooter />

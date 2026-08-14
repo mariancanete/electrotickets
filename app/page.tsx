@@ -1,16 +1,23 @@
 import type { Metadata } from "next";
-import { EventCard } from "@/components/event-card";
+import Link from "next/link";
+import { EventRow } from "@/components/event-row";
 import { Hero } from "@/components/hero";
-import { MotionReveal } from "@/components/motion-reveal";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import { getUpcomingPublishedEvents } from "@/lib/events";
+import { VipTables, WhatsappAlerts } from "@/components/whatsapp-alerts";
+import type { CtaPlacement } from "@/lib/analytics";
+import { getLastTicketsEvents, getUpcomingPublishedEvents, getWeekendEvents } from "@/lib/events";
 import { absoluteUrl, siteConfig } from "@/lib/site";
+import { buildVipWhatsappMessage, whatsappUrlOrGroup } from "@/lib/whatsapp";
+import type { EventRecord } from "@/types/event";
 
 export const revalidate = 60;
 
 const homeTitle = "ElectroTickets · Tickets de electrónica en Argentina";
 const homeImage = absoluteUrl("/og-logo");
+
+/** Cuántas fechas se listan en la home antes de derivar a la agenda completa. */
+const HOME_AGENDA_LIMIT = 8;
 
 export const metadata: Metadata = {
   title: homeTitle,
@@ -28,10 +35,22 @@ export const metadata: Metadata = {
 
 export default async function HomePage() {
   const events = await getUpcomingPublishedEvents();
+
   const featuredEvents = events.filter((event) => event.featured);
-  const fallbackEvents = events.filter((event) => !event.featured);
-  const heroEvents = [...featuredEvents, ...fallbackEvents].slice(0, 3);
-  const nextEvents = events;
+  const heroEvents = [...featuredEvents, ...events.filter((event) => !event.featured)].slice(0, 3);
+  const heroIds = new Set(heroEvents.map((event) => event.id));
+
+  // La home repetía en la grilla los mismos tres eventos que ya mostraba el hero. Acá se
+  // listan solo los que no están arriba.
+  const agendaEvents = events.filter((event) => !heroIds.has(event.id));
+  const weekendEvents = getWeekendEvents(agendaEvents);
+  const weekendIds = new Set(weekendEvents.map((event) => event.id));
+  const lastTicketsEvents = getLastTicketsEvents(agendaEvents).filter((event) => !weekendIds.has(event.id));
+  const highlightedIds = new Set([...weekendIds, ...lastTicketsEvents.map((event) => event.id)]);
+
+  const restOfAgenda = agendaEvents.filter((event) => !highlightedIds.has(event.id));
+  const visibleAgenda = restOfAgenda.slice(0, HOME_AGENDA_LIMIT);
+  const remainingCount = restOfAgenda.length - visibleAgenda.length;
 
   return (
     <>
@@ -39,38 +58,105 @@ export default async function HomePage() {
       <main>
         <Hero featuredEvents={heroEvents} />
 
-        <section className="px-4 pb-14 pt-6 sm:px-6 lg:px-8 lg:pb-16 lg:pt-8">
-          <div className="mx-auto max-w-7xl">
-            <MotionReveal className="mb-6 flex flex-col items-start justify-between gap-4 rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-5 sm:flex-row sm:items-end sm:p-6">
+        <div className="mx-auto max-w-7xl space-y-10 px-4 pb-16 pt-4 sm:px-6 lg:px-8">
+          {weekendEvents.length ? (
+            <AgendaSection
+              eyebrow="Esta semana"
+              title="Este finde"
+              description="Las fechas de viernes a domingo dentro de los próximos siete días."
+              events={weekendEvents}
+              placement="home_weekend"
+            />
+          ) : null}
+
+          {lastTicketsEvents.length ? (
+            <AgendaSection
+              eyebrow="Se están agotando"
+              title="Últimas entradas"
+              description="Fechas marcadas como últimas entradas por la productora."
+              events={lastTicketsEvents}
+              placement="home_last_tickets"
+            />
+          ) : null}
+
+          {/* Único mecanismo de retorno del sitio: quien llega desde Google y no compra hoy
+              se iba sin dejar ningún punto de contacto. */}
+          <WhatsappAlerts source="home_alerts" />
+
+          <section>
+            <div className="mb-5 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.35em] text-violet-200/80">Próximos eventos</p>
+                <p className="text-xs font-bold uppercase tracking-[0.35em] text-violet-200/80">Agenda</p>
                 <h2 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">Próximos eventos</h2>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-white/55">
-                  Eventos publicados con links oficiales para comprar por Bombo y consultar detalles antes de decidir.
+                  Fechas publicadas con su link oficial de Bombo, lineup y ubicación para decidir antes de comprar.
                 </p>
               </div>
-              <a href="/eventos" className="rounded-full bg-white px-5 py-3 text-sm font-black text-black transition hover:bg-white/85">
+              <Link
+                href="/eventos"
+                className="rounded-full bg-white px-5 py-3 text-sm font-black text-black transition hover:bg-white/85"
+              >
                 Ver todos los eventos
-              </a>
-            </MotionReveal>
+              </Link>
+            </div>
 
-            {nextEvents.length ? (
-              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {nextEvents.map((event) => (
-                  <MotionReveal key={event.id}>
-                    <EventCard event={event} showDetailsLink={false} />
-                  </MotionReveal>
-                ))}
-              </div>
+            {visibleAgenda.length ? (
+              <>
+                <div className="space-y-3">
+                  {visibleAgenda.map((event) => (
+                    <EventRow key={event.id} event={event} placement="home_agenda" />
+                  ))}
+                </div>
+                {remainingCount > 0 ? (
+                  <Link
+                    href="/eventos"
+                    className="mt-4 flex items-center justify-center rounded-3xl border border-dashed border-white/15 px-5 py-4 text-sm font-bold text-white/70 transition hover:border-white/30 hover:text-white"
+                  >
+                    Ver {remainingCount} {remainingCount === 1 ? "fecha más" : "fechas más"} en la agenda →
+                  </Link>
+                ) : null}
+              </>
             ) : (
-              <MotionReveal className="rounded-[1.75rem] border border-dashed border-white/10 bg-white/[0.03] p-6 text-sm leading-6 text-white/60">
-                No hay más fechas publicadas por ahora. Revisá los destacados o volvé pronto para descubrir nuevos eventos.
-              </MotionReveal>
+              <div className="rounded-[1.75rem] border border-dashed border-white/10 bg-white/[0.03] p-6 text-sm leading-6 text-white/60">
+                No hay más fechas publicadas por ahora. Sumate a las alertas de WhatsApp y te avisamos apenas
+                publiquemos la próxima.
+              </div>
             )}
-          </div>
-        </section>
+          </section>
+
+          <VipTables source="home_vip" href={whatsappUrlOrGroup(buildVipWhatsappMessage())} />
+        </div>
       </main>
       <SiteFooter />
     </>
+  );
+}
+
+function AgendaSection({
+  eyebrow,
+  title,
+  description,
+  events,
+  placement
+}: {
+  eyebrow: string;
+  title: string;
+  description: string;
+  events: EventRecord[];
+  placement: CtaPlacement;
+}) {
+  return (
+    <section>
+      <div className="mb-5">
+        <p className="text-xs font-bold uppercase tracking-[0.35em] text-violet-200/80">{eyebrow}</p>
+        <h2 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">{title}</h2>
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-white/55">{description}</p>
+      </div>
+      <div className="space-y-3">
+        {events.map((event) => (
+          <EventRow key={event.id} event={event} placement={placement} />
+        ))}
+      </div>
+    </section>
   );
 }

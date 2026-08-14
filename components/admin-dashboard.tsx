@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { parseJsonResponse } from "@/lib/http";
+import type { EventPerformance, EventSaleRecord } from "@/types/analytics";
 import type { VenueRecord, GenreRecord } from "@/types/catalog";
 import type { EventRecord } from "@/types/event";
 
@@ -34,6 +36,12 @@ type VenueFormState = {
   city: string;
   province: string;
   map_url: string;
+};
+
+type SaleFormState = {
+  event_id: string;
+  sale_date: string;
+  tickets_sold: string;
 };
 
 const emptyForm: FormState = {
@@ -70,15 +78,24 @@ const emptyVenueForm: VenueFormState = {
 export function AdminDashboard({
   initialEvents,
   initialVenues,
-  initialGenres
+  initialGenres,
+  performance,
+  initialSales,
+  analyticsReady
 }: {
   initialEvents: EventRecord[];
   initialVenues: VenueRecord[];
   initialGenres: GenreRecord[];
+  performance: Record<string, EventPerformance>;
+  initialSales: EventSaleRecord[];
+  analyticsReady: boolean;
 }) {
   const [events, setEvents] = useState(initialEvents);
   const [venues, setVenues] = useState(initialVenues);
   const [genres, setGenres] = useState(initialGenres);
+  const [sales, setSales] = useState(initialSales);
+  const [salesLoading, setSalesLoading] = useState(false);
+  const [salesMessage, setSalesMessage] = useState("");
   const [form, setForm] = useState<FormState>(emptyForm);
   const [venueForm, setVenueForm] = useState<VenueFormState>(emptyVenueForm);
   const [newGenre, setNewGenre] = useState("");
@@ -103,6 +120,42 @@ export function AdminDashboard({
   const sortedGenres = useMemo(
     () => [...genres].sort((a, b) => a.sort_order - b.sort_order || a.name.localeCompare(b.name, "es")),
     [genres]
+  );
+
+  const salesByEvent = useMemo(
+    () =>
+      sales.reduce<Record<string, number>>((acc, sale) => {
+        acc[sale.event_id] = (acc[sale.event_id] || 0) + sale.tickets_sold;
+        return acc;
+      }, {}),
+    [sales]
+  );
+
+  /**
+   * La tabla que responde "¿por qué tengo tráfico y no ventas?": clics enviados a Bombo
+   * contra entradas efectivamente vendidas, por evento.
+   */
+  const reconciliation = useMemo(
+    () =>
+      sortedEvents
+        .map((event) => {
+          const stats = performance[event.slug];
+          const clicks = stats?.clicks ?? event.clicks_count ?? 0;
+          const ticketsSold = salesByEvent[event.id] || 0;
+
+          return {
+            event,
+            clicks,
+            clicksLast7Days: stats?.clicksLast7Days ?? 0,
+            ticketsSold,
+            conversion: clicks > 0 ? ticketsSold / clicks : null,
+            topPlacement: topKey(stats?.byPlacement),
+            topSource: topKey(stats?.bySource)
+          };
+        })
+        .filter((row) => row.clicks > 0 || row.ticketsSold > 0)
+        .sort((a, b) => b.clicks - a.clicks),
+    [performance, salesByEvent, sortedEvents]
   );
 
   const genreIsFromCatalog = sortedGenres.some((genre) => genre.name === form.genre);
@@ -183,10 +236,9 @@ export function AdminDashboard({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type: "venue", venue: venueForm })
       });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "No se pudo guardar el venue.");
+      const result = await parseJsonResponse<{ venue: VenueRecord }>(response, "No se pudo guardar el venue.");
 
-      const saved = result.venue as VenueRecord;
+      const saved = result.venue;
       setVenues((current) => [...current, saved]);
       setVenueForm(emptyVenueForm);
       setCatalogMessage("Venue guardado. Ya podés reutilizarlo en próximos eventos.");
@@ -219,10 +271,9 @@ export function AdminDashboard({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type: "genre", genre: { name, sort_order: genres.length + 1 } })
       });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "No se pudo guardar el género.");
+      const result = await parseJsonResponse<{ genre: GenreRecord }>(response, "No se pudo guardar el género.");
 
-      const saved = result.genre as GenreRecord;
+      const saved = result.genre;
       setGenres((current) => [...current, saved]);
       setNewGenre("");
       updateField("genre", saved.name);
@@ -241,13 +292,9 @@ export function AdminDashboard({
     body.append("file", flyerFile);
 
     const response = await fetch("/api/admin/upload", { method: "POST", body });
-    const result = await response.json();
+    const result = await parseJsonResponse<{ publicUrl: string }>(response, "No se pudo subir el flyer.");
 
-    if (!response.ok) {
-      throw new Error(result.error || "No se pudo subir el flyer.");
-    }
-
-    return result.publicUrl as string;
+    return result.publicUrl;
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -274,11 +321,10 @@ export function AdminDashboard({
         body: JSON.stringify(payload)
       });
 
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "No se pudo guardar el evento.");
+      const result = await parseJsonResponse<{ event: EventRecord }>(response, "No se pudo guardar el evento.");
 
       setEvents((current) => {
-        const saved = result.event as EventRecord;
+        const saved = result.event;
         const exists = current.some((item) => item.id === saved.id);
         return exists ? current.map((item) => (item.id === saved.id ? saved : item)) : [saved, ...current];
       });
@@ -296,17 +342,51 @@ export function AdminDashboard({
   async function removeEvent(id: string) {
     if (!confirm("¿Eliminar este evento?")) return;
     setLoading(true);
-    const response = await fetch("/api/admin/events", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id })
-    });
-    setLoading(false);
-    if (response.ok) {
+
+    try {
+      const response = await fetch("/api/admin/events", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id })
+      });
+      await parseJsonResponse<{ ok: boolean }>(response, "No se pudo eliminar el evento.");
+
       setEvents((current) => current.filter((event) => event.id !== id));
       setMessage("Evento eliminado.");
-    } else {
-      setMessage("No se pudo eliminar el evento.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "No se pudo eliminar el evento.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function saveSale(form: SaleFormState) {
+    setSalesLoading(true);
+    setSalesMessage("");
+
+    try {
+      const response = await fetch("/api/admin/sales", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          event_id: form.event_id,
+          sale_date: form.sale_date,
+          tickets_sold: Number(form.tickets_sold)
+        })
+      });
+      const result = await parseJsonResponse<{ sale: EventSaleRecord }>(response, "No se pudo guardar la venta.");
+
+      setSales((current) => {
+        const others = current.filter(
+          (sale) => !(sale.event_id === result.sale.event_id && sale.sale_date === result.sale.sale_date)
+        );
+        return [result.sale, ...others].sort((a, b) => b.sale_date.localeCompare(a.sale_date));
+      });
+      setSalesMessage("Venta registrada.");
+    } catch (error) {
+      setSalesMessage(error instanceof Error ? error.message : "No se pudo guardar la venta.");
+    } finally {
+      setSalesLoading(false);
     }
   }
 
@@ -328,6 +408,15 @@ export function AdminDashboard({
           Salir
         </button>
       </div>
+
+      <ConversionPanel
+        analyticsReady={analyticsReady}
+        reconciliation={reconciliation}
+        events={sortedEvents}
+        onSaveSale={saveSale}
+        loading={salesLoading}
+        message={salesMessage}
+      />
 
       <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
         <form onSubmit={handleSubmit} className="glass space-y-5 rounded-[2rem] p-5 sm:p-6">
@@ -495,6 +584,9 @@ export function AdminDashboard({
           {sortedEvents.map((event) => (
             <article key={event.id} className="glass grid gap-4 rounded-[1.6rem] p-4 sm:grid-cols-[92px_1fr]">
               <div className="aspect-square overflow-hidden rounded-2xl bg-white/5">
+                {/* Miniatura del panel privado: el flyer puede venir de cualquier host pegado
+                    a mano, así que no pasa por next/image. */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 {event.flyer_url ? <img src={event.flyer_url} alt="" className="h-full w-full object-cover" /> : null}
               </div>
               <div>
@@ -526,24 +618,186 @@ export function AdminDashboard({
         </section>
       </div>
 
-      <style jsx>{`
-        .input {
-          width: 100%;
-          border-radius: 1rem;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          background: rgba(0, 0, 0, 0.28);
-          padding: 0.78rem 0.95rem;
-          outline: none;
-          color: white;
-        }
-        .input:focus {
-          border-color: rgba(255, 255, 255, 0.35);
-        }
-        .input option {
-          background: #09090b;
-          color: white;
-        }
-      `}</style>
+    </div>
+  );
+}
+
+function topKey(counts?: Record<string, number>) {
+  if (!counts) return null;
+  const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  return entries.length ? entries[0][0] : null;
+}
+
+type ReconciliationRow = {
+  event: EventRecord;
+  clicks: number;
+  clicksLast7Days: number;
+  ticketsSold: number;
+  conversion: number | null;
+  topPlacement: string | null;
+  topSource: string | null;
+};
+
+/**
+ * Panel de conversión. Cruza los clics hacia Bombo con las ventas que se cargan a mano
+ * desde el reporte de Bombo, que es lo único que permite saber si el problema está en el
+ * tráfico, en la página del evento o en el checkout externo.
+ */
+function ConversionPanel({
+  analyticsReady,
+  reconciliation,
+  events,
+  onSaveSale,
+  loading,
+  message
+}: {
+  analyticsReady: boolean;
+  reconciliation: ReconciliationRow[];
+  events: EventRecord[];
+  onSaveSale: (form: SaleFormState) => void;
+  loading: boolean;
+  message: string;
+}) {
+  const [saleForm, setSaleForm] = useState<SaleFormState>({
+    event_id: "",
+    sale_date: new Date().toISOString().slice(0, 10),
+    tickets_sold: ""
+  });
+
+  const totals = useMemo(
+    () =>
+      reconciliation.reduce(
+        (acc, row) => ({
+          clicks: acc.clicks + row.clicks,
+          tickets: acc.tickets + row.ticketsSold
+        }),
+        { clicks: 0, tickets: 0 }
+      ),
+    [reconciliation]
+  );
+
+  const globalConversion = totals.clicks > 0 ? totals.tickets / totals.clicks : null;
+
+  return (
+    <section className="glass mb-8 rounded-[2rem] p-5 sm:p-6">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-black">Conversión</h2>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-white/55">
+            Clics enviados a Bombo contra entradas vendidas. Cargá las ventas por evento y por día desde el
+            reporte de Bombo para ver la tasa real.
+          </p>
+        </div>
+        <div className="flex gap-3">
+          <Metric label="Clics" value={String(totals.clicks)} />
+          <Metric label="Vendidas" value={String(totals.tickets)} />
+          <Metric
+            label="Clic → venta"
+            value={globalConversion === null ? "—" : `${(globalConversion * 100).toFixed(1)}%`}
+          />
+        </div>
+      </div>
+
+      {!analyticsReady ? (
+        <p className="mt-5 rounded-2xl border border-amber-300/25 bg-amber-400/10 px-4 py-3 text-sm leading-6 text-amber-100">
+          Faltan las tablas de medición. Ejecutá <code className="font-mono">supabase/05-analytics.sql</code> en el SQL
+          Editor de Supabase. Hasta entonces se muestra solo el contador histórico de clics.
+        </p>
+      ) : null}
+
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (!saleForm.event_id) return;
+          onSaveSale(saleForm);
+        }}
+        className="mt-5 grid gap-3 rounded-3xl border border-white/10 bg-black/20 p-4 sm:grid-cols-[1.6fr_1fr_0.8fr_auto]"
+      >
+        <select
+          value={saleForm.event_id}
+          onChange={(event) => setSaleForm((current) => ({ ...current, event_id: event.target.value }))}
+          className="input"
+        >
+          <option value="">Elegí un evento</option>
+          {events.map((event) => (
+            <option key={event.id} value={event.id}>
+              {event.title}
+            </option>
+          ))}
+        </select>
+        <input
+          type="date"
+          value={saleForm.sale_date}
+          onChange={(event) => setSaleForm((current) => ({ ...current, sale_date: event.target.value }))}
+          className="input"
+        />
+        <input
+          type="number"
+          min="0"
+          required
+          value={saleForm.tickets_sold}
+          onChange={(event) => setSaleForm((current) => ({ ...current, tickets_sold: event.target.value }))}
+          className="input"
+          placeholder="Vendidas"
+        />
+        <button
+          disabled={loading || !saleForm.event_id}
+          className="rounded-full bg-white px-5 py-3 text-sm font-black text-black transition hover:bg-white/85 disabled:opacity-50"
+        >
+          {loading ? "Guardando..." : "Registrar"}
+        </button>
+      </form>
+
+      {message ? (
+        <p className="mt-3 rounded-2xl bg-white/10 px-4 py-3 text-sm text-white/75">{message}</p>
+      ) : null}
+
+      {reconciliation.length ? (
+        <div className="mt-5 overflow-x-auto">
+          <table className="w-full min-w-[640px] text-left text-sm">
+            <thead className="text-xs uppercase tracking-[0.15em] text-white/40">
+              <tr>
+                <th className="pb-3 pr-4 font-semibold">Evento</th>
+                <th className="pb-3 pr-4 font-semibold">Clics</th>
+                <th className="pb-3 pr-4 font-semibold">7 días</th>
+                <th className="pb-3 pr-4 font-semibold">Vendidas</th>
+                <th className="pb-3 pr-4 font-semibold">Clic → venta</th>
+                <th className="pb-3 pr-4 font-semibold">Mejor CTA</th>
+                <th className="pb-3 font-semibold">Origen</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/10">
+              {reconciliation.map((row) => (
+                <tr key={row.event.id}>
+                  <td className="py-3 pr-4 font-semibold text-white/85">{row.event.title}</td>
+                  <td className="py-3 pr-4 text-white/70">{row.clicks}</td>
+                  <td className="py-3 pr-4 text-white/50">{row.clicksLast7Days}</td>
+                  <td className="py-3 pr-4 text-white/70">{row.ticketsSold}</td>
+                  <td className="py-3 pr-4 font-bold text-white">
+                    {row.conversion === null ? "—" : `${(row.conversion * 100).toFixed(1)}%`}
+                  </td>
+                  <td className="py-3 pr-4 text-white/50">{row.topPlacement || "—"}</td>
+                  <td className="py-3 text-white/50">{row.topSource || "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <p className="mt-5 text-sm leading-6 text-white/45">
+          Todavía no hay clics registrados en la ventana de análisis. Los datos aparecen acá a medida que la gente
+          use los botones de compra.
+        </p>
+      )}
+    </section>
+  );
+}
+
+function Metric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-center">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/40">{label}</p>
+      <p className="mt-1 text-xl font-black text-white">{value}</p>
     </div>
   );
 }

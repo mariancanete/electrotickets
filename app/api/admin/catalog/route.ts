@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
 import { getAdminCatalog } from "@/lib/catalog";
+import { normalizeText } from "@/lib/slugify";
 import { getSupabaseAdminClient } from "@/lib/supabase";
 
 export const runtime = "nodejs";
@@ -27,8 +28,16 @@ export async function POST(request: Request) {
     const body = await request.json();
     const supabase = getSupabaseAdminClient();
 
+    // Un nombre que ya existe salvo por mayúsculas o acentos no crea una fila nueva: se
+    // devuelve la existente. Así el panel selecciona la canónica en vez de fallar con un
+    // error de unicidad o, peor, duplicar el género y partir el filtro público.
+    const catalog = await getAdminCatalog();
+
     if (body.type === "venue") {
       const venue = normalizeVenue(body.venue || body);
+      const existing = catalog.venues.find((item) => normalizeText(item.name) === normalizeText(venue.name));
+      if (existing) return NextResponse.json({ venue: existing });
+
       const { data, error } = await supabase.from("venues").insert(venue).select("*").single();
       if (error) throw error;
       return NextResponse.json({ venue: data });
@@ -36,6 +45,9 @@ export async function POST(request: Request) {
 
     if (body.type === "genre") {
       const genre = normalizeGenre(body.genre || body);
+      const existing = catalog.genres.find((item) => normalizeText(item.name) === normalizeText(genre.name));
+      if (existing) return NextResponse.json({ genre: existing });
+
       const { data, error } = await supabase.from("genres").insert(genre).select("*").single();
       if (error) throw error;
       return NextResponse.json({ genre: data });
