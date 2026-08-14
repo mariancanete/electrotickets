@@ -115,6 +115,47 @@ Ese endpoint incrementa `clicks_count` y luego redirige al link de Bombo con UTM
 utm_source=electrotickets&utm_medium=referral&utm_campaign=slug-del-evento
 ```
 
+## Migraciones pendientes de ejecutar
+
+Después de deployar, ejecutar **en este orden** en Supabase > SQL Editor. Son idempotentes:
+se pueden correr más de una vez sin romper nada.
+
+1. `supabase/05-analytics.sql` — crea `event_clicks` (una fila por clic hacia Bombo, con
+   placement, origen y dispositivo) y `event_sales` (entradas vendidas por evento y día), más
+   la función `track_event_click`.
+2. `supabase/06-normalize-catalog.sql` — fusiona géneros y venues duplicados que solo
+   difieren en mayúsculas o espacios, reapunta los eventos al nombre canónico y agrega un
+   índice único para que no vuelvan a entrar.
+
+Hasta que se ejecute la primera, el sitio sigue funcionando: `/go/[slug]` cae automáticamente
+al contador anterior (`increment_event_clicks`) y el panel muestra un aviso.
+
+## Medición
+
+El clic de compra sale por `/go/[slug]`, que es una redirección de servidor: GA4 no puede
+verlo por su cuenta. Por eso se registra en dos lugares:
+
+- **Cliente:** `track("click_buy")` antes de navegar (GA4, para atribución de canal).
+- **Servidor:** una fila en `event_clicks` dentro del route handler (Supabase, para conciliar
+  contra las ventas de Bombo).
+
+Todos los CTA hacia `/go` mandan un `placement` (`hero`, `home_agenda`, `event_detail`,
+`sticky_mobile`, `related`, …) y todos los CTA de WhatsApp mandan un `wa_source`.
+
+Bombo no expone API ni webhook. Las ventas se cargan a mano desde `/admin` (por evento y por
+día, tal como las reporta Bombo) y el panel calcula la tasa clic→venta.
+
+### Variables de entorno a verificar en Vercel
+
+Sin estas, la medición no existe y no hay ningún aviso en pantalla:
+
+```bash
+NEXT_PUBLIC_GA_ID=
+NEXT_PUBLIC_CLARITY_ID=
+NEXT_PUBLIC_CONTACT_WHATSAPP=   # sin esto, los CTA de WhatsApp caen al grupo de difusión
+NEXT_PUBLIC_CONTACT_NAME=       # nombre real de quien atiende, para el saludo del mensaje
+```
+
 ## Próximas mejoras recomendadas
 
 - Mapa embebido real por evento.

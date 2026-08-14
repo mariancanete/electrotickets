@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
+import { findCanonicalName, getAdminCatalog } from "@/lib/catalog";
 import { buildEventSlug } from "@/lib/slugify";
 import { getSupabaseAdminClient } from "@/lib/supabase";
 import type { EventInput } from "@/types/event";
@@ -17,7 +18,7 @@ export async function POST(request: Request) {
   if (unauthorized) return unauthorized;
 
   try {
-    const payload = normalizePayload(await request.json());
+    const payload = await normalizePayload(await request.json());
     const supabase = getSupabaseAdminClient();
     const { data, error } = await supabase.from("events").insert(payload).select("*").single();
 
@@ -36,7 +37,7 @@ export async function PUT(request: Request) {
     const body = (await request.json()) as EventInput & { id?: string };
     if (!body.id) throw new Error("Missing event id");
 
-    const payload = normalizePayload(body);
+    const payload = await normalizePayload(body);
     const supabase = getSupabaseAdminClient();
     const { data, error } = await supabase.from("events").update(payload).eq("id", body.id).select("*").single();
 
@@ -65,10 +66,17 @@ export async function DELETE(request: Request) {
   }
 }
 
-function normalizePayload(input: EventInput) {
+async function normalizePayload(input: EventInput) {
   if (!input.title?.trim()) throw new Error("El título es obligatorio");
   if (!input.starts_at) throw new Error("La fecha es obligatoria");
   if (!input.bombo_url?.trim()) throw new Error("El link de Bombo es obligatorio");
+
+  // Si el género o el venue ya existen en el catálogo con otra capitalización, se guarda la
+  // forma canónica. Sin esto, el texto libre del formulario vuelve a introducir duplicados
+  // después de haber normalizado la base.
+  const catalog = await getAdminCatalog();
+  const genre = findCanonicalName(catalog.genres, input.genre) ?? input.genre?.trim() ?? null;
+  const venueName = findCanonicalName(catalog.venues, input.venue_name) ?? input.venue_name?.trim() ?? null;
 
   return {
     title: input.title.trim(),
@@ -76,7 +84,7 @@ function normalizePayload(input: EventInput) {
     description: input.description?.trim() || null,
     flyer_url: input.flyer_url?.trim() || null,
     lineup: Array.isArray(input.lineup) ? input.lineup : [],
-    venue_name: input.venue_name?.trim() || null,
+    venue_name: venueName || null,
     venue_address: input.venue_address?.trim() || null,
     city: input.city?.trim() || "Buenos Aires",
     province: input.province?.trim() || "CABA",
@@ -84,7 +92,7 @@ function normalizePayload(input: EventInput) {
     starts_at: input.starts_at,
     end_at: input.end_at || null,
     price_label: input.price_label?.trim() || null,
-    genre: input.genre?.trim() || null,
+    genre: genre || null,
     video_url: input.video_url?.trim() || null,
     bombo_url: input.bombo_url.trim(),
     featured: Boolean(input.featured),

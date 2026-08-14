@@ -18,23 +18,35 @@ type FaqItem = {
 const faqs: FaqItem[] = [
   {
     question: "¿ElectroTickets vende tickets directamente?",
-    answer: "No. ElectroTickets muestra eventos y te redirige al link oficial de compra de cada fecha."
+    answer: "No. ElectroTickets es una agenda especializada: publicamos las fechas con toda su información y te llevamos al link oficial de compra de cada una. No emitimos entradas ni procesamos pagos."
   },
   {
     question: "¿Dónde finalizo la compra?",
-    answer: "La compra se completa en Bombo o en la plataforma oficial configurada para el evento."
+    answer: "En Bombo, que es la plataforma oficial del evento. Ahí ves el precio y la disponibilidad actualizados, y completás el pago."
+  },
+  {
+    question: "¿Por qué no veo los precios en la web?",
+    answer: "Los precios y los lotes los define la productora y cambian seguido, así que mostrarlos acá podría desactualizarse. El valor vigente siempre está en Bombo. Si querés saberlo antes de salir del sitio, escribinos por WhatsApp y te lo pasamos."
   },
   {
     question: "¿Los links son oficiales?",
-    answer: "Sí. Cada evento usa el link de vendedor correspondiente para esa fecha."
+    answer: "Sí. Cada evento usa el link de vendedor que corresponde a esa fecha, y lo verificamos al publicarla."
+  },
+  {
+    question: "¿Puedo consultar por mesas VIP o cortesías?",
+    answer: "Sí, es parte de lo que hacemos. Escribinos por WhatsApp indicando la fecha y te pasamos disponibilidad y condiciones."
   },
   {
     question: "¿Qué hago si tengo un problema con mi ticket?",
-    answer: "Como la emisión del ticket se realiza fuera de ElectroTickets, el soporte principal corresponde a la plataforma donde completaste la compra."
+    answer: "Como la emisión se realiza en Bombo, el soporte formal corresponde a esa plataforma. Igual escribinos: te ayudamos a encontrar el canal correcto y hacemos el seguimiento con vos."
+  },
+  {
+    question: "¿Qué pasa si el evento se cancela o cambia de fecha?",
+    answer: "Esas decisiones las toma la productora y se comunican a través de Bombo, que es donde está registrada tu compra. Cuando nos enteramos, lo avisamos por el grupo de difusión y actualizamos la página del evento."
   },
   {
     question: "¿Cómo me entero de nuevas fechas?",
-    answer: "Podés sumarte al grupo de difusión de WhatsApp desde la página de contacto o desde cualquier evento."
+    answer: "Sumate al grupo de difusión de WhatsApp o pedinos que te agreguemos a las alertas. Mandamos novedades importantes: nuevas fechas, preventas y últimas entradas."
   },
   {
     question: "¿Necesito la app de Bombo para comprar?",
@@ -75,9 +87,15 @@ export default function FaqPage() {
             ))}
           </div>
 
-          <div className="mt-8">
+          <div className="mt-8 flex flex-wrap gap-3">
             <Link href="/contacto" className="rounded-full bg-white px-6 py-3 text-sm font-bold text-black transition hover:bg-white/85">
               Ir a contacto
+            </Link>
+            <Link
+              href="/quienes-somos"
+              className="rounded-full border border-white/15 px-6 py-3 text-sm font-bold text-white/80 transition hover:bg-white/10"
+            >
+              Quiénes somos
             </Link>
           </div>
         </section>

@@ -1,5 +1,18 @@
+import { normalizeText } from "@/lib/slugify";
 import { getSupabaseAdminClient } from "@/lib/supabase";
 import type { CatalogResponse, GenreRecord, VenueRecord } from "@/types/catalog";
+
+/**
+ * Devuelve el nombre tal como está guardado en el catálogo si `value` es el mismo texto
+ * ignorando mayúsculas, acentos y espacios. Evita que "progressive house" entre como un
+ * género nuevo y termine partiendo el filtro público en dos opciones.
+ */
+export function findCanonicalName(catalog: { name: string }[], value?: string | null) {
+  const normalized = normalizeText(value);
+  if (!normalized) return null;
+
+  return catalog.find((item) => normalizeText(item.name) === normalized)?.name ?? null;
+}
 
 const now = new Date(0).toISOString();
 

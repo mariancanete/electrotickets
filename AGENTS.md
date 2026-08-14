@@ -29,8 +29,11 @@ Priorities:
 - `/`
 - `/eventos`
 - `/eventos/[slug]`
+- `/destacados`
+- `/quienes-somos`
 - `/contacto`
 - `/preguntas-frecuentes`
+- `/privacidad`
 - `/go/[slug]`
 
 ## Private route
@@ -51,11 +54,28 @@ The admin route must not be visible in public navigation.
 
 - Public copy must generate trust and sales.
 - Avoid technical/internal copy on public pages.
-- Primary CTA: Comprar tickets.
+- Primary CTA: **Comprar en Bombo** (never just "Comprar": the purchase completes off-site,
+  and discovering that after the click is where users are lost).
+- Always set the expectation *before* the CTA, not below it.
 - Secondary CTA: Consultar por WhatsApp.
-- Community CTA: Grupo de difusión.
+- Community CTA: Grupo de difusión / Recibir alertas.
+- Prices are deliberately not shown. Do not add a CTA that promises a price on-site; route
+  price questions to WhatsApp instead.
 - Keep the design dark, modern, premium and not overloaded.
+- Prefer the compact `EventRow` over full-height cards in agenda listings: on mobile a 4/5
+  card fills the screen and eight dates become eight screens of scrolling.
 - Mobile experience is critical.
+
+## Measurement rules
+
+- Every CTA to `/go/[slug]` must pass a `placement`. Without it there is no way to know
+  which section sells.
+- `/go/[slug]` is a server redirect, so GA4 cannot observe it. Purchase clicks are tracked
+  twice: `track("click_buy")` client-side before navigating, and a row in `event_clicks`
+  server-side.
+- Every WhatsApp CTA must carry a `WhatsappSource`.
+- Sales from Bombo are loaded by hand in `/admin` (`event_sales`, per event and per day).
+  That is the only way to compute the click→sale rate.
 
 ## SEO rules
 
@@ -64,7 +84,9 @@ The admin route must not be visible in public navigation.
 - Each event page must have metadata, canonical URL and Open Graph tags.
 - WhatsApp previews must show a valid image.
 - Use event flyer as `og:image` when available.
-- Use `/og-home.jpg` as fallback.
+- Use the dynamic `/og-logo` route as fallback.
+- **Never 404 a past event.** Its URL keeps ranking and backlinks; render the "finalizado"
+  state with alternatives instead.
 
 ## Admin rules
 

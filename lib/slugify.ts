@@ -1,3 +1,15 @@
+/**
+ * Minúsculas y sin acentos, para comparar valores cargados a mano que llegan con
+ * capitalización o tildes inconsistentes ("Progressive House" vs "progressive house").
+ */
+export function normalizeText(value?: string | null) {
+  return (value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase("es-AR")
+    .trim();
+}
+
 export function slugify(value: string) {
   return value
     .toString()

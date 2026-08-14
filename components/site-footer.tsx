@@ -1,22 +1,103 @@
 import Link from "next/link";
+import { WhatsappLink } from "@/components/whatsapp-link";
+import { siteConfig } from "@/lib/site";
+import { buildGeneralWhatsappMessage, whatsappUrlOrGroup } from "@/lib/whatsapp";
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-white/10 py-10">
-      <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 text-sm text-white/55 sm:px-6 lg:px-8">
-        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+    <footer className="border-t border-white/10 py-12">
+      <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 text-sm text-white/55 sm:px-6 lg:px-8">
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <p className="font-semibold text-white">ElectroTickets</p>
-            <p>Eventos electrónicos, links oficiales de compra y acceso rápido a cada fecha.</p>
+            <p className="font-black text-white">ElectroTickets</p>
+            <p className="mt-2 leading-6">
+              Agenda de música electrónica en Argentina. Centralizamos las fechas, el link oficial de compra de cada
+              una y te asistimos por WhatsApp.
+            </p>
           </div>
-          <div className="flex gap-4">
-            <Link className="hover:text-white" href="/eventos">Eventos</Link>
-            <Link className="hover:text-white" href="/contacto">Contacto</Link>
-            <Link className="hover:text-white" href="/preguntas-frecuentes">FAQ</Link>
+
+          <div>
+            <p className="font-semibold text-white/80">Eventos</p>
+            <ul className="mt-3 space-y-2">
+              <li>
+                <Link className="hover:text-white" href="/eventos">
+                  Todas las fechas
+                </Link>
+              </li>
+              <li>
+                <Link className="hover:text-white" href="/destacados">
+                  Destacados
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <p className="font-semibold text-white/80">ElectroTickets</p>
+            <ul className="mt-3 space-y-2">
+              <li>
+                <Link className="hover:text-white" href="/quienes-somos">
+                  Quiénes somos
+                </Link>
+              </li>
+              <li>
+                <Link className="hover:text-white" href="/preguntas-frecuentes">
+                  Cómo comprar
+                </Link>
+              </li>
+              <li>
+                <Link className="hover:text-white" href="/privacidad">
+                  Privacidad
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <p className="font-semibold text-white/80">Contacto</p>
+            <ul className="mt-3 space-y-2">
+              <li>
+                <WhatsappLink
+                  href={whatsappUrlOrGroup(buildGeneralWhatsappMessage())}
+                  source="footer"
+                  className="hover:text-white"
+                >
+                  WhatsApp
+                </WhatsappLink>
+              </li>
+              <li>
+                <WhatsappLink
+                  href={siteConfig.whatsappGroup}
+                  source="footer"
+                  kind="group"
+                  className="hover:text-white"
+                >
+                  Grupo de difusión
+                </WhatsappLink>
+              </li>
+              <li>
+                <a
+                  href={siteConfig.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-white"
+                >
+                  Instagram
+                </a>
+              </li>
+              <li>
+                <Link className="hover:text-white" href="/contacto">
+                  Página de contacto
+                </Link>
+              </li>
+            </ul>
           </div>
         </div>
-        <p className="text-xs text-white/35">
-          ElectroTickets no emite tickets propios. La compra se completa en la plataforma oficial del evento.
+
+        <p className="border-t border-white/5 pt-6 text-xs leading-6 text-white/35">
+          ElectroTickets no emite tickets propios ni procesa pagos. La compra y la emisión de la entrada se completan
+          en Bombo, la plataforma oficial de cada evento. Ante un problema con un ticket ya comprado, el soporte
+          corresponde a Bombo, y podés escribirnos para que te ayudemos a gestionarlo.
         </p>
       </div>
     </footer>

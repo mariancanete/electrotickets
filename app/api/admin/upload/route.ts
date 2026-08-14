@@ -5,7 +5,13 @@ import { slugify } from "@/lib/slugify";
 
 export const runtime = "nodejs";
 
-const MAX_SIZE = 6 * 1024 * 1024;
+/**
+ * Las funciones serverless de Vercel rechazan bodies de más de ~4,5 MB antes de que este
+ * handler se ejecute, devolviendo HTML en vez de JSON. El límite anterior era de 6 MB, así
+ * que un flyer de 5 MB nunca llegaba acá y el panel mostraba un error de parseo sin sentido.
+ * Se valida por debajo de ese techo para que el rechazo sea nuestro y el mensaje, útil.
+ */
+const MAX_SIZE = 2 * 1024 * 1024;
 
 export async function POST(request: Request) {
   const authenticated = await isAdminAuthenticated();
@@ -16,7 +22,9 @@ export async function POST(request: Request) {
     const file = formData.get("file") as File | null;
     if (!file) throw new Error("No file received");
     if (!file.type.startsWith("image/")) throw new Error("El archivo debe ser una imagen");
-    if (file.size > MAX_SIZE) throw new Error("El flyer no puede pesar más de 6MB");
+    if (file.size > MAX_SIZE) {
+      throw new Error("El flyer es demasiado pesado. Comprimilo o usá una imagen menor a 2 MB.");
+    }
 
     const supabase = getSupabaseAdminClient();
     const bucket = process.env.SUPABASE_STORAGE_BUCKET || "event-flyers";
