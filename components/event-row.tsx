@@ -36,28 +36,38 @@ export function EventRow({
   const tags = [event.genre, event.city].filter(Boolean).slice(0, 2) as string[];
   const isSoldOut = Boolean(event.sold_out);
   const hasLastTickets = Boolean(event.last_tickets) && !isSoldOut;
+  // Ancho fijo en desktop para que los botones de todas las filas queden alineados en
+  // columna aunque cambie el texto ("Comprar en Bombo" vs "Avisame si se libera").
   const ctaClass =
-    "inline-flex w-full shrink-0 items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-violet-600 to-blue-600 px-4 py-2.5 text-center text-xs font-black text-white shadow-[0_14px_30px_rgba(91,33,182,0.28)] transition hover:from-violet-500 hover:to-blue-500 sm:w-auto";
+    "inline-flex w-full shrink-0 items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-violet-600 to-blue-600 px-4 py-2.5 text-center text-xs font-black text-white shadow-[0_14px_30px_rgba(91,33,182,0.28)] transition hover:from-violet-500 hover:to-blue-500 sm:w-[170px]";
+  const chipClass =
+    "whitespace-nowrap rounded-full border px-2.5 py-1 text-[11px] sm:px-2 sm:text-[10px]";
 
   return (
     <article className="group w-full max-w-full overflow-hidden rounded-3xl border border-white/10 bg-white/[0.035] shadow-2xl shadow-black/15 backdrop-blur transition duration-300 hover:border-violet-300/30 hover:bg-white/[0.06]">
-      <div className="flex min-w-0 flex-col gap-3 p-3 sm:grid sm:min-h-[128px] sm:grid-cols-[180px_56px_minmax(0,1fr)_auto] sm:items-center sm:gap-4 lg:grid-cols-[190px_58px_minmax(0,1fr)_auto] xl:grid-cols-[210px_60px_minmax(0,1fr)_auto]">
+      {/* El flyer ocupaba 210px de una columna de ~700px, así que al título le quedaban unos
+          190px y se cortaba. A 100px el título recibe ~304px y entra completo, y de paso el
+          recorte deja de ser una franja horizontal sobre un flyer vertical.
+          Todo el grid vive en sm: y superiores: mobile mantiene el apilado actual. */}
+      <div className="flex min-w-0 flex-col gap-3 p-3 sm:grid sm:min-h-[139px] sm:grid-cols-[92px_48px_minmax(0,1fr)_auto] sm:items-center sm:gap-4 lg:grid-cols-[96px_52px_minmax(0,1fr)_auto] xl:grid-cols-[100px_56px_minmax(0,1fr)_auto]">
         <Link
           href={`/eventos/${event.slug}`}
-          className="relative h-32 w-full overflow-hidden rounded-2xl bg-white/5 sm:h-[108px] sm:w-full"
+          className="relative h-32 w-full overflow-hidden rounded-2xl bg-white/5 sm:h-[115px] sm:w-full lg:h-[120px] xl:h-[125px]"
         >
           {event.flyer_url ? (
             <FlyerImage
               src={event.flyer_url}
               alt={`Flyer de ${event.title}`}
-              sizes="(max-width: 640px) 100vw, 210px"
+              sizes="(max-width: 640px) 100vw, 100px"
               priority={priority}
               className="object-cover transition duration-500 group-hover:scale-105"
             />
           ) : (
             <FlyerFallback size="text-2xl" />
           )}
-          <div className="absolute left-3 top-3 flex flex-wrap gap-2">
+          {/* Solo mobile: en desktop estos badges duplicaban el chip de la columna de texto y,
+              con el flyer más chico, taparían el arte entero. */}
+          <div className="absolute left-3 top-3 flex flex-wrap gap-2 sm:hidden">
             {event.featured ? (
               <span className="rounded-full bg-gradient-to-r from-violet-600 to-blue-600 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-white">
                 Destacado
@@ -90,7 +100,9 @@ export function EventRow({
 
         <div className="min-w-0 px-1 sm:px-0">
           <Link href={`/eventos/${event.slug}`}>
-            <h3 className="truncate text-lg font-black leading-tight tracking-tight text-white sm:text-xl">
+            {/* Mobile conserva `truncate` tal cual está hoy. En desktop el nombre entra
+                completo y, si alguno fuera muy largo, baja a una segunda línea. */}
+            <h3 className="truncate text-lg font-black leading-tight tracking-tight text-white sm:line-clamp-2 sm:whitespace-normal sm:text-xl">
               {event.title}
             </h3>
           </Link>
@@ -104,20 +116,20 @@ export function EventRow({
               <span className="min-w-0 break-words sm:truncate">{event.venue_name || "Venue a confirmar"}</span>
             </span>
           </div>
-          <div className="mt-3 flex flex-wrap gap-2">
+          {/* En una sola línea en desktop: al envolver, unas filas quedaban más altas que
+              otras y los botones dejaban de alinearse. */}
+          <div className="mt-3 flex flex-wrap gap-2 sm:mt-2 sm:flex-nowrap sm:gap-1.5">
             {isSoldOut ? (
-              <span className="rounded-full border border-red-300/30 bg-red-600/25 px-2.5 py-1 text-[11px] font-bold text-red-50">
-                Sold Out
-              </span>
+              <span className={`${chipClass} border-red-300/30 bg-red-600/25 font-bold text-red-50`}>Sold Out</span>
             ) : hasLastTickets ? (
-              <span className="rounded-full border border-red-300/20 bg-red-500/15 px-2.5 py-1 text-[11px] font-bold text-red-100">
+              <span className={`${chipClass} border-red-300/20 bg-red-500/15 font-bold text-red-100`}>
                 Últimas entradas
               </span>
             ) : null}
             {tags.map((tag) => (
               <span
                 key={tag}
-                className="rounded-full border border-violet-300/15 bg-violet-500/10 px-2.5 py-1 text-[11px] font-medium text-violet-100/80"
+                className={`${chipClass} border-violet-300/15 bg-violet-500/10 font-medium text-violet-100/80`}
               >
                 {tag}
               </span>
