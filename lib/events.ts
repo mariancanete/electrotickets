@@ -1,44 +1,12 @@
 import { demoEvents } from "@/lib/demo-events";
+import { isPastEvent, isUpcomingEvent, PAST_EVENT_WINDOW_DAYS } from "@/lib/event-dates";
 import { normalizeText } from "@/lib/slugify";
 import { getSupabaseAdminClient, getSupabasePublicClient, isSupabasePublicConfigured } from "@/lib/supabase";
 import type { EventRecord } from "@/types/event";
 
 const eventSelect = "*";
 
-/**
- * Una fiesta que empieza a las 23:59 se sigue vendiendo esa madrugada. Cortar en
- * `starts_at` sacaba el evento del sitio justo la noche en que la gente lo busca, así que
- * se usa `end_at` cuando existe y, si no, el horario de inicio más esta gracia.
- */
-const DEFAULT_DURATION_HOURS = 8;
-
-/** Cuánto tiempo se mantiene un evento pasado como landing indexable antes de archivarlo. */
-export const PAST_EVENT_WINDOW_DAYS = 120;
-
-function getEventEndTime(event: Pick<EventRecord, "starts_at" | "end_at">) {
-  if (event.end_at) {
-    const endsAt = new Date(event.end_at).getTime();
-    if (!Number.isNaN(endsAt)) return endsAt;
-  }
-
-  const startsAt = new Date(event.starts_at).getTime();
-  if (Number.isNaN(startsAt)) return Number.NaN;
-
-  return startsAt + DEFAULT_DURATION_HOURS * 60 * 60 * 1000;
-}
-
-export function isUpcomingEvent(event: Pick<EventRecord, "starts_at" | "end_at">) {
-  if (!event.starts_at) return false;
-
-  const endTime = getEventEndTime(event);
-  if (Number.isNaN(endTime)) return false;
-
-  return endTime > Date.now();
-}
-
-export function isPastEvent(event: Pick<EventRecord, "starts_at" | "end_at">) {
-  return Boolean(event.starts_at) && !isUpcomingEvent(event);
-}
+export { isPastEvent, isUpcomingEvent, PAST_EVENT_WINDOW_DAYS } from "@/lib/event-dates";
 
 export function filterUpcomingEvents<T extends Pick<EventRecord, "starts_at" | "end_at">>(events: T[]) {
   return events.filter(isUpcomingEvent);
