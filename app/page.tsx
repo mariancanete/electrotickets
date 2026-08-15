@@ -94,7 +94,7 @@ export default async function HomePage() {
               </div>
               <Link
                 href="/eventos"
-                className="rounded-full bg-white px-5 py-3 text-sm font-black text-black transition hover:bg-white/85"
+                className="rounded-full border border-white/20 px-5 py-3 text-sm font-black text-white transition hover:border-white/40 hover:bg-white/10"
               >
                 Ver todos los eventos
               </Link>

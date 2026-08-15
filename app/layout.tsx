@@ -59,7 +59,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#050507",
+  // Tiene que coincidir con el primer stop del degradé del body. Con `#050507` la barra del
+  // navegador quedaba de un negro distinto al del sitio y en mobile se veía una costura
+  // arriba de todo, justo en la plataforma de la que entra la mayoría del tráfico.
+  themeColor: "#0b0714",
   width: "device-width",
   initialScale: 1
 };

@@ -9,67 +9,36 @@ export const size = {
   height: 630
 };
 
+/**
+ * Monograma ET.
+ *
+ * Reemplaza las tres barras inclinadas con degradé del logo anterior. La imagen OG es lo que
+ * se ve cuando alguien comparte una fecha por WhatsApp o Instagram, así que tiene que llevar
+ * exactamente la misma marca que el header del sitio: si acá quedara el logo viejo, todos los
+ * links compartidos seguirían mostrando una identidad que el sitio ya no usa.
+ *
+ * La metadata de la ruta (`alt`, `contentType`, `size`) no cambia: solo cambia el dibujo.
+ */
 function ElectroTicketsMark({ size = 152 }: { size?: number }) {
-  const scale = size / 64;
-
   return (
     <div
       style={{
         alignItems: "center",
-        background: "rgba(255,255,255,0.06)",
-        border: "1px solid rgba(255,255,255,0.16)",
+        background: "rgba(61,232,245,0.10)",
+        border: "2px solid rgba(61,232,245,0.38)",
         borderRadius: 32,
-        boxShadow: "0 0 70px rgba(129,140,248,0.28)",
+        boxShadow: "0 0 70px rgba(61,232,245,0.22)",
+        color: "#3DE8F5",
         display: "flex",
+        fontSize: size * 0.42,
+        fontWeight: 600,
         height: size,
         justifyContent: "center",
+        letterSpacing: size * 0.03,
         width: size
       }}
     >
-      <div
-        style={{
-          display: "flex",
-          filter: "drop-shadow(0 0 26px rgba(139,92,246,0.62))",
-          height: 64 * scale,
-          position: "relative",
-          transform: "skewX(-12deg) translateX(4px)",
-          width: 64 * scale
-        }}
-      >
-        <div
-          style={{
-            background: "linear-gradient(135deg, #ffffff 0%, #93c5fd 52%, #8b5cf6 100%)",
-            borderRadius: 5 * scale,
-            height: 7 * scale,
-            left: 18 * scale,
-            position: "absolute",
-            top: 16 * scale,
-            width: 30 * scale
-          }}
-        />
-        <div
-          style={{
-            background: "linear-gradient(135deg, #ffffff 0%, #93c5fd 52%, #8b5cf6 100%)",
-            borderRadius: 5 * scale,
-            height: 7 * scale,
-            left: 18 * scale,
-            position: "absolute",
-            top: 28.5 * scale,
-            width: 23 * scale
-          }}
-        />
-        <div
-          style={{
-            background: "linear-gradient(135deg, #ffffff 0%, #93c5fd 52%, #8b5cf6 100%)",
-            borderRadius: 5 * scale,
-            height: 7 * scale,
-            left: 18 * scale,
-            position: "absolute",
-            top: 41 * scale,
-            width: 30 * scale
-          }}
-        />
-      </div>
+      ET
     </div>
   );
 }
@@ -80,7 +49,7 @@ export function GET() {
       <div
         style={{
           alignItems: "center",
-          background: "#050507",
+          background: "#0B0714",
           color: "white",
           display: "flex",
           fontFamily: "Inter, Arial, sans-serif",
@@ -131,25 +100,26 @@ export function GET() {
           <div style={{ alignItems: "center", display: "flex", gap: 34 }}>
             <ElectroTicketsMark />
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <div style={{ fontSize: 88, fontWeight: 950, letterSpacing: -3, lineHeight: 1 }}>
+                ELECTRO
+              </div>
+              <div style={{ background: "#3DE8F5", borderRadius: 2, height: 5, width: 420 }} />
               <div
                 style={{
-                  color: "rgba(255,255,255,0.68)",
-                  fontSize: 24,
-                  fontWeight: 800,
-                  letterSpacing: 5,
-                  textTransform: "uppercase"
+                  color: "rgba(255,255,255,0.78)",
+                  fontSize: 30,
+                  fontWeight: 600,
+                  letterSpacing: 14,
+                  lineHeight: 1
                 }}
               >
-                Eventos electrónicos en Argentina
-              </div>
-              <div style={{ fontSize: 88, fontWeight: 950, letterSpacing: -4, lineHeight: 1 }}>
-                ElectroTickets
+                TICKETS
               </div>
             </div>
           </div>
           <div
             style={{
-              background: "linear-gradient(90deg, rgba(147,197,253,0.95), rgba(139,92,246,0.95))",
+              background: "#3DE8F5",
               borderRadius: 999,
               height: 6,
               width: 390

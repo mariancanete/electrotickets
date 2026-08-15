@@ -214,7 +214,7 @@ export default async function EventDetailPage({ params }: PageProps) {
                   <span className="rounded-full bg-white/10 px-3 py-1 text-sm font-bold text-white/78">Finalizado</span>
                 ) : null}
                 {event.featured && !finished ? (
-                  <span className="rounded-full bg-white px-3 py-1 text-sm font-bold text-black">Destacado</span>
+                  <span className="rounded-full bg-brand px-3 py-1 text-sm font-black text-brand-ink">Destacado</span>
                 ) : null}
                 {/* Los estados comerciales llevan icono: se reconocen sin leer, que es lo
                     que importa cuando se scrollea en un teléfono. */}
@@ -423,10 +423,13 @@ export default async function EventDetailPage({ params }: PageProps) {
               Avisame si se libera
             </WhatsappLink>
           ) : (
+            /* Es el elemento de mayor intención de todo el sitio y está fijo en pantalla
+               durante todo el scroll del detalle. Estaba en blanco sobre negro: podía ser de
+               cualquier sitio de cualquier rubro. Ahora es el píxel más de marca que hay. */
             <BuyButton
               event={event}
               placement="sticky_mobile"
-              className="block rounded-full bg-white px-5 py-4 text-center text-sm font-black text-black shadow-2xl shadow-black/50"
+              className="flex min-h-[52px] items-center justify-center gap-2 rounded-full bg-brand px-5 text-center text-sm font-black text-brand-ink shadow-[0_16px_40px_-8px_rgba(61,232,245,0.55)]"
             >
               <Ticket size={19} weight="fill" aria-hidden="true" />
               Comprar en Bombo
@@ -485,7 +488,7 @@ function PurchaseBlock({
             <BuyButton
               event={event}
               placement="event_detail"
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-white px-6 text-center text-sm font-black text-black transition hover:scale-[1.01] hover:bg-white/85"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-brand px-6 text-center text-sm font-black text-brand-ink shadow-[0_14px_36px_-10px_rgba(61,232,245,0.55)] transition hover:scale-[1.01] hover:bg-brand-strong"
             >
               <Ticket size={19} weight="fill" aria-hidden="true" />
               Comprar en Bombo
@@ -558,7 +561,7 @@ function FinishedEventBlock({
         <div className="mt-4 flex flex-wrap gap-3">
           <Link
             href="/eventos"
-            className="rounded-full bg-white px-5 py-3 text-sm font-black text-black transition hover:bg-white/85"
+            className="rounded-full border border-white/20 px-5 py-3 text-sm font-black text-white transition hover:border-white/40 hover:bg-white/10"
           >
             Ver próximos eventos
           </Link>
@@ -679,7 +682,7 @@ function InfoCard({ icon: IconComponent, label, value }: { icon: Icon; label: st
 function StepCard({ number, title, description }: { number: string; title: string; description: string }) {
   return (
     <div className="rounded-[20px] border border-white/10 bg-black/25 p-4">
-      <span className="grid h-8 w-8 place-items-center rounded-full bg-white text-xs font-black text-black">
+      <span className="tabular grid h-8 w-8 place-items-center rounded-full border border-brand/40 bg-brand/10 text-xs font-medium text-brand">
         {number}
       </span>
       <h3 className="mt-4 font-bold text-white">{title}</h3>

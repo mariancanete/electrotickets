@@ -70,7 +70,7 @@ export function MobileNav() {
           <Link
             href="/eventos"
             onClick={() => setOpen(false)}
-            className="mt-5 block rounded-full bg-white px-5 py-3.5 text-center text-sm font-black text-black"
+            className="mt-5 block rounded-full border border-white/20 px-5 py-3.5 text-center text-sm font-black text-white transition hover:border-white/40 hover:bg-white/10"
           >
             Ver todas las fechas
           </Link>

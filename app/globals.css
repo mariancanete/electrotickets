@@ -7,6 +7,11 @@
  * y ya vienen cargados de contraste. El sitio los enmarca en vez de competir con ellos, así
  * que todo lo que rodea al flyer baja el volumen y gana precisión. Lo único expresivo es la
  * tipografía de nombres y fechas.
+ *
+ * Concepto de marca: **la lista**. ElectroTickets no es un marketplace, es el RRPP que tiene
+ * la lista. De ahí salen las tres decisiones que sostienen todo el sistema: la fecha en mono
+ * tabular como elemento firma (tipografía de lista impresa), la densidad de fila por encima
+ * de la grilla de tarjetas, y el troquelado de ticket como forma que se repite.
  */
 
 @theme {
@@ -18,6 +23,23 @@
   /* Tres pasos de radio. Antes había ocho, cuatro de ellos valores sueltos. */
   --radius-chip: 12px;
   --radius-card: 20px;
+
+  /**
+   * Color de acción y de marca.
+   *
+   * Antes el botón de comprar tenía cuatro tratamientos distintos según la superficie
+   * (degradé violeta en la fila, `bg-white/10` fantasma en la tarjeta, blanco sólido en el
+   * detalle y en la barra fija). Ninguno era propiedad de nadie: el blanco es el default de
+   * todos los sitios y no se puede recordar.
+   *
+   * El cyan es el complemento del campo violeta del fondo, así que salta en vez de fundirse
+   * —que es la razón por la que el violeta nunca funcionó como CTA y se terminó cayendo al
+   * blanco—. Da ~12:1 sobre la tinta oscura y está bien lejos del emerald de WhatsApp, así
+   * que los dos roles no se confunden nunca.
+   */
+  --color-brand: #3de8f5;
+  --color-brand-strong: #7cf2fb;
+  --color-brand-ink: #04121a;
 }
 
 :root {
@@ -27,7 +49,21 @@
   --background: #0b0714;
   --foreground: #f5f5f7;
 
-  /* Acento único del sistema. */
+  /**
+   * Ley de color: cuatro roles cerrados, sin excepciones.
+   *
+   *   brand (cyan)  → **relleno** = comprar, y nada más en todo el sitio.
+   *                   **filete o tinte** = firma de marca (la regla del wordmark, el día de
+   *                   la semana en el riel de fecha, el monograma). Nunca un relleno pleno
+   *                   que pueda confundirse con un botón de compra.
+   *   emerald       → acciones de WhatsApp. Se retiró de toda decoración.
+   *   rojo          → escasez (sold out, últimas entradas). Nada más.
+   *   violeta       → atmósfera: fondo, glow del flyer, campo de marca. Nunca un CTA.
+   *
+   * Antes convivían seis familias de color sin rol asignado y el verde de WhatsApp había
+   * quedado de hecho como co-primario. Con seis colores compitiendo ninguno significa nada:
+   * nadie puede aprender "violeta = ElectroTickets" si el verde pesa lo mismo en pantalla.
+   */
   --accent: #8b5cf6;
   --accent-strong: #a78bfa;
 
@@ -124,6 +160,101 @@ h2,
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.07),
     0 10px 26px -10px rgba(124, 58, 237, 0.45);
+}
+
+/**
+ * Troquelado de ticket.
+ *
+ * Es la única forma que se repite en todo el sitio: fila, tarjeta y detalle comparten la
+ * misma perforación donde el bloque de fecha se separa del contenido. La recordación visual
+ * se construye repitiendo *una* forma, y antes había cinco ideas sin parentesco (cuadrado
+ * redondeado en el header, glow en el flyer, pill blanco en el CTA, chips redondos, mono en
+ * la fecha).
+ *
+ * Se recorta con máscara en vez de dibujar dos semicírculos del color del fondo, porque el
+ * fondo del sitio es un degradé: cualquier semicírculo sólido se vería como un parche en
+ * cuanto se scrollea.
+ */
+.ticket-cut {
+  --cut-x: 84px;
+  --cut-r: 8px;
+  -webkit-mask-image:
+    radial-gradient(circle var(--cut-r) at var(--cut-x) 0, transparent 98%, #000 100%),
+    radial-gradient(circle var(--cut-r) at var(--cut-x) 100%, transparent 98%, #000 100%);
+  mask-image:
+    radial-gradient(circle var(--cut-r) at var(--cut-x) 0, transparent 98%, #000 100%),
+    radial-gradient(circle var(--cut-r) at var(--cut-x) 100%, transparent 98%, #000 100%);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+
+/**
+ * Variante horizontal, para la tarjeta vertical de `/eventos` y `/destacados`.
+ *
+ * La perforación cae justo encima del botón de comprar, que es donde la separación significa
+ * algo: arriba queda la información y abajo el talón que se entrega. La distancia se mide
+ * desde abajo y no desde arriba porque el alto del flyer depende del ancho de la grilla,
+ * mientras que el alto del pie es fijo.
+ */
+.ticket-cut-h {
+  --cut-y: 80px;
+  --cut-r: 8px;
+  -webkit-mask-image:
+    radial-gradient(circle var(--cut-r) at 0 calc(100% - var(--cut-y)), transparent 98%, #000 100%),
+    radial-gradient(circle var(--cut-r) at 100% calc(100% - var(--cut-y)), transparent 98%, #000 100%);
+  mask-image:
+    radial-gradient(circle var(--cut-r) at 0 calc(100% - var(--cut-y)), transparent 98%, #000 100%),
+    radial-gradient(circle var(--cut-r) at 100% calc(100% - var(--cut-y)), transparent 98%, #000 100%);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+
+/**
+ * La elevación va en el contenedor y no en la pieza troquelada: la máscara recorta todo lo
+ * que pinta el elemento, sombra incluida, así que un `box-shadow` sobre `.ticket-cut`
+ * desaparecería. `drop-shadow` sobre el padre sigue el contorno real, muescas incluidas.
+ */
+.ticket-elev {
+  filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.32));
+}
+
+/** Línea de perforación entre la fecha y el contenido. Acompaña a las muescas. */
+.ticket-perf {
+  background-image: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.22) 0 5px,
+    transparent 5px 11px
+  );
+  background-size: 1px 11px;
+  background-repeat: repeat-y;
+}
+
+/**
+ * Lockup del wordmark.
+ *
+ * El logo anterior eran tres barras inclinadas con un degradé de tres paradas: no funcionaba
+ * en un solo color (requisito mínimo para un sello, un avatar o una story), a 40px leía como
+ * un ícono genérico de audio, y no tenía ningún parentesco con la tipografía del nombre que
+ * llevaba al lado.
+ *
+ * Ahora el logo *es* la tipografía, con las dos familias que el sitio ya carga: cero peso
+ * nuevo, y cada h1 del sitio refuerza el logo porque están puestos en la misma letra.
+ */
+.wordmark-electro {
+  font-family: var(--font-display);
+  font-variation-settings: "wdth" 112;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.wordmark-tickets {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  /* El tracking deja aire después de la última letra: sin compensarlo, el bloque mide más
+     de lo que se ve y "TICKETS" queda descentrado respecto de "ELECTRO". */
+  margin-right: -0.34em;
 }
 
 /** Fechas y horarios: cifras tabulares para que la columna de la agenda alinee. */

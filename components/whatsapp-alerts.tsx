@@ -84,12 +84,12 @@ export function VipTables({
   href: string;
 }) {
   return (
-    <div className="rounded-[20px] border border-amber-200/20 bg-gradient-to-br from-amber-300/[0.09] to-transparent p-6 sm:p-7">
+    <div className="rounded-[20px] border border-violet-300/20 bg-gradient-to-br from-violet-500/[0.10] to-transparent p-6 sm:p-7">
       <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
-          <p className="text-xs font-bold uppercase tracking-[0.28em] text-amber-200/80">Atención personalizada</p>
+          <p className="text-xs font-bold uppercase tracking-[0.28em] text-violet-200/80">Atención personalizada</p>
           <h2 className="mt-2 flex items-start gap-2.5 text-2xl font-black tracking-tight text-white">
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[12px] border border-amber-200/25 bg-amber-300/10 text-amber-200">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[12px] border border-violet-300/25 bg-violet-500/10 text-violet-200">
               <Crown size={19} weight="duotone" aria-hidden="true" />
             </span>
             Mesas VIP y cortesías
@@ -104,7 +104,7 @@ export function VipTables({
           href={href}
           source={source}
           eventSlug={eventSlug}
-          className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-full bg-amber-200 px-6 text-center text-sm font-black text-black transition hover:bg-amber-100"
+          className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-full bg-emerald-400 px-6 text-center text-sm font-black text-black transition hover:bg-emerald-300"
         >
           <WhatsappLogo size={18} weight="fill" aria-hidden="true" />
           Consultar mesas

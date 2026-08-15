@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { BuyButton } from "@/components/buy-button";
-import { Clock, Fire, MapPin, ProhibitInset, Ticket } from "@phosphor-icons/react/dist/ssr";
+import { Fire, MapPin, ProhibitInset, Ticket } from "@phosphor-icons/react/dist/ssr";
 import { FlyerFallback, FlyerImage } from "@/components/flyer-image";
 import { WhatsappLink } from "@/components/whatsapp-link";
 import type { CtaPlacement } from "@/lib/analytics";
@@ -22,6 +22,13 @@ const timeFormatter = new Intl.DateTimeFormat("es-AR", {
  * pantalla entera, así que ver ocho fechas eran ocho pantallas de scroll. Esta fila muestra
  * la misma información en una fracción del alto, y se reutiliza en el hero, en la agenda de
  * la home y en los eventos relacionados.
+ *
+ * El riel de fecha vive a la izquierda **en las dos densidades**. Antes el bloque en mono
+ * —el elemento más distintivo del sitio— era `hidden sm:block`, así que en mobile, que es de
+ * donde entra la mayoría del tráfico, la firma de la marca simplemente no existía: se
+ * reemplazaba por un badge negro chico encima del flyer, apilado con los chips de estado.
+ * Ahora el riel es la columna que ordena la agenta en cualquier ancho, y es también donde
+ * cae el troquelado que se repite en tarjeta y detalle.
  */
 export function EventRow({
   event,
@@ -40,37 +47,35 @@ export function EventRow({
   // Ancho fijo en desktop para que los botones de todas las filas queden alineados en
   // columna aunque cambie el texto ("Comprar en Bombo" vs "Avisame si se libera").
   const ctaClass =
-    "inline-flex w-full shrink-0 items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-violet-600 to-blue-600 min-h-11 px-4 text-center text-xs font-black text-white sm:min-h-0 sm:py-2.5 shadow-[0_14px_30px_rgba(91,33,182,0.28)] transition hover:from-violet-500 hover:to-blue-500 sm:w-[170px]";
+    "inline-flex w-full shrink-0 items-center justify-center gap-1.5 rounded-full bg-brand min-h-11 px-4 text-center text-xs font-black text-brand-ink sm:min-h-0 sm:py-2.5 shadow-[0_8px_24px_-10px_rgba(61,232,245,0.45)] transition hover:bg-brand-strong sm:w-[170px]";
   const chipClass =
     "whitespace-nowrap rounded-full border px-2.5 py-1 text-[11px] sm:px-2 sm:text-[10px]";
 
   return (
-    <article className="group w-full max-w-full overflow-hidden rounded-[20px] border border-white/10 bg-white/[0.035] shadow-2xl shadow-black/15 transition duration-300 hover:border-violet-300/30 hover:bg-white/[0.06]">
-      {/* El flyer ocupaba 210px de una columna de ~700px, así que al título le quedaban unos
-          190px y se cortaba. A 100px el título recibe ~304px y entra completo, y de paso el
-          recorte deja de ser una franja horizontal sobre un flyer vertical.
-          Todo el grid vive en sm: y superiores: mobile mantiene el apilado actual. */}
-      <div className="flex min-w-0 flex-col gap-3 p-3 sm:grid sm:min-h-[139px] sm:grid-cols-[92px_48px_minmax(0,1fr)_auto] sm:items-center sm:gap-4 lg:grid-cols-[96px_52px_minmax(0,1fr)_auto] xl:grid-cols-[100px_56px_minmax(0,1fr)_auto]">
+    <div className="ticket-elev">
+      <article className="ticket-cut group grid w-full max-w-full grid-cols-[84px_minmax(0,1fr)] overflow-hidden rounded-[20px] border border-white/10 bg-white/[0.035] transition duration-300 hover:border-brand/25 hover:bg-white/[0.06] sm:grid-cols-[84px_100px_minmax(0,1fr)_auto] sm:items-center">
+        <DateRail badge={badge} time={eventTime} />
+
         <Link
           href={`/eventos/${event.slug}`}
-          className="flyer-glow-sm relative h-32 w-full overflow-hidden rounded-[12px] bg-white/5 sm:h-[115px] sm:w-full lg:h-[120px] xl:h-[125px]"
+          className="flyer-glow-sm relative m-3 h-28 overflow-hidden rounded-[12px] bg-white/5 sm:my-4 sm:ml-4 sm:mr-0 sm:h-[112px] lg:h-[118px]"
         >
           {event.flyer_url ? (
             <FlyerImage
               src={event.flyer_url}
               alt={`Flyer de ${event.title}`}
-              sizes="(max-width: 640px) 100vw, 100px"
+              sizes="(max-width: 640px) 70vw, 100px"
               priority={priority}
               className="object-cover transition duration-500 group-hover:scale-105"
             />
           ) : (
             <FlyerFallback size="text-2xl" />
           )}
-          {/* Solo mobile: en desktop estos badges duplicaban el chip de la columna de texto y,
-              con el flyer más chico, taparían el arte entero. */}
-          <div className="absolute left-3 top-3 flex flex-wrap gap-2 sm:hidden">
+          {/* Solo mobile: en desktop estos badges duplicarían el chip de la columna de texto
+              y, con el flyer más chico, taparían el arte entero. */}
+          <div className="absolute left-2.5 top-2.5 flex flex-wrap gap-2 sm:hidden">
             {event.featured ? (
-              <span className="rounded-full bg-gradient-to-r from-violet-600 to-blue-600 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-white">
+              <span className="rounded-full bg-brand px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-brand-ink">
                 Destacado
               </span>
             ) : null}
@@ -84,38 +89,17 @@ export function EventRow({
               </span>
             ) : null}
           </div>
-          <span
-            className={`absolute left-3 ${
-              event.featured || isSoldOut || hasLastTickets ? "top-12" : "top-3"
-            } grid min-w-9 place-items-center rounded-[12px] border border-white/10 bg-black/70 px-2 py-1.5 text-center shadow-lg shadow-black/25 sm:hidden`}
-          >
-            <span className="tabular text-lg font-medium leading-none text-white">{badge.day}</span>
-            <span className="tabular mt-0.5 text-[8px] uppercase tracking-[0.16em] text-white/62">{badge.month}</span>
-          </span>
         </Link>
 
-        {/* La fecha es el único elemento que se repite en cada fila, tarjeta y detalle, así
-            que es donde vive la identidad. En mono con cifras tabulares la columna alinea
-            verticalmente y la agenda se lee como una grilla de horarios impresa. */}
-        <div className="hidden text-center sm:block">
-          <p className="tabular text-[10px] uppercase tracking-[0.2em] text-white/48">{badge.month}</p>
-          <p className="tabular mt-1.5 text-[28px] font-medium leading-none text-white">{badge.day}</p>
-          <span className="mx-auto mt-2 block h-px w-5 bg-white/20" aria-hidden="true" />
-        </div>
-
-        <div className="min-w-0 px-1 sm:px-0">
+        <div className="col-start-2 min-w-0 px-3 pb-3 sm:col-start-auto sm:px-4 sm:py-4">
           <Link href={`/eventos/${event.slug}`}>
-            {/* Mobile conserva `truncate` tal cual está hoy. En desktop el nombre entra
-                completo y, si alguno fuera muy largo, baja a una segunda línea. */}
-            <h3 className="font-display truncate text-lg font-black leading-tight tracking-[-0.02em] text-white sm:line-clamp-2 sm:whitespace-normal sm:text-xl">
+            {/* En desktop el nombre entra completo y, si alguno fuera muy largo, baja a una
+                segunda línea. En mobile ahora hay ancho suficiente para dos líneas. */}
+            <h3 className="font-display line-clamp-2 text-lg font-black leading-tight tracking-[-0.02em] text-white sm:text-xl">
               {event.title}
             </h3>
           </Link>
           <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-white/62">
-            <span className="inline-flex items-center gap-1">
-              <Clock size={14} weight="bold" aria-hidden="true" />
-              <span className="tabular">{eventTime}</span> hs
-            </span>
             <span className="inline-flex min-w-0 items-center gap-1">
               <MapPin size={14} weight="fill" aria-hidden="true" />
               <span className="min-w-0 break-words sm:truncate">{event.venue_name || "Venue a confirmar"}</span>
@@ -146,13 +130,13 @@ export function EventRow({
           </div>
         </div>
 
-        <div className="flex min-w-0 px-1 sm:justify-end sm:px-0">
+        <div className="col-start-2 flex min-w-0 px-3 pb-3 sm:col-start-auto sm:justify-end sm:px-4 sm:pb-0">
           {isSoldOut ? (
             <WhatsappLink
               href={whatsappUrlOrGroup(buildWaitlistWhatsappMessage(event.title))}
               source="soldout"
               eventSlug={event.slug}
-              className={ctaClass}
+              className={`${ctaClass} !bg-emerald-400 !text-black shadow-none hover:!bg-emerald-300`}
             >
               Avisame si se libera
             </WhatsappLink>
@@ -163,13 +147,37 @@ export function EventRow({
             </BuyButton>
           )}
         </div>
-      </div>
-    </article>
+      </article>
+    </div>
+  );
+}
+
+/**
+ * Riel de fecha: el elemento firma del sitio.
+ *
+ * Se lee como una grilla de horarios impresa —día de la semana, número, mes, hora— en mono
+ * con cifras tabulares, así que la columna alinea verticalmente entre filas y la agenda se
+ * escanea de un vistazo. Es lo único que se repite idéntico en fila, tarjeta y detalle, y
+ * por eso es donde vive la identidad.
+ */
+function DateRail({
+  badge,
+  time
+}: {
+  badge: { day: string; month: string; weekday: string };
+  time: string;
+}) {
+  return (
+    <div className="ticket-perf row-span-3 flex h-full flex-col items-center justify-start bg-black/25 bg-right px-2 py-5 text-center sm:row-span-1 sm:justify-center sm:py-4">
+      <p className="tabular text-[9px] uppercase tracking-[0.24em] text-brand">{badge.weekday}</p>
+      <p className="tabular mt-1 text-[30px] font-medium leading-none text-white">{badge.day}</p>
+      <p className="tabular mt-1 text-[10px] uppercase tracking-[0.2em] text-white/62">{badge.month}</p>
+      <span className="mt-2.5 block h-px w-5 bg-white/20" aria-hidden="true" />
+      <p className="tabular mt-2 text-[11px] leading-none text-white/48">{time}</p>
+    </div>
   );
 }
 
 function formatEventTime(date: string) {
   return timeFormatter.format(new Date(date)).replace(/[^\d:]/g, "").padStart(5, "0");
 }
-
-
