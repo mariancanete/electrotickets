@@ -3,6 +3,7 @@ import Link from "next/link";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { CheckCircle, XCircle } from "@phosphor-icons/react/dist/ssr";
+import { OfficialVenues } from "@/components/official-venues";
 import { WhatsappLink } from "@/components/whatsapp-link";
 import { absoluteUrl, siteConfig } from "@/lib/site";
 import { buildGeneralWhatsappMessage, whatsappUrlOrGroup } from "@/lib/whatsapp";
@@ -13,7 +14,10 @@ import { buildGeneralWhatsappMessage, whatsappUrlOrGroup } from "@/lib/whatsapp"
  * clientes, años de experiencia ni testimonios porque no hay dato real que los respalde, y
  * una credencial inventada destruye exactamente la confianza que la página busca construir.
  *
- * Lo que más suma acá es lo que solo vos podés agregar: nombre completo, una foto y el
+ * Ya cargado: los venues donde ElectroTickets es RRPP oficial, que viven en
+ * `lib/credentials.ts` y se muestran con `<OfficialVenues />`.
+ *
+ * Lo que sigue faltando es lo que solo vos podés agregar: nombre completo, una foto y el
  * tiempo típico de respuesta por WhatsApp. En un negocio de RRPP, la cara es el producto.
  */
 
@@ -60,6 +64,12 @@ export default function AboutPage() {
             que importan, verificamos el link de compra de cada una y te acompañamos por WhatsApp antes y después de
             comprar.
           </p>
+
+          {/* La credencial que faltaba. Esta página aclaraba en su encabezado que no lleva
+              cantidad de clientes ni testimonios porque no hay dato real que los respalde;
+              los venues donde ElectroTickets es RRPP oficial sí son un dato real, y son la
+              razón concreta por la que los links son oficiales y no una promesa. */}
+          <OfficialVenues className="mt-6 rounded-[12px] border border-white/10 bg-black/20 px-4 py-3" />
 
           <section className="glass mt-10 rounded-[20px] p-6 sm:p-8">
             <h2 className="text-2xl font-black">Qué somos y qué no somos</h2>

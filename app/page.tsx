@@ -40,15 +40,23 @@ export default async function HomePage() {
   const heroEvents = [...featuredEvents, ...events.filter((event) => !event.featured)].slice(0, 3);
   const heroIds = new Set(heroEvents.map((event) => event.id));
 
-  // La home repetía en la grilla los mismos tres eventos que ya mostraba el hero. Acá se
-  // listan solo los que no están arriba.
-  const agendaEvents = events.filter((event) => !heroIds.has(event.id));
-  const weekendEvents = getWeekendEvents(agendaEvents);
+  // Las secciones curadas se calculan sobre **todos** los eventos, incluidos los del hero.
+  //
+  // Antes partían de una lista que excluía lo que ya estaba arriba, para no repetir. El
+  // efecto colateral era que una fecha marcada como últimas entradas desaparecía de la
+  // sección "Últimas entradas" por el solo hecho de haber quedado entre los tres del hero,
+  // y lo mismo pasaba con las fechas del finde. Una sección de escasez que se saltea fechas
+  // que se están agotando está rota: acá la completitud vale más que no repetir.
+  const weekendEvents = getWeekendEvents(events);
   const weekendIds = new Set(weekendEvents.map((event) => event.id));
-  const lastTicketsEvents = getLastTicketsEvents(agendaEvents).filter((event) => !weekendIds.has(event.id));
+  // Una fecha que es del finde y además tiene últimas entradas se lista una sola vez, en
+  // "Este finde": la fila ya muestra su chip rojo, así que el dato de escasez no se pierde.
+  const lastTicketsEvents = getLastTicketsEvents(events).filter((event) => !weekendIds.has(event.id));
   const highlightedIds = new Set([...weekendIds, ...lastTicketsEvents.map((event) => event.id)]);
 
-  const restOfAgenda = agendaEvents.filter((event) => !highlightedIds.has(event.id));
+  // La agenda genérica sí evita repetir: es la lista larga de relleno, y ahí sí molesta
+  // volver a ver lo que ya apareció en el hero o en una sección curada.
+  const restOfAgenda = events.filter((event) => !heroIds.has(event.id) && !highlightedIds.has(event.id));
   const visibleAgenda = restOfAgenda.slice(0, HOME_AGENDA_LIMIT);
   const remainingCount = restOfAgenda.length - visibleAgenda.length;
 

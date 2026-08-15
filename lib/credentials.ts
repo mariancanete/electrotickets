@@ -20,8 +20,12 @@
  */
 
 export const credentials = {
-  /** Ej.: ["Crobar", "Mandarine Park"]. Vacío = no se renderiza la línea de venues. */
-  officialVenues: [] as string[],
+  /**
+   * Venues donde ElectroTickets es RRPP oficial. Dato aportado por el dueño del proyecto.
+   * Los nombres van tal como los pasó: no completar, corregir ni "mejorar" la nomenclatura
+   * sin confirmarlo, porque es una afirmación pública sobre relaciones comerciales reales.
+   */
+  officialVenues: ["Mute", "Mandarine", "Crobar", "Rio", "The Bow"] as string[],
 
   /** Ej.: 2023. `null` = no se renderiza. */
   sinceYear: null as number | null,

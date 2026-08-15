@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { EventRow } from "@/components/event-row";
+import { OfficialVenues } from "@/components/official-venues";
 import type { EventRecord } from "@/types/event";
 
 /**
@@ -87,21 +88,28 @@ export function Hero({ featuredEvents }: { featuredEvents: EventRecord[] }) {
               dos botones: el argumento por el que alguien elige ElectroTickets en vez de
               buscar en Bombo directo llegaba último y en el cuerpo más chico de la página.
               En desktop vuelve al pie de la columna, donde cierra parejo con la otra. */}
-          <div className="order-4 mt-6 grid max-w-2xl grid-cols-3 gap-0 overflow-hidden rounded-[12px] border border-white/10 bg-black/20 sm:mt-7 lg:order-none lg:mt-auto">
-            {microBenefits.map((item) => (
-              <div
-                key={item.title}
-                className="flex flex-col items-center gap-1.5 border-r border-white/10 px-2 py-3 text-center last:border-r-0 sm:flex-row sm:items-center sm:gap-3 sm:px-4 sm:text-left"
-              >
-                <span className="shrink-0 text-brand">{item.icon}</span>
-                <span className="min-w-0">
-                  <span className="block text-[11px] font-bold leading-tight text-white sm:text-[13px]">
-                    {item.title}
+          <div className="order-4 mt-6 max-w-2xl overflow-hidden rounded-[12px] border border-white/10 bg-black/20 sm:mt-7 lg:order-none lg:mt-auto">
+            <div className="grid grid-cols-3 gap-0">
+              {microBenefits.map((item) => (
+                <div
+                  key={item.title}
+                  className="flex flex-col items-center gap-1.5 border-r border-white/10 px-2 py-3 text-center last:border-r-0 sm:flex-row sm:items-center sm:gap-3 sm:px-4 sm:text-left"
+                >
+                  <span className="shrink-0 text-brand">{item.icon}</span>
+                  <span className="min-w-0">
+                    <span className="block text-[11px] font-bold leading-tight text-white sm:text-[13px]">
+                      {item.title}
+                    </span>
+                    <span className="mt-1 hidden text-[12px] leading-snug text-white/62 sm:block">{item.text}</span>
                   </span>
-                  <span className="mt-1 hidden text-[12px] leading-snug text-white/62 sm:block">{item.text}</span>
-                </span>
-              </div>
-            ))}
+                </div>
+              ))}
+            </div>
+            {/* Va adentro de la misma caja y no como bloque aparte: las otras tres señales son
+                promesas del sitio, esta es un hecho verificable, y juntas se leen como una
+                sola credencial en vez de como dos avisos sueltos. Además mantiene intacto el
+                `lg:mt-auto` que cierra las dos columnas del hero a la misma altura. */}
+            <OfficialVenues className="border-t border-white/10 px-3 py-2.5 sm:px-4" />
           </div>
 
           {/* En fila también en mobile: apilados sumaban ~110px de alto y empujaban la
