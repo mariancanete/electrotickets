@@ -64,13 +64,17 @@ export function Hero({ featuredEvents }: { featuredEvents: EventRecord[] }) {
             Argentina · Compra por Bombo
           </div>
 
-          {/* El titular anterior ("Las mejores fechas de electrónica, en un solo lugar")
-              vendía la categoría, no la marca: cualquier agregador podía firmarlo. Este dice
-              qué es ElectroTickets —la lista— y de paso nombra el rubro y el país, que es lo
-              que se busca. Cuatro palabras entran grandes en un teléfono; la anterior tenía
-              nueve y bajaba a cinco líneas. */}
+          {/* Tercera versión del titular, y las dos anteriores fallaron por motivos opuestos.
+              "Las mejores fechas de electrónica, en un solo lugar" vendía la categoría: lo
+              podía firmar cualquier agregador. "La lista de la electrónica argentina" se
+              apoyaba en una metáfora muerta —la lista de RRPP es cosa del pasado y ya no le
+              dice nada a nadie—.
+
+              Este nombra el lugar, que es lo que construye recordación: la respuesta a
+              "¿dónde miro qué hay?". "Suena" es lengua de la noche y no de marketplace, y
+              rubro y país quedan explícitos para quien llega buscando exactamente eso. */}
           <h1 className="max-w-2xl text-balance text-[2.5rem] font-black leading-[0.95] tracking-[-0.03em] text-white sm:text-5xl lg:text-[3.6rem] xl:text-[4rem]">
-            La lista de la electrónica argentina.
+            Dónde suena la electrónica en Argentina.
           </h1>
           <p className="mt-4 max-w-xl text-base leading-7 text-white/62 sm:mt-5 sm:text-lg">
             Cada fecha con su <span className="font-semibold text-white">link oficial</span> de Bombo, lineup y

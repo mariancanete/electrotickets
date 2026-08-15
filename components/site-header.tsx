@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { MobileNav } from "@/components/mobile-nav";
-import { Wordmark, WordmarkMonogram } from "@/components/wordmark";
+import { BrandMark, Wordmark } from "@/components/wordmark";
 
 export function SiteHeader() {
   return (
@@ -11,7 +11,7 @@ export function SiteHeader() {
           className="flex items-center gap-2.5 transition hover:opacity-90"
           aria-label="Ir al inicio de ElectroTickets"
         >
-          <WordmarkMonogram className="h-9 w-9 shrink-0" />
+          <BrandMark className="h-9 w-9 shrink-0 text-brand" />
           <Wordmark size="md" />
         </Link>
 

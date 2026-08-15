@@ -59,11 +59,15 @@ export default async function HomePage() {
         <Hero featuredEvents={heroEvents} />
 
         <div className="mx-auto max-w-7xl space-y-10 px-4 pb-16 pt-4 sm:px-6 lg:px-8">
+          {/* La descripción decía "dentro de los próximos siete días", que era la ventana del
+              filtro contada en voz alta. En pantalla confundía: nadie piensa el finde como un
+              horizonte de días. `getWeekendEvents` no cambia; solo se nombra por lo que
+              devuelve, que son las fechas de viernes, sábado y domingo. */}
           {weekendEvents.length ? (
             <AgendaSection
               eyebrow="Esta semana"
               title="Este finde"
-              description="Las fechas de viernes a domingo dentro de los próximos siete días."
+              description="Todo lo que hay viernes, sábado y domingo."
               events={weekendEvents}
               placement="home_weekend"
             />

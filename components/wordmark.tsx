@@ -11,17 +11,32 @@
  * dicen las dos mitades del negocio, y no hay ni un byte de fuente nuevo.
  */
 
-/** Monograma para superficies cuadradas chicas: favicon, avatar, el cuadro del header. */
-export function WordmarkMonogram({ className = "" }: { className?: string }) {
+/**
+ * Marca gráfica: ticket troquelado con el rayo calado.
+ *
+ * La versión anterior era el monograma "ET" dentro de un recuadro, y no era un logo: era
+ * texto en una caja. Un logo tiene que ser reconocible como *forma*, sin leerse.
+ *
+ * Esta lo es por dos razones. La primera es que las muescas laterales son exactamente la
+ * misma perforación que `.ticket-cut` recorta en cada fila y cada tarjeta del sitio: la
+ * marca y el objeto que se repite en todas las pantallas son la misma figura, así que cada
+ * fecha de la agenda refuerza el logo. La segunda es que el rayo y el ticket son los dos
+ * sustantivos del nombre —electro y tickets— resueltos en una sola silueta.
+ *
+ * Se dibuja como un único `path` con `fillRule="evenodd"`: el rayo es un agujero, no una
+ * pieza encima. Eso la deja en un solo color plano —hereda `currentColor`— así que funciona
+ * en cyan sobre el fondo, en blanco sobre cyan, en negro sobre papel y a 16px en una pestaña,
+ * que es donde el degradé de tres paradas del logo original se convertía en una mancha.
+ */
+export function BrandMark({ className = "" }: { className?: string }) {
   return (
-    <span
-      className={`grid place-items-center rounded-[12px] border border-brand/35 bg-brand/10 ${className}`}
-      aria-hidden="true"
-    >
-      <span className="tabular text-[15px] font-medium leading-none tracking-[0.06em] text-brand">
-        ET
-      </span>
-    </span>
+    <svg viewBox="0 0 64 64" className={className} role="presentation" aria-hidden="true">
+      <path
+        fill="currentColor"
+        fillRule="evenodd"
+        d="M21 8h22a13 13 0 0 1 13 13v4.5a6.5 6.5 0 0 0 0 13V43a13 13 0 0 1-13 13H21A13 13 0 0 1 8 43v-4.5a6.5 6.5 0 0 0 0-13V21A13 13 0 0 1 21 8Zm16 5L18 37h11.5l-3.5 16 18-25H31l6-15Z"
+      />
+    </svg>
   );
 }
 

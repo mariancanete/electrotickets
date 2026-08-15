@@ -10,36 +10,29 @@ export const size = {
 };
 
 /**
- * Monograma ET.
+ * Marca: ticket troquelado con el rayo calado. Es la misma figura que `BrandMark` en
+ * `components/wordmark.tsx` y que `public/favicon.svg`.
  *
- * Reemplaza las tres barras inclinadas con degradé del logo anterior. La imagen OG es lo que
- * se ve cuando alguien comparte una fecha por WhatsApp o Instagram, así que tiene que llevar
- * exactamente la misma marca que el header del sitio: si acá quedara el logo viejo, todos los
- * links compartidos seguirían mostrando una identidad que el sitio ya no usa.
+ * La imagen OG es lo que se ve cuando alguien comparte una fecha por WhatsApp o Instagram,
+ * así que tiene que llevar exactamente la misma marca que el header: si acá quedara otra
+ * cosa, todos los links compartidos mostrarían una identidad que el sitio ya no usa.
+ *
+ * Va como `<img>` con data URI y no como SVG inline porque el renderer de `next/og` es
+ * Satori, que no dibuja `path`. Rasteriza el SVG y lo compone como imagen, que sí soporta.
  *
  * La metadata de la ruta (`alt`, `contentType`, `size`) no cambia: solo cambia el dibujo.
  */
+const MARK_PATH =
+  "M21 8h22a13 13 0 0 1 13 13v4.5a6.5 6.5 0 0 0 0 13V43a13 13 0 0 1-13 13H21A13 13 0 0 1 8 43v-4.5a6.5 6.5 0 0 0 0-13V21A13 13 0 0 1 21 8Zm16 5L18 37h11.5l-3.5 16 18-25H31l6-15Z";
+
+const MARK_DATA_URI = `data:image/svg+xml;utf8,${encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><path fill="#3DE8F5" fill-rule="evenodd" d="${MARK_PATH}"/></svg>`
+)}`;
+
 function ElectroTicketsMark({ size = 152 }: { size?: number }) {
   return (
-    <div
-      style={{
-        alignItems: "center",
-        background: "rgba(61,232,245,0.10)",
-        border: "2px solid rgba(61,232,245,0.38)",
-        borderRadius: 32,
-        boxShadow: "0 0 70px rgba(61,232,245,0.22)",
-        color: "#3DE8F5",
-        display: "flex",
-        fontSize: size * 0.42,
-        fontWeight: 600,
-        height: size,
-        justifyContent: "center",
-        letterSpacing: size * 0.03,
-        width: size
-      }}
-    >
-      ET
-    </div>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={MARK_DATA_URI} width={size} height={size} alt="" />
   );
 }
 
@@ -117,14 +110,8 @@ export function GET() {
               </div>
             </div>
           </div>
-          <div
-            style={{
-              background: "#3DE8F5",
-              borderRadius: 999,
-              height: 6,
-              width: 390
-            }}
-          />
+          {/* El lockup ya trae su propia regla cyan entre ELECTRO y TICKETS; la que había
+              acá debajo quedaba como una segunda línea sin función. */}
           <div
             style={{
               color: "rgba(255,255,255,0.82)",
