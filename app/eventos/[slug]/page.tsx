@@ -8,8 +8,26 @@ import { FlyerFallback, FlyerImage } from "@/components/flyer-image";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { VipTables, WhatsappAlerts } from "@/components/whatsapp-alerts";
+import { EventCountdown } from "@/components/event-countdown";
+import { SectionHeading } from "@/components/section-heading";
 import { WhatsappLink } from "@/components/whatsapp-link";
 import { YoutubeFacade } from "@/components/youtube-facade";
+import {
+  CalendarBlank,
+  CurrencyDollarSimple,
+  Fire,
+  Info,
+  MapPin,
+  MapTrifold,
+  ProhibitInset,
+  Question,
+  ShoppingBagOpen,
+  SpeakerHigh,
+  Ticket,
+  UsersThree,
+  WhatsappLogo
+} from "@phosphor-icons/react/dist/ssr";
+import type { Icon } from "@phosphor-icons/react";
 import { formatEventLongDate } from "@/lib/dates";
 import {
   getEventBySlug,
@@ -169,7 +187,9 @@ export default async function EventDetailPage({ params }: PageProps) {
 
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.9fr_1.1fr]">
           <div className="lg:sticky lg:top-24 lg:self-start">
-            <div className="relative aspect-[4/5] overflow-hidden rounded-[20px] border border-white/10 bg-white/5 shadow-2xl shadow-black/30">
+            {/* El flyer pasa de estar enmarcado a estar encendido: la sombra de color lo
+                convierte en fuente de luz en vez de contenido pegado sobre una caja. */}
+            <div className="flyer-glow relative aspect-[4/5] overflow-hidden rounded-[20px] bg-white/5">
               {event.flyer_url ? (
                 <FlyerImage
                   src={event.flyer_url}
@@ -196,12 +216,16 @@ export default async function EventDetailPage({ params }: PageProps) {
                 {event.featured && !finished ? (
                   <span className="rounded-full bg-white px-3 py-1 text-sm font-bold text-black">Destacado</span>
                 ) : null}
+                {/* Los estados comerciales llevan icono: se reconocen sin leer, que es lo
+                    que importa cuando se scrollea en un teléfono. */}
                 {isSoldOut ? (
-                  <span className="rounded-full bg-red-700 px-3 py-1 text-sm font-black text-white shadow-lg shadow-red-950/40">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-red-700 px-3 py-1 text-sm font-black text-white shadow-lg shadow-red-950/40">
+                    <ProhibitInset size={15} weight="fill" aria-hidden="true" />
                     Sold Out
                   </span>
                 ) : hasLastTickets ? (
-                  <span className="rounded-full bg-red-600 px-3 py-1 text-sm font-black text-white shadow-lg shadow-red-950/30">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-red-600 px-3 py-1 text-sm font-black text-white shadow-lg shadow-red-950/30">
+                    <Fire size={15} weight="fill" aria-hidden="true" />
                     Últimas entradas
                   </span>
                 ) : null}
@@ -210,13 +234,16 @@ export default async function EventDetailPage({ params }: PageProps) {
               <h1 className="mt-5 text-4xl font-black tracking-tight sm:text-6xl">{event.title}</h1>
 
               <div className="mt-8 grid gap-4 md:grid-cols-3">
-                <InfoCard label="Fecha y horario" value={formatEventLongDate(event.starts_at)} />
+                <InfoCard icon={CalendarBlank} label="Fecha y horario" value={formatEventLongDate(event.starts_at)} />
                 <InfoCard
+                  icon={MapPin}
                   label="Venue"
                   value={`${event.venue_name || "A confirmar"}${event.city ? ` · ${event.city}` : ""}`}
                 />
-                <InfoCard label="Ubicación" value={event.venue_address || event.city || "Argentina"} />
+                <InfoCard icon={MapTrifold} label="Ubicación" value={event.venue_address || event.city || "Argentina"} />
               </div>
+
+              {!finished ? <EventCountdown startsAt={event.starts_at} /> : null}
 
               {finished ? (
                 <FinishedEventBlock event={event} sameArtistEvent={sameArtistEvent} />
@@ -234,7 +261,7 @@ export default async function EventDetailPage({ params }: PageProps) {
                 al final, debajo de dos acordeones de texto escrito para buscadores. */}
             {event.lineup?.length ? (
               <div className="glass rounded-[20px] p-6 sm:p-8">
-                <h2 className="text-2xl font-black">Lineup</h2>
+                <SectionHeading icon={UsersThree}>Lineup</SectionHeading>
                 <div className="mt-5 flex flex-wrap gap-3">
                   {event.lineup.map((artist) => (
                     <span
@@ -250,7 +277,7 @@ export default async function EventDetailPage({ params }: PageProps) {
 
             {embedUrl && videoId ? (
               <div className="glass rounded-[20px] p-4 sm:p-5">
-                <h2 className="px-2 pb-4 text-2xl font-black">Videoset</h2>
+                <SectionHeading icon={SpeakerHigh} className="px-2 pb-4">Videoset</SectionHeading>
                 <div className="aspect-video overflow-hidden rounded-[12px] bg-black">
                   <YoutubeFacade
                     embedUrl={embedUrl}
@@ -267,7 +294,7 @@ export default async function EventDetailPage({ params }: PageProps) {
             ) : null}
 
             <div className="glass rounded-[20px] p-6 sm:p-8">
-              <h2 className="text-2xl font-black">Sobre el evento</h2>
+              <SectionHeading icon={Info}>Sobre el evento</SectionHeading>
               <p className="mt-4 text-base leading-7 text-white/62">{aboutEvent}</p>
 
               {!finished ? (
@@ -286,7 +313,7 @@ export default async function EventDetailPage({ params }: PageProps) {
 
             {!finished ? (
               <div className="glass rounded-[20px] p-6 sm:p-8">
-                <h2 className="text-2xl font-black">¿Tenés dudas sobre este evento?</h2>
+                <SectionHeading icon={WhatsappLogo}>¿Tenés dudas sobre este evento?</SectionHeading>
                 <p className="mt-3 text-base leading-7 text-white/62">
                   Escribinos por WhatsApp para consultar por la fecha o sumate al grupo de difusión para recibir
                   próximos eventos.
@@ -296,7 +323,7 @@ export default async function EventDetailPage({ params }: PageProps) {
                     href={contactUrl}
                     source="event_question"
                     eventSlug={event.slug}
-                    className="rounded-full bg-emerald-400 px-5 py-3 text-center text-sm font-black text-black transition hover:scale-[1.01] hover:bg-emerald-300"
+                    className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-emerald-400 px-5 text-center text-sm font-black text-black transition hover:scale-[1.01] hover:bg-emerald-300"
                   >
                     Consultar por WhatsApp
                   </WhatsappLink>
@@ -305,7 +332,7 @@ export default async function EventDetailPage({ params }: PageProps) {
                     source="event_question"
                     kind="group"
                     eventSlug={event.slug}
-                    className="rounded-full border border-emerald-300/30 px-5 py-3 text-center text-sm font-bold text-emerald-100 transition hover:bg-emerald-300/10"
+                    className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-emerald-300/30 px-5 text-center text-sm font-bold text-emerald-100 transition hover:bg-emerald-300/10"
                   >
                     Grupo de difusión
                   </WhatsappLink>
@@ -315,7 +342,7 @@ export default async function EventDetailPage({ params }: PageProps) {
 
             <details className="group glass rounded-[20px] p-6 sm:p-8">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-2xl font-black marker:hidden">
-                <span>Cómo comprar</span>
+                <span className="flex items-center gap-2.5"><span className="grid h-9 w-9 shrink-0 place-items-center rounded-[12px] border border-violet-300/20 bg-violet-500/10 text-violet-200"><ShoppingBagOpen size={19} weight="duotone" aria-hidden="true" /></span>Cómo comprar</span>
                 <span
                   className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/10 bg-black/25 text-base text-white/78 transition group-open:rotate-45 group-open:bg-white group-open:text-black"
                   aria-hidden="true"
@@ -331,7 +358,7 @@ export default async function EventDetailPage({ params }: PageProps) {
             </details>
 
             <div className="glass rounded-[20px] p-6 sm:p-8">
-              <h2 className="text-2xl font-black">Preguntas frecuentes del evento</h2>
+              <SectionHeading icon={Question}>Preguntas frecuentes del evento</SectionHeading>
               <div className="mt-5 divide-y divide-white/10">
                 {faqItems.map((item) => (
                   <details key={item.question} className="group py-4 first:pt-0 last:pb-0">
@@ -360,7 +387,7 @@ export default async function EventDetailPage({ params }: PageProps) {
                   {finished ? "Próximas fechas parecidas" : "Eventos que también te pueden gustar"}
                 </h2>
               </div>
-              <Link href="/eventos" className="text-sm font-bold text-violet-200 transition hover:text-white">
+              <Link href="/eventos" className="inline-flex min-h-11 items-center text-sm font-bold text-violet-200 transition hover:text-white">
                 Ver agenda completa →
               </Link>
             </div>
@@ -390,8 +417,9 @@ export default async function EventDetailPage({ params }: PageProps) {
               href={waitlistUrl}
               source="soldout"
               eventSlug={event.slug}
-              className="block rounded-full bg-emerald-400 px-5 py-4 text-center text-sm font-black text-black shadow-2xl shadow-black/50"
+              className="flex min-h-[52px] items-center justify-center gap-2 rounded-full bg-emerald-400 px-5 text-center text-sm font-black text-black shadow-2xl shadow-black/50"
             >
+              <WhatsappLogo size={19} weight="fill" aria-hidden="true" />
               Avisame si se libera
             </WhatsappLink>
           ) : (
@@ -400,6 +428,7 @@ export default async function EventDetailPage({ params }: PageProps) {
               placement="sticky_mobile"
               className="block rounded-full bg-white px-5 py-4 text-center text-sm font-black text-black shadow-2xl shadow-black/50"
             >
+              <Ticket size={19} weight="fill" aria-hidden="true" />
               Comprar en Bombo
             </BuyButton>
           )}
@@ -456,16 +485,18 @@ function PurchaseBlock({
             <BuyButton
               event={event}
               placement="event_detail"
-              className="rounded-full bg-white px-6 py-4 text-center text-sm font-black text-black transition hover:scale-[1.01] hover:bg-white/85"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-white px-6 text-center text-sm font-black text-black transition hover:scale-[1.01] hover:bg-white/85"
             >
+              <Ticket size={19} weight="fill" aria-hidden="true" />
               Comprar en Bombo
             </BuyButton>
             <WhatsappLink
               href={priceUrl}
               source="event_price"
               eventSlug={event.slug}
-              className="rounded-full border border-emerald-300/30 px-6 py-4 text-center text-sm font-bold text-emerald-100 transition hover:bg-emerald-300/10"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-emerald-300/30 px-6 text-center text-sm font-bold text-emerald-100 transition hover:bg-emerald-300/10"
             >
+              <CurrencyDollarSimple size={18} weight="bold" aria-hidden="true" />
               Consultar precio por WhatsApp
             </WhatsappLink>
             {event.map_url ? (
@@ -473,8 +504,9 @@ function PurchaseBlock({
                 href={event.map_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="rounded-full border border-white/15 px-6 py-4 text-center text-sm font-bold text-white/78 transition hover:bg-white/10"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-white/15 px-6 text-center text-sm font-bold text-white/78 transition hover:bg-white/10"
               >
+                <MapTrifold size={18} weight="bold" aria-hidden="true" />
                 Ver ubicación
               </a>
             ) : null}
@@ -491,7 +523,7 @@ function PurchaseBlock({
             href={bomboAppLinks.ios}
             target="_blank"
             rel="noopener noreferrer"
-            className="rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-2 text-xs font-bold text-white/78 transition hover:border-white/25 hover:text-white"
+            className="inline-flex min-h-11 items-center rounded-full border border-white/10 bg-white/[0.04] px-4 text-xs font-bold text-white/78 transition hover:border-white/25 hover:text-white"
           >
             App Store
           </a>
@@ -499,7 +531,7 @@ function PurchaseBlock({
             href={bomboAppLinks.android}
             target="_blank"
             rel="noopener noreferrer"
-            className="rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-2 text-xs font-bold text-white/78 transition hover:border-white/25 hover:text-white"
+            className="inline-flex min-h-11 items-center rounded-full border border-white/10 bg-white/[0.04] px-4 text-xs font-bold text-white/78 transition hover:border-white/25 hover:text-white"
           >
             Google Play
           </a>
@@ -632,10 +664,13 @@ function shouldAppendPlaceToTitle(title: string, place: string) {
   return !normalizeText(title).includes(normalizeText(place));
 }
 
-function InfoCard({ label, value }: { label: string; value: string }) {
+function InfoCard({ icon: IconComponent, label, value }: { icon: Icon; label: string; value: string }) {
   return (
     <div className="rounded-[20px] border border-white/10 bg-black/25 p-4">
-      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/48">{label}</p>
+      <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-white/48">
+        <IconComponent size={14} weight="bold" aria-hidden="true" />
+        {label}
+      </p>
       <p className="mt-2 text-sm font-semibold leading-6 text-white/78">{value}</p>
     </div>
   );

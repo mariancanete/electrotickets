@@ -16,7 +16,7 @@ const host = supabaseImageHost();
 
 const nextConfig: NextConfig = {
   experimental: {
-    optimizePackageImports: ["framer-motion"]
+    optimizePackageImports: ["framer-motion", "@phosphor-icons/react"]
   },
   images: {
     formats: ["image/avif", "image/webp"],

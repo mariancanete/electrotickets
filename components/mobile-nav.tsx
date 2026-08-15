@@ -38,7 +38,7 @@ export function MobileNav() {
         onClick={() => setOpen((current) => !current)}
         aria-expanded={open}
         aria-label={open ? "Cerrar menú" : "Abrir menú"}
-        className="grid h-10 w-10 place-items-center rounded-full border border-white/15 bg-white/[0.06] text-white transition hover:bg-white/10"
+        className="grid h-11 w-11 place-items-center rounded-full border border-white/15 bg-white/[0.06] text-white transition hover:bg-white/10"
       >
         {open ? (
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" aria-hidden="true">

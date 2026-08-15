@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BuyButton } from "@/components/buy-button";
+import { CalendarBlank, Fire, MapPin, ProhibitInset, Ticket } from "@phosphor-icons/react/dist/ssr";
 import { FlyerFallback, FlyerImage } from "@/components/flyer-image";
 import { WhatsappLink } from "@/components/whatsapp-link";
 import type { CtaPlacement } from "@/lib/analytics";
@@ -19,7 +20,7 @@ export function EventCard({ event, placement, priority = false, showDetailsLink 
   const isSoldOut = Boolean(event.sold_out);
   const hasLastTickets = Boolean(event.last_tickets) && !isSoldOut;
   const ctaClass =
-    "rounded-full bg-white/10 px-4 py-2 text-center text-sm font-bold transition hover:bg-white hover:text-black";
+    "inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full bg-white/10 px-4 text-center text-sm font-bold transition hover:bg-white hover:text-black";
 
   return (
     <article className="group overflow-hidden rounded-[20px] border border-white/10 bg-white/[0.045] shadow-2xl shadow-black/25 transition duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-white/[0.07]">
@@ -45,11 +46,13 @@ export function EventCard({ event, placement, priority = false, showDetailsLink 
           </div>
           <div className="absolute right-4 top-4 flex max-w-[calc(100%-7.5rem)] flex-col items-end gap-2">
             {isSoldOut ? (
-              <span className="rounded-full bg-red-700 px-3 py-1 text-xs font-black text-white shadow-lg shadow-red-950/40">
+              <span className="inline-flex items-center gap-1 rounded-full bg-red-700 px-3 py-1 text-xs font-black text-white shadow-lg shadow-red-950/40">
+                <ProhibitInset size={13} weight="fill" aria-hidden="true" />
                 Sold Out
               </span>
             ) : hasLastTickets ? (
-              <span className="rounded-full bg-red-600 px-3 py-1 text-xs font-black text-white shadow-lg shadow-red-950/35">
+              <span className="inline-flex items-center gap-1 rounded-full bg-red-600 px-3 py-1 text-xs font-black text-white shadow-lg shadow-red-950/35">
+                <Fire size={13} weight="fill" aria-hidden="true" />
                 Últimas entradas
               </span>
             ) : null}
@@ -70,8 +73,12 @@ export function EventCard({ event, placement, priority = false, showDetailsLink 
           </Link>
         </div>
         <div className="space-y-2 text-[13px] text-white/62">
-          <p className="tabular">{formatEventDate(event.starts_at)}</p>
-          <p>
+          <p className="flex items-center gap-1.5">
+            <CalendarBlank size={14} weight="bold" aria-hidden="true" />
+            <span className="tabular">{formatEventDate(event.starts_at)}</span>
+          </p>
+          <p className="flex items-center gap-1.5">
+            <MapPin size={14} weight="fill" aria-hidden="true" />
             {event.venue_name || "Venue a confirmar"}
             {event.city ? ` · ${event.city}` : ""}
           </p>
@@ -95,6 +102,7 @@ export function EventCard({ event, placement, priority = false, showDetailsLink 
             </WhatsappLink>
           ) : (
             <BuyButton event={event} placement={placement} className={ctaClass}>
+              <Ticket size={15} weight="fill" aria-hidden="true" />
               Comprar en Bombo
             </BuyButton>
           )}
