@@ -75,9 +75,9 @@ Informado por la skill **`ui-ux-pro-max`**, con referencia visual de allmusicpar
   15px a 32px. Mínimo web WCAG es 24px; los primarios van a 44 por criterio.
 - Estados comerciales con icono: llama en "Últimas entradas", prohibido en "Sold Out".
 
-### Rama `claude/electrotickets-brand-identity-78v9rv` — identidad de marca
+### PR #25 — Identidad de marca: color de acción, logo y troquelado
 
-> **Estado: en rama, pendiente de revisión en la URL de preview.** Todavía no está en `main`.
+Mergeado y en producción.
 
 El objetivo de esta sesión no era estética sino **recordación**: que ElectroTickets sea la
 primera opción cuando alguien piensa "¿qué hay este finde?".
@@ -143,7 +143,13 @@ CTA de WhatsApp en emerald).
   agregador) y la segunda usaba la metáfora muerta de la lista. Esta nombra el lugar, que es
   lo que se recuerda. En "Este finde" se sacó "dentro de los próximos siete días": era la
   ventana de `getWeekendEvents` contada en voz alta y confundía. El filtro no cambió.
-- **Favicon e imagen OG** al monograma ET, y `themeColor` a `#0b0714` para que coincida con
+- **Íconos: hay dos fuentes y se tocan juntas.** `app/icon.svg` es una convención de archivo
+  del App Router y genera la ruta `/icon.svg`; `public/favicon.svg` es lo que declara
+  `metadata.icons`. Hoy gana el segundo porque `metadata.icons` tiene precedencia sobre la
+  convención, pero **dejarlos desincronizados hace reaparecer el logo viejo** por cualquier
+  vía que pida `/icon.svg`. En esta sesión pasó exactamente eso y costó una vuelta de
+  revisión. Si tocás uno, tocá el otro.
+- **Favicon, ícono e imagen OG** llevan la marca nueva, y `themeColor` a `#0b0714` para que coincida con
   el fondo real del body (había una costura visible en la barra del navegador en mobile).
   Los tres se aprobaron aparte por tocar zona restringida; la metadata de `app/og-logo` —
   `alt`, `contentType`, `size`, la URL— **no** cambió, solo el dibujo.
