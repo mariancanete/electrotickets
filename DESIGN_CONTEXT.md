@@ -98,8 +98,11 @@ decisión de marca que todo eso estuviera ejecutando:
 - El logo (tres barras con degradé de tres paradas) no funcionaba en un solo color, a 16px
   era una mancha y no tenía parentesco con la tipografía del nombre que llevaba al lado.
 
-**Concepto: la lista.** ElectroTickets no es un marketplace, es el RRPP que tiene la lista.
-Justifica el mono tabular que ya existía, la densidad de fila en mobile y el troquelado.
+**Concepto: el ticket.** La primera versión de esta sesión lo llamó "la lista" y **el dueño
+del proyecto lo rechazó con razón: la lista de RRPP es cosa del pasado y ya no le dice nada a
+nadie.** El concepto que quedó es el objeto que sí sigue vivo —el ticket troquelado— y sostiene
+igual las tres decisiones del sistema: el mono tabular de la fecha, la densidad de fila en
+mobile y la perforación como forma repetida. **No revivir la metáfora de la lista en el copy.**
 
 **Ley de color — cuatro roles cerrados** (documentada en `app/globals.css`):
 
@@ -117,10 +120,15 @@ CTA de WhatsApp en emerald).
 
 **Qué cambió:**
 
-- **El wordmark ahora es la tipografía** (`components/wordmark.tsx`): ELECTRO en Archivo
-  expandido + TICKETS en DM Mono trackeado, con regla cyan. Cero fuentes nuevas, funciona en
-  un solo color, y cada `h1` del sitio refuerza el logo porque están en la misma letra.
-  `WordmarkMonogram` (ET) cubre favicon, avatar y el cuadro del header.
+- **Wordmark tipográfico** (`components/wordmark.tsx`): ELECTRO en Archivo expandido +
+  TICKETS en DM Mono trackeado, con regla cyan. Cero fuentes nuevas, y cada `h1` del sitio
+  refuerza el logo porque están en la misma letra.
+- **Marca gráfica** (`BrandMark`): ticket troquelado con el rayo calado en negativo. Las
+  muescas laterales son la misma perforación que `.ticket-cut`, así que el logo y el objeto
+  que se repite en cada pantalla son la misma figura. Un solo `path` con `fillRule="evenodd"`
+  en color plano, probado a 16/24/40/110px. **La primera versión fue un monograma "ET" dentro
+  de un recuadro y se rechazó por no ser un logo sino texto en una caja** — si en el futuro se
+  vuelve a tocar, el criterio es que tiene que ser reconocible como forma, sin leerse.
 - **Riel de fecha en mono, también en mobile**, con día de la semana (`getDayBadge` ahora
   devuelve `weekday`). Es la columna que ordena la agenda en cualquier ancho.
 - **Troquelado de ticket** como única forma repetida: `.ticket-cut` (fila, vertical),
@@ -129,8 +137,12 @@ CTA de WhatsApp en emerald).
   como un parche. **La elevación se movió a `drop-shadow` en un contenedor `.ticket-elev`:**
   la máscara recorta todo lo que pinta el elemento, `box-shadow` incluido.
 - **Mobile:** confianza por encima de los botones (`order-4`/`order-5`), botones del hero en
-  una sola fila, barra fija de compra en cyan, h1 nuevo ("La lista de la electrónica
-  argentina" — el anterior vendía la categoría, no la marca).
+  una sola fila, barra fija de compra en cyan.
+- **Copy.** Titular: **"Dónde suena la electrónica en Argentina."** Es la tercera versión; la
+  primera vendía la categoría ("Las mejores fechas... en un solo lugar", lo firmaba cualquier
+  agregador) y la segunda usaba la metáfora muerta de la lista. Esta nombra el lugar, que es
+  lo que se recuerda. En "Este finde" se sacó "dentro de los próximos siete días": era la
+  ventana de `getWeekendEvents` contada en voz alta y confundía. El filtro no cambió.
 - **Favicon e imagen OG** al monograma ET, y `themeColor` a `#0b0714` para que coincida con
   el fondo real del body (había una costura visible en la barra del navegador en mobile).
   Los tres se aprobaron aparte por tocar zona restringida; la metadata de `app/og-logo` —
