@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { InstagramLogo, Megaphone, WhatsappLogo } from "@phosphor-icons/react/dist/ssr";
 import { WhatsappLink } from "@/components/whatsapp-link";
+import { Wordmark } from "@/components/wordmark";
 import { siteConfig } from "@/lib/site";
 import { buildGeneralWhatsappMessage, whatsappUrlOrGroup } from "@/lib/whatsapp";
 
@@ -10,8 +11,8 @@ export function SiteFooter() {
       <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 text-sm text-white/62 sm:px-6 lg:px-8">
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <p className="font-black text-white">ElectroTickets</p>
-            <p className="mt-2 leading-6">
+            <Wordmark size="lg" />
+            <p className="mt-4 leading-6">
               Agenda de música electrónica en Argentina. Centralizamos las fechas, el link oficial de compra de cada
               una y te asistimos por WhatsApp.
             </p>

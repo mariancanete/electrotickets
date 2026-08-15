@@ -59,54 +59,72 @@ export function Hero({ featuredEvents }: { featuredEvents: EventRecord[] }) {
           de los pies funciona en ambas y cierran parejas. */}
       <div className="relative mx-auto grid max-w-7xl gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(560px,1.1fr)] xl:grid-cols-[minmax(0,0.88fr)_minmax(620px,1.12fr)]">
         <div className="flex flex-col pt-0 lg:pt-1">
-          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.045] px-3.5 py-1.5 text-xs font-semibold text-white/78 sm:text-sm">
-            <span className="h-1.5 w-1.5 rounded-full bg-violet-500 shadow-[0_0_18px_rgba(139,92,246,0.85)]" />
-            Agenda de electrónica · Argentina · Compra por Bombo
+          <div className="mb-4 inline-flex items-center gap-2 self-start rounded-full border border-white/10 bg-white/[0.045] px-3 py-1.5 text-[11px] font-semibold text-white/78 sm:mb-5 sm:px-3.5 sm:text-sm">
+            <span className="h-1.5 w-1.5 rounded-full bg-brand shadow-[0_0_18px_rgba(61,232,245,0.85)]" />
+            Argentina · Compra por Bombo
           </div>
 
-          {/* El título anterior ("antes que todos") prometía anticipación que el sitio no
-              sustentaba: no había alertas ni preventas. Ahora promete lo que sí entrega. */}
-          {/* Archivo expandido es bastante más ancho por carácter que Arial, así que al
-              tamaño anterior el titular pasaba a cinco líneas y desbalanceaba el hero. El
-              peso visual lo aporta ahora el ancho de la letra, no el cuerpo. */}
-          <h1 className="max-w-2xl text-balance text-[2.6rem] font-black leading-[0.98] tracking-[-0.03em] text-white sm:text-5xl lg:text-[3.6rem] xl:text-[4rem]">
-            Las mejores fechas de electrónica, en un solo lugar.
+          {/* Tercera versión del titular, y las dos anteriores fallaron por motivos opuestos.
+              "Las mejores fechas de electrónica, en un solo lugar" vendía la categoría: lo
+              podía firmar cualquier agregador. "La lista de la electrónica argentina" se
+              apoyaba en una metáfora muerta —la lista de RRPP es cosa del pasado y ya no le
+              dice nada a nadie—.
+
+              Este nombra el lugar, que es lo que construye recordación: la respuesta a
+              "¿dónde miro qué hay?". "Suena" es lengua de la noche y no de marketplace, y
+              rubro y país quedan explícitos para quien llega buscando exactamente eso. */}
+          <h1 className="max-w-2xl text-balance text-[2.5rem] font-black leading-[0.95] tracking-[-0.03em] text-white sm:text-5xl lg:text-[3.6rem] xl:text-[4rem]">
+            Dónde suena la electrónica en Argentina.
           </h1>
-          <p className="mt-5 max-w-xl text-base leading-7 text-white/62 sm:text-lg">
-            Descubrí eventos, revisá lineup y ubicación, y comprá con el{" "}
-            <span className="font-semibold text-violet-200">link verificado</span> de Bombo de cada fecha. Te
-            ayudamos por <span className="font-semibold text-violet-200">WhatsApp</span> antes y después de comprar.
+          <p className="mt-4 max-w-xl text-base leading-7 text-white/62 sm:mt-5 sm:text-lg">
+            Cada fecha con su <span className="font-semibold text-white">link oficial</span> de Bombo, lineup y
+            ubicación. Y alguien que te contesta por{" "}
+            <span className="font-semibold text-white">WhatsApp</span> antes y después de comprar.
           </p>
 
-          <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-            <Link
-              href="/eventos"
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-violet-600 to-blue-600 px-7 py-3 text-center text-sm font-black text-white shadow-[0_18px_45px_rgba(91,33,182,0.3)] transition hover:scale-[1.01] hover:from-violet-500 hover:to-blue-500"
-            >
-              Ver todas las fechas
-              <span aria-hidden="true">→</span>
-            </Link>
-            <Link
-              href="/destacados"
-              className="inline-flex items-center justify-center rounded-full border border-white/15 bg-black/20 px-7 py-3 text-center text-sm font-bold text-white/78 transition hover:border-white/35 hover:bg-white/10"
-            >
-              Ver destacados
-            </Link>
-          </div>
-
-          <div className="mt-7 grid max-w-2xl gap-0 overflow-hidden rounded-[12px] border border-white/10 bg-black/20 sm:grid-cols-3 lg:mt-auto">
+          {/* `order` sube la franja de confianza por encima de los botones en mobile.
+              Estaba al final de la columna, en 12px, después de un h1 grande, un párrafo y
+              dos botones: el argumento por el que alguien elige ElectroTickets en vez de
+              buscar en Bombo directo llegaba último y en el cuerpo más chico de la página.
+              En desktop vuelve al pie de la columna, donde cierra parejo con la otra. */}
+          <div className="order-4 mt-6 grid max-w-2xl grid-cols-3 gap-0 overflow-hidden rounded-[12px] border border-white/10 bg-black/20 sm:mt-7 lg:order-none lg:mt-auto">
             {microBenefits.map((item) => (
               <div
                 key={item.title}
-                className="flex items-center gap-3 border-white/10 px-4 py-3 text-white/78 sm:border-r sm:last:border-r-0"
+                className="flex flex-col items-center gap-1.5 border-r border-white/10 px-2 py-3 text-center last:border-r-0 sm:flex-row sm:items-center sm:gap-3 sm:px-4 sm:text-left"
               >
-                <span className="shrink-0 text-violet-200">{item.icon}</span>
+                <span className="shrink-0 text-brand">{item.icon}</span>
                 <span className="min-w-0">
-                  <span className="block text-[13px] font-bold leading-tight text-white">{item.title}</span>
-                  <span className="mt-1 block text-[12px] leading-snug text-white/62">{item.text}</span>
+                  <span className="block text-[11px] font-bold leading-tight text-white sm:text-[13px]">
+                    {item.title}
+                  </span>
+                  <span className="mt-1 hidden text-[12px] leading-snug text-white/62 sm:block">{item.text}</span>
                 </span>
               </div>
             ))}
+          </div>
+
+          {/* En fila también en mobile: apilados sumaban ~110px de alto y empujaban la
+              primera fecha fuera de la primera pantalla, que es justo lo que el usuario vino
+              a ver. */}
+          <div className="order-5 mt-5 flex flex-row gap-3 sm:mt-7 lg:order-none">
+            <Link
+              href="/eventos"
+              className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-white/20 px-4 py-3 text-center text-[13px] font-black text-white transition sm:text-sm hover:border-white/40 hover:bg-white/10 sm:flex-none sm:px-7"
+            >
+              Ver todas las fechas
+              {/* La flecha empujaba el rótulo a dos líneas en 390px y desalineaba los dos
+                  botones. En desktop, donde sobra ancho, vuelve. */}
+              <span className="hidden sm:inline" aria-hidden="true">
+                →
+              </span>
+            </Link>
+            <Link
+              href="/destacados"
+              className="inline-flex flex-1 items-center justify-center rounded-full border border-white/15 bg-black/20 px-4 py-3 text-center text-[13px] font-bold text-white/78 transition sm:text-sm hover:border-white/35 hover:bg-white/10 sm:flex-none sm:px-7"
+            >
+              Destacados
+            </Link>
           </div>
         </div>
 
@@ -122,7 +140,7 @@ export function Hero({ featuredEvents }: { featuredEvents: EventRecord[] }) {
             </h2>
             <Link
               href="/destacados"
-              className="inline-flex items-center gap-2 text-sm font-bold text-violet-200 transition hover:text-white"
+              className="inline-flex min-h-6 items-center gap-2 text-sm font-bold text-violet-200 transition hover:text-white"
             >
               Ver todos
               <span aria-hidden="true">→</span>

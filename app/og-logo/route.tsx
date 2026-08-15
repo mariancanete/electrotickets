@@ -9,68 +9,30 @@ export const size = {
   height: 630
 };
 
-function ElectroTicketsMark({ size = 152 }: { size?: number }) {
-  const scale = size / 64;
+/**
+ * Marca: ticket troquelado con el rayo calado. Es la misma figura que `BrandMark` en
+ * `components/wordmark.tsx` y que `public/favicon.svg`.
+ *
+ * La imagen OG es lo que se ve cuando alguien comparte una fecha por WhatsApp o Instagram,
+ * así que tiene que llevar exactamente la misma marca que el header: si acá quedara otra
+ * cosa, todos los links compartidos mostrarían una identidad que el sitio ya no usa.
+ *
+ * Va como `<img>` con data URI y no como SVG inline porque el renderer de `next/og` es
+ * Satori, que no dibuja `path`. Rasteriza el SVG y lo compone como imagen, que sí soporta.
+ *
+ * La metadata de la ruta (`alt`, `contentType`, `size`) no cambia: solo cambia el dibujo.
+ */
+const MARK_PATH =
+  "M21 8h22a13 13 0 0 1 13 13v4.5a6.5 6.5 0 0 0 0 13V43a13 13 0 0 1-13 13H21A13 13 0 0 1 8 43v-4.5a6.5 6.5 0 0 0 0-13V21A13 13 0 0 1 21 8Zm16 5L18 37h11.5l-3.5 16 18-25H31l6-15Z";
 
+const MARK_DATA_URI = `data:image/svg+xml;utf8,${encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><path fill="#3DE8F5" fill-rule="evenodd" d="${MARK_PATH}"/></svg>`
+)}`;
+
+function ElectroTicketsMark({ size = 152 }: { size?: number }) {
   return (
-    <div
-      style={{
-        alignItems: "center",
-        background: "rgba(255,255,255,0.06)",
-        border: "1px solid rgba(255,255,255,0.16)",
-        borderRadius: 32,
-        boxShadow: "0 0 70px rgba(129,140,248,0.28)",
-        display: "flex",
-        height: size,
-        justifyContent: "center",
-        width: size
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          filter: "drop-shadow(0 0 26px rgba(139,92,246,0.62))",
-          height: 64 * scale,
-          position: "relative",
-          transform: "skewX(-12deg) translateX(4px)",
-          width: 64 * scale
-        }}
-      >
-        <div
-          style={{
-            background: "linear-gradient(135deg, #ffffff 0%, #93c5fd 52%, #8b5cf6 100%)",
-            borderRadius: 5 * scale,
-            height: 7 * scale,
-            left: 18 * scale,
-            position: "absolute",
-            top: 16 * scale,
-            width: 30 * scale
-          }}
-        />
-        <div
-          style={{
-            background: "linear-gradient(135deg, #ffffff 0%, #93c5fd 52%, #8b5cf6 100%)",
-            borderRadius: 5 * scale,
-            height: 7 * scale,
-            left: 18 * scale,
-            position: "absolute",
-            top: 28.5 * scale,
-            width: 23 * scale
-          }}
-        />
-        <div
-          style={{
-            background: "linear-gradient(135deg, #ffffff 0%, #93c5fd 52%, #8b5cf6 100%)",
-            borderRadius: 5 * scale,
-            height: 7 * scale,
-            left: 18 * scale,
-            position: "absolute",
-            top: 41 * scale,
-            width: 30 * scale
-          }}
-        />
-      </div>
-    </div>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={MARK_DATA_URI} width={size} height={size} alt="" />
   );
 }
 
@@ -80,7 +42,7 @@ export function GET() {
       <div
         style={{
           alignItems: "center",
-          background: "#050507",
+          background: "#0B0714",
           color: "white",
           display: "flex",
           fontFamily: "Inter, Arial, sans-serif",
@@ -131,30 +93,25 @@ export function GET() {
           <div style={{ alignItems: "center", display: "flex", gap: 34 }}>
             <ElectroTicketsMark />
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <div style={{ fontSize: 88, fontWeight: 950, letterSpacing: -3, lineHeight: 1 }}>
+                ELECTRO
+              </div>
+              <div style={{ background: "#3DE8F5", borderRadius: 2, height: 5, width: 420 }} />
               <div
                 style={{
-                  color: "rgba(255,255,255,0.68)",
-                  fontSize: 24,
-                  fontWeight: 800,
-                  letterSpacing: 5,
-                  textTransform: "uppercase"
+                  color: "rgba(255,255,255,0.78)",
+                  fontSize: 30,
+                  fontWeight: 600,
+                  letterSpacing: 14,
+                  lineHeight: 1
                 }}
               >
-                Eventos electrónicos en Argentina
-              </div>
-              <div style={{ fontSize: 88, fontWeight: 950, letterSpacing: -4, lineHeight: 1 }}>
-                ElectroTickets
+                TICKETS
               </div>
             </div>
           </div>
-          <div
-            style={{
-              background: "linear-gradient(90deg, rgba(147,197,253,0.95), rgba(139,92,246,0.95))",
-              borderRadius: 999,
-              height: 6,
-              width: 390
-            }}
-          />
+          {/* El lockup ya trae su propia regla cyan entre ELECTRO y TICKETS; la que había
+              acá debajo quedaba como una segunda línea sin función. */}
           <div
             style={{
               color: "rgba(255,255,255,0.82)",

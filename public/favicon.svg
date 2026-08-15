@@ -1,24 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="ElectroTickets">
-  <rect width="64" height="64" rx="16" fill="#050507"/>
-  <rect x="1" y="1" width="62" height="62" rx="15" fill="none" stroke="#FFFFFF" stroke-opacity="0.16"/>
-  <defs>
-    <linearGradient id="electroGradient" x1="18" y1="14" x2="46" y2="50" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#FFFFFF"/>
-      <stop offset="0.5" stop-color="#93C5FD"/>
-      <stop offset="1" stop-color="#8B5CF6"/>
-    </linearGradient>
-    <filter id="electroGlow" x="-40%" y="-40%" width="180%" height="180%" color-interpolation-filters="sRGB">
-      <feGaussianBlur stdDeviation="3" result="blur"/>
-      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.36 0 0 0 0 0.45 0 0 0 0 1 0 0 0 0.65 0"/>
-      <feMerge>
-        <feMergeNode/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
-    </filter>
-  </defs>
-  <g transform="skewX(-12) translate(6 0)" filter="url(#electroGlow)">
-    <rect x="18" y="16" width="30" height="7" rx="2" fill="url(#electroGradient)"/>
-    <rect x="18" y="28.5" width="23" height="7" rx="2" fill="url(#electroGradient)"/>
-    <rect x="18" y="41" width="30" height="7" rx="2" fill="url(#electroGradient)"/>
-  </g>
+  <!--
+    Misma marca que el header: ticket troquelado con el rayo calado, en un solo color plano.
+    El favicon original eran tres barras finas con degradé de tres paradas y blur, y a 16px
+    —que es el tamaño real de una pestaña— se convertía en una mancha. Esta silueta sobrevive
+    a esa reducción porque es forma y no dibujo, y es exactamente la misma figura que el logo
+    del header y que la perforación de cada fila de la agenda.
+  -->
+  <path
+    fill="#3DE8F5"
+    fill-rule="evenodd"
+    d="M21 8h22a13 13 0 0 1 13 13v4.5a6.5 6.5 0 0 0 0 13V43a13 13 0 0 1-13 13H21A13 13 0 0 1 8 43v-4.5a6.5 6.5 0 0 0 0-13V21A13 13 0 0 1 21 8Zm16 5L18 37h11.5l-3.5 16 18-25H31l6-15Z"
+  />
 </svg>
