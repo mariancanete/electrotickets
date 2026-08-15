@@ -11,3 +11,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+
+# Skills de agentes: se versiona skills-lock.json, no los archivos. El contenido pesa
+# varios MB y son datos de terceros que no aportan nada al historial del proyecto.
+# Para instalarlas: npx skills add <source> --skill <nombre>
+.agents/
+.claude/skills/
