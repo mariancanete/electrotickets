@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { InstagramLogo, Megaphone, WhatsappLogo } from "@phosphor-icons/react/dist/ssr";
 import { WhatsappLink } from "@/components/whatsapp-link";
 import { siteConfig } from "@/lib/site";
 import { buildGeneralWhatsappMessage, whatsappUrlOrGroup } from "@/lib/whatsapp";
@@ -20,12 +21,12 @@ export function SiteFooter() {
             <p className="font-semibold text-white/78">Eventos</p>
             <ul className="mt-3 space-y-2">
               <li>
-                <Link className="hover:text-white" href="/eventos">
+                <Link className="inline-block py-1.5 hover:text-white" href="/eventos">
                   Todas las fechas
                 </Link>
               </li>
               <li>
-                <Link className="hover:text-white" href="/destacados">
+                <Link className="inline-block py-1.5 hover:text-white" href="/destacados">
                   Destacados
                 </Link>
               </li>
@@ -36,17 +37,17 @@ export function SiteFooter() {
             <p className="font-semibold text-white/78">ElectroTickets</p>
             <ul className="mt-3 space-y-2">
               <li>
-                <Link className="hover:text-white" href="/quienes-somos">
+                <Link className="inline-block py-1.5 hover:text-white" href="/quienes-somos">
                   Quiénes somos
                 </Link>
               </li>
               <li>
-                <Link className="hover:text-white" href="/preguntas-frecuentes">
+                <Link className="inline-block py-1.5 hover:text-white" href="/preguntas-frecuentes">
                   Cómo comprar
                 </Link>
               </li>
               <li>
-                <Link className="hover:text-white" href="/privacidad">
+                <Link className="inline-block py-1.5 hover:text-white" href="/privacidad">
                   Privacidad
                 </Link>
               </li>
@@ -60,8 +61,9 @@ export function SiteFooter() {
                 <WhatsappLink
                   href={whatsappUrlOrGroup(buildGeneralWhatsappMessage())}
                   source="footer"
-                  className="hover:text-white"
+                  className="inline-flex items-center gap-2 py-1.5 hover:text-white"
                 >
+                  <WhatsappLogo size={17} weight="fill" aria-hidden="true" />
                   WhatsApp
                 </WhatsappLink>
               </li>
@@ -70,8 +72,9 @@ export function SiteFooter() {
                   href={siteConfig.whatsappGroup}
                   source="footer"
                   kind="group"
-                  className="hover:text-white"
+                  className="inline-flex items-center gap-2 py-1.5 hover:text-white"
                 >
+                  <Megaphone size={17} weight="fill" aria-hidden="true" />
                   Grupo de difusión
                 </WhatsappLink>
               </li>
@@ -80,13 +83,14 @@ export function SiteFooter() {
                   href={siteConfig.instagram}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:text-white"
+                  className="inline-flex items-center gap-2 py-1.5 hover:text-white"
                 >
+                  <InstagramLogo size={17} weight="fill" aria-hidden="true" />
                   Instagram
                 </a>
               </li>
               <li>
-                <Link className="hover:text-white" href="/contacto">
+                <Link className="inline-block py-1.5 hover:text-white" href="/contacto">
                   Página de contacto
                 </Link>
               </li>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BuyButton } from "@/components/buy-button";
+import { Clock, Fire, MapPin, ProhibitInset, Ticket } from "@phosphor-icons/react/dist/ssr";
 import { FlyerFallback, FlyerImage } from "@/components/flyer-image";
 import { WhatsappLink } from "@/components/whatsapp-link";
 import type { CtaPlacement } from "@/lib/analytics";
@@ -39,7 +40,7 @@ export function EventRow({
   // Ancho fijo en desktop para que los botones de todas las filas queden alineados en
   // columna aunque cambie el texto ("Comprar en Bombo" vs "Avisame si se libera").
   const ctaClass =
-    "inline-flex w-full shrink-0 items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-violet-600 to-blue-600 px-4 py-2.5 text-center text-xs font-black text-white shadow-[0_14px_30px_rgba(91,33,182,0.28)] transition hover:from-violet-500 hover:to-blue-500 sm:w-[170px]";
+    "inline-flex w-full shrink-0 items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-violet-600 to-blue-600 min-h-11 px-4 text-center text-xs font-black text-white sm:min-h-0 sm:py-2.5 shadow-[0_14px_30px_rgba(91,33,182,0.28)] transition hover:from-violet-500 hover:to-blue-500 sm:w-[170px]";
   const chipClass =
     "whitespace-nowrap rounded-full border px-2.5 py-1 text-[11px] sm:px-2 sm:text-[10px]";
 
@@ -52,7 +53,7 @@ export function EventRow({
       <div className="flex min-w-0 flex-col gap-3 p-3 sm:grid sm:min-h-[139px] sm:grid-cols-[92px_48px_minmax(0,1fr)_auto] sm:items-center sm:gap-4 lg:grid-cols-[96px_52px_minmax(0,1fr)_auto] xl:grid-cols-[100px_56px_minmax(0,1fr)_auto]">
         <Link
           href={`/eventos/${event.slug}`}
-          className="relative h-32 w-full overflow-hidden rounded-[12px] bg-white/5 sm:h-[115px] sm:w-full lg:h-[120px] xl:h-[125px]"
+          className="flyer-glow-sm relative h-32 w-full overflow-hidden rounded-[12px] bg-white/5 sm:h-[115px] sm:w-full lg:h-[120px] xl:h-[125px]"
         >
           {event.flyer_url ? (
             <FlyerImage
@@ -112,11 +113,11 @@ export function EventRow({
           </Link>
           <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-white/62">
             <span className="inline-flex items-center gap-1">
-              <ClockIcon />
+              <Clock size={14} weight="bold" aria-hidden="true" />
               <span className="tabular">{eventTime}</span> hs
             </span>
             <span className="inline-flex min-w-0 items-center gap-1">
-              <PinIcon />
+              <MapPin size={14} weight="fill" aria-hidden="true" />
               <span className="min-w-0 break-words sm:truncate">{event.venue_name || "Venue a confirmar"}</span>
             </span>
           </div>
@@ -124,9 +125,13 @@ export function EventRow({
               otras y los botones dejaban de alinearse. */}
           <div className="mt-3 flex flex-wrap gap-2 sm:mt-2 sm:flex-nowrap sm:gap-1.5">
             {isSoldOut ? (
-              <span className={`${chipClass} border-red-300/30 bg-red-600/25 font-bold text-red-50`}>Sold Out</span>
+              <span className={`${chipClass} inline-flex items-center gap-1 border-red-300/30 bg-red-600/25 font-bold text-red-50`}>
+                <ProhibitInset size={12} weight="fill" aria-hidden="true" />
+                Sold Out
+              </span>
             ) : hasLastTickets ? (
-              <span className={`${chipClass} border-red-300/20 bg-red-500/15 font-bold text-red-100`}>
+              <span className={`${chipClass} inline-flex items-center gap-1 border-red-300/20 bg-red-500/15 font-bold text-red-100`}>
+                <Fire size={12} weight="fill" aria-hidden="true" />
                 Últimas entradas
               </span>
             ) : null}
@@ -153,8 +158,8 @@ export function EventRow({
             </WhatsappLink>
           ) : (
             <BuyButton event={event} placement={placement} className={ctaClass}>
+              <Ticket size={16} weight="fill" aria-hidden="true" />
               Comprar en Bombo
-              <span aria-hidden="true">→</span>
             </BuyButton>
           )}
         </div>
@@ -167,20 +172,4 @@ function formatEventTime(date: string) {
   return timeFormatter.format(new Date(date)).replace(/[^\d:]/g, "").padStart(5, "0");
 }
 
-function ClockIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 shrink-0" fill="none" aria-hidden="true">
-      <circle cx="12" cy="12" r="8" stroke="currentColor" strokeWidth="1.7" />
-      <path d="M12 7.5V12l3 1.8" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
 
-function PinIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 shrink-0" fill="none" aria-hidden="true">
-      <path d="M12 21s6-5.15 6-11a6 6 0 1 0-12 0c0 5.85 6 11 6 11Z" stroke="currentColor" strokeWidth="1.7" />
-      <circle cx="12" cy="10" r="2" stroke="currentColor" strokeWidth="1.7" />
-    </svg>
-  );
-}

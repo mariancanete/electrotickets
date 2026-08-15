@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { CheckCircle, XCircle } from "@phosphor-icons/react/dist/ssr";
 import { WhatsappLink } from "@/components/whatsapp-link";
 import { absoluteUrl, siteConfig } from "@/lib/site";
 import { buildGeneralWhatsappMessage, whatsappUrlOrGroup } from "@/lib/whatsapp";
@@ -66,21 +67,21 @@ export default function AboutPage() {
               <div className="rounded-[20px] border border-emerald-300/20 bg-emerald-400/[0.06] p-5">
                 <p className="text-sm font-bold uppercase tracking-[0.18em] text-emerald-200/80">Sí hacemos</p>
                 <ul className="mt-4 space-y-2 text-base leading-7 text-white/62">
-                  <li>· Publicamos y mantenemos la agenda de fechas.</li>
-                  <li>· Verificamos el link de compra de cada evento.</li>
-                  <li>· Consolidamos lineup, venue, horario y ubicación.</li>
-                  <li>· Respondemos consultas por WhatsApp.</li>
-                  <li>· Gestionamos mesas VIP y cortesías.</li>
-                  <li>· Avisamos de nuevas fechas y últimas entradas.</li>
+                  <li className="flex gap-2.5"><CheckCircle size={19} weight="fill" aria-hidden="true" className="mt-0.5 shrink-0 text-emerald-300" />Publicamos y mantenemos la agenda de fechas.</li>
+                  <li className="flex gap-2.5"><CheckCircle size={19} weight="fill" aria-hidden="true" className="mt-0.5 shrink-0 text-emerald-300" />Verificamos el link de compra de cada evento.</li>
+                  <li className="flex gap-2.5"><CheckCircle size={19} weight="fill" aria-hidden="true" className="mt-0.5 shrink-0 text-emerald-300" />Consolidamos lineup, venue, horario y ubicación.</li>
+                  <li className="flex gap-2.5"><CheckCircle size={19} weight="fill" aria-hidden="true" className="mt-0.5 shrink-0 text-emerald-300" />Respondemos consultas por WhatsApp.</li>
+                  <li className="flex gap-2.5"><CheckCircle size={19} weight="fill" aria-hidden="true" className="mt-0.5 shrink-0 text-emerald-300" />Gestionamos mesas VIP y cortesías.</li>
+                  <li className="flex gap-2.5"><CheckCircle size={19} weight="fill" aria-hidden="true" className="mt-0.5 shrink-0 text-emerald-300" />Avisamos de nuevas fechas y últimas entradas.</li>
                 </ul>
               </div>
               <div className="rounded-[20px] border border-white/10 bg-black/25 p-5">
                 <p className="text-sm font-bold uppercase tracking-[0.18em] text-white/48">No hacemos</p>
                 <ul className="mt-4 space-y-2 text-base leading-7 text-white/62">
-                  <li>· No emitimos las entradas.</li>
-                  <li>· No procesamos el pago.</li>
-                  <li>· No definimos precios ni lotes.</li>
-                  <li>· No organizamos los eventos.</li>
+                  <li className="flex gap-2.5"><XCircle size={19} weight="fill" aria-hidden="true" className="mt-0.5 shrink-0 text-white/48" />No emitimos las entradas.</li>
+                  <li className="flex gap-2.5"><XCircle size={19} weight="fill" aria-hidden="true" className="mt-0.5 shrink-0 text-white/48" />No procesamos el pago.</li>
+                  <li className="flex gap-2.5"><XCircle size={19} weight="fill" aria-hidden="true" className="mt-0.5 shrink-0 text-white/48" />No definimos precios ni lotes.</li>
+                  <li className="flex gap-2.5"><XCircle size={19} weight="fill" aria-hidden="true" className="mt-0.5 shrink-0 text-white/48" />No organizamos los eventos.</li>
                 </ul>
                 <p className="mt-4 text-base leading-7 text-white/48">
                   Todo eso ocurre en Bombo, que es la plataforma oficial donde se completa la compra.

@@ -1,3 +1,4 @@
+import { BellRinging, Crown, WhatsappLogo } from "@phosphor-icons/react/dist/ssr";
 import { WhatsappLink } from "@/components/whatsapp-link";
 import type { WhatsappSource } from "@/lib/analytics";
 import { siteConfig } from "@/lib/site";
@@ -30,7 +31,12 @@ export function WhatsappAlerts({
     >
       <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
-          <h2 className={`font-black tracking-tight text-white ${compact ? "text-lg" : "text-2xl"}`}>{title}</h2>
+          <h2 className={`flex items-start gap-2.5 font-black tracking-tight text-white ${compact ? "text-lg" : "text-2xl"}`}>
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[12px] border border-emerald-300/25 bg-emerald-400/10 text-emerald-200">
+              <BellRinging size={19} weight="duotone" aria-hidden="true" />
+            </span>
+            {title}
+          </h2>
           <p className="mt-2 max-w-xl text-base leading-7 text-white/62">{text}</p>
           <p className="mt-2 text-xs text-white/48">Solo novedades importantes. Sin mensajes todos los días.</p>
         </div>
@@ -38,16 +44,18 @@ export function WhatsappAlerts({
           <WhatsappLink
             href={whatsappUrlOrGroup(buildAlertsWhatsappMessage())}
             source={source}
-            className="rounded-full bg-emerald-400 px-5 py-3 text-center text-sm font-black text-black transition hover:bg-emerald-300"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-emerald-400 px-5 text-center text-sm font-black text-black transition hover:bg-emerald-300"
           >
+            <BellRinging size={18} weight="fill" aria-hidden="true" />
             Recibir alertas
           </WhatsappLink>
           <WhatsappLink
             href={siteConfig.whatsappGroup}
             source={source}
             kind="group"
-            className="rounded-full border border-emerald-300/30 px-5 py-3 text-center text-sm font-bold text-emerald-100 transition hover:bg-emerald-300/10"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-emerald-300/30 px-5 text-center text-sm font-bold text-emerald-100 transition hover:bg-emerald-300/10"
           >
+            <WhatsappLogo size={18} weight="fill" aria-hidden="true" />
             Grupo de difusión
           </WhatsappLink>
         </div>
@@ -80,7 +88,12 @@ export function VipTables({
       <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           <p className="text-xs font-bold uppercase tracking-[0.28em] text-amber-200/80">Atención personalizada</p>
-          <h2 className="mt-2 text-2xl font-black tracking-tight text-white">Mesas VIP y cortesías</h2>
+          <h2 className="mt-2 flex items-start gap-2.5 text-2xl font-black tracking-tight text-white">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[12px] border border-amber-200/25 bg-amber-300/10 text-amber-200">
+              <Crown size={19} weight="duotone" aria-hidden="true" />
+            </span>
+            Mesas VIP y cortesías
+          </h2>
           <p className="mt-2 max-w-xl text-base leading-7 text-white/62">
             {eventTitle
               ? `Consultá disponibilidad de mesas y cortesías para ${eventTitle}. Te respondemos por WhatsApp.`
@@ -91,8 +104,9 @@ export function VipTables({
           href={href}
           source={source}
           eventSlug={eventSlug}
-          className="shrink-0 rounded-full bg-amber-200 px-6 py-3 text-center text-sm font-black text-black transition hover:bg-amber-100"
+          className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-full bg-amber-200 px-6 text-center text-sm font-black text-black transition hover:bg-amber-100"
         >
+          <WhatsappLogo size={18} weight="fill" aria-hidden="true" />
           Consultar mesas
         </WhatsappLink>
       </div>

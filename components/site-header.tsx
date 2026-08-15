@@ -94,7 +94,7 @@ export function SiteHeader() {
         <div className="flex items-center gap-3">
           <Link
             href="/eventos"
-            className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-black transition hover:bg-white/85"
+            className="inline-flex min-h-11 items-center rounded-full bg-white px-5 text-sm font-semibold text-black transition hover:bg-white/85"
           >
             Ver fechas
           </Link>

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { MagnifyingGlass } from "@phosphor-icons/react";
 import { EventCard } from "@/components/event-card";
 import { WhatsappAlerts } from "@/components/whatsapp-alerts";
 import { track, type CtaPlacement } from "@/lib/analytics";
@@ -89,19 +90,27 @@ export function EventBrowser({
   return (
     <div className="space-y-8">
       <div className="glass grid gap-3 rounded-[20px] p-4 sm:grid-cols-[1fr_220px]">
-        <input
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Buscar por DJ, venue, género..."
-          className="rounded-full border border-white/10 bg-black/30 px-5 py-3 text-sm outline-none transition placeholder:text-white/48 focus:border-white/30"
-        />
+        <div className="relative">
+          <MagnifyingGlass
+            size={18}
+            weight="bold"
+            aria-hidden="true"
+            className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-white/48"
+          />
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Buscar por DJ, venue, género..."
+            className="min-h-11 w-full rounded-full border border-white/10 bg-black/30 pl-11 pr-5 text-sm outline-none transition placeholder:text-white/48 focus:border-white/30"
+          />
+        </div>
         <select
           value={genre}
           onChange={(event) => {
             setGenre(event.target.value);
             track("select_genre", { genre: event.target.value });
           }}
-          className="rounded-full border border-white/10 bg-black/30 px-5 py-3 text-sm outline-none transition focus:border-white/30"
+          className="min-h-11 rounded-full border border-white/10 bg-black/30 px-5 text-sm outline-none transition focus:border-white/30"
         >
           {genres.map((item) => (
             <option key={item}>{item}</option>
