@@ -161,6 +161,32 @@ CTA de WhatsApp en emerald).
 interactivos por debajo de 24px. Los diez valores de `CtaPlacement` y sus ubicaciones quedaron
 **idénticos a `main`** (se comparó archivo por archivo contra `origin/main`).
 
+### PR #26 — Venues oficiales y fix de secciones curadas
+
+**Credencial de RRPP oficial.** `lib/credentials.ts` ya tiene cargados los venues reales:
+Mute, Mandarine, Crobar, Rio y The Bow. Se muestran con `components/official-venues.tsx` en
+el hero —dentro de la caja de confianza, para no romper el `lg:mt-auto` que cierra las dos
+columnas— y en Quiénes somos. Los nombres van tal como los pasó el dueño del proyecto: **no
+completar ni "corregir" la nomenclatura sin confirmarlo**, porque es una afirmación pública
+sobre relaciones comerciales reales.
+
+> **Ojo con el PR #25:** ahí se creó `lib/credentials.ts` con los huecos vacíos pero **ningún
+> componente lo consumía**, así que cargar un dato no habría mostrado nada. La UI se agregó
+> recién en este PR. Hoy sí funciona como se documentó: se completa el archivo y aparece solo.
+> Siguen vacíos `sinceYear` y `communitySize`.
+
+**Fix: las secciones curadas se perdían fechas.** Con dos eventos marcados como últimas
+entradas, "Últimas entradas" mostraba uno solo. `weekendEvents` y `lastTicketsEvents` se
+calculaban sobre una lista que excluía a los tres del hero —para no repetirlos más abajo—, así
+que una fecha que quedaba destacada arriba desaparecía de la sección de escasez. "Este finde"
+tenía el mismo agujero.
+
+Ahora las dos secciones curadas se calculan sobre **todos** los eventos: ahí la completitud
+vale más que no repetir. La agenda genérica de abajo sigue filtrando lo que ya apareció. Se
+mantiene la precedencia entre secciones: una fecha del finde con últimas entradas se lista
+solo en "Este finde", donde su fila ya muestra el chip rojo. `lib/events.ts` no se tocó — el
+cambio es cómo la home compone, no cómo se filtra.
+
 ### Sobre las skills
 
 - **`frontend-design`** se usó para el PR #22 pero **no quedó versionada**: el PR que la
