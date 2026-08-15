@@ -24,15 +24,15 @@ export function WhatsappAlerts({
 }) {
   return (
     <div
-      className={`rounded-[1.75rem] border border-emerald-300/20 bg-emerald-400/[0.06] ${
+      className={`rounded-[20px] border border-emerald-300/20 bg-emerald-400/[0.06] ${
         compact ? "p-5" : "p-6 sm:p-7"
       }`}
     >
       <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           <h2 className={`font-black tracking-tight text-white ${compact ? "text-lg" : "text-2xl"}`}>{title}</h2>
-          <p className="mt-2 max-w-xl text-sm leading-6 text-white/60">{text}</p>
-          <p className="mt-2 text-xs text-white/40">Solo novedades importantes. Sin mensajes todos los días.</p>
+          <p className="mt-2 max-w-xl text-base leading-7 text-white/62">{text}</p>
+          <p className="mt-2 text-xs text-white/48">Solo novedades importantes. Sin mensajes todos los días.</p>
         </div>
         <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
           <WhatsappLink
@@ -76,12 +76,12 @@ export function VipTables({
   href: string;
 }) {
   return (
-    <div className="rounded-[1.75rem] border border-amber-200/20 bg-gradient-to-br from-amber-300/[0.09] to-transparent p-6 sm:p-7">
+    <div className="rounded-[20px] border border-amber-200/20 bg-gradient-to-br from-amber-300/[0.09] to-transparent p-6 sm:p-7">
       <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           <p className="text-xs font-bold uppercase tracking-[0.28em] text-amber-200/80">Atención personalizada</p>
           <h2 className="mt-2 text-2xl font-black tracking-tight text-white">Mesas VIP y cortesías</h2>
-          <p className="mt-2 max-w-xl text-sm leading-6 text-white/60">
+          <p className="mt-2 max-w-xl text-base leading-7 text-white/62">
             {eventTitle
               ? `Consultá disponibilidad de mesas y cortesías para ${eventTitle}. Te respondemos por WhatsApp.`
               : "Consultá disponibilidad de mesas y cortesías para las próximas fechas. Te respondemos por WhatsApp."}

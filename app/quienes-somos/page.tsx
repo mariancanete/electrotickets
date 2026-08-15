@@ -54,18 +54,18 @@ export default function AboutPage() {
           <h1 className="mt-3 text-4xl font-black tracking-tight sm:text-6xl">
             Una agenda de electrónica con asistencia real
           </h1>
-          <p className="mt-6 text-lg leading-8 text-white/60">
+          <p className="mt-6 text-lg leading-8 text-white/62">
             ElectroTickets es una agenda especializada en música electrónica en Argentina. Centralizamos las fechas
             que importan, verificamos el link de compra de cada una y te acompañamos por WhatsApp antes y después de
             comprar.
           </p>
 
-          <section className="glass mt-10 rounded-[2rem] p-6 sm:p-8">
+          <section className="glass mt-10 rounded-[20px] p-6 sm:p-8">
             <h2 className="text-2xl font-black">Qué somos y qué no somos</h2>
             <div className="mt-6 grid gap-5 sm:grid-cols-2">
-              <div className="rounded-3xl border border-emerald-300/20 bg-emerald-400/[0.06] p-5">
+              <div className="rounded-[20px] border border-emerald-300/20 bg-emerald-400/[0.06] p-5">
                 <p className="text-sm font-bold uppercase tracking-[0.18em] text-emerald-200/80">Sí hacemos</p>
-                <ul className="mt-4 space-y-2 text-sm leading-6 text-white/65">
+                <ul className="mt-4 space-y-2 text-base leading-7 text-white/62">
                   <li>· Publicamos y mantenemos la agenda de fechas.</li>
                   <li>· Verificamos el link de compra de cada evento.</li>
                   <li>· Consolidamos lineup, venue, horario y ubicación.</li>
@@ -74,15 +74,15 @@ export default function AboutPage() {
                   <li>· Avisamos de nuevas fechas y últimas entradas.</li>
                 </ul>
               </div>
-              <div className="rounded-3xl border border-white/10 bg-black/25 p-5">
-                <p className="text-sm font-bold uppercase tracking-[0.18em] text-white/45">No hacemos</p>
-                <ul className="mt-4 space-y-2 text-sm leading-6 text-white/55">
+              <div className="rounded-[20px] border border-white/10 bg-black/25 p-5">
+                <p className="text-sm font-bold uppercase tracking-[0.18em] text-white/48">No hacemos</p>
+                <ul className="mt-4 space-y-2 text-base leading-7 text-white/62">
                   <li>· No emitimos las entradas.</li>
                   <li>· No procesamos el pago.</li>
                   <li>· No definimos precios ni lotes.</li>
                   <li>· No organizamos los eventos.</li>
                 </ul>
-                <p className="mt-4 text-sm leading-6 text-white/45">
+                <p className="mt-4 text-base leading-7 text-white/48">
                   Todo eso ocurre en Bombo, que es la plataforma oficial donde se completa la compra.
                 </p>
               </div>
@@ -93,20 +93,20 @@ export default function AboutPage() {
             <h2 className="text-2xl font-black">Cómo funciona la compra</h2>
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
               {steps.map((step, index) => (
-                <div key={step.title} className="glass rounded-[1.6rem] p-5">
+                <div key={step.title} className="glass rounded-[20px] p-5">
                   <span className="grid h-8 w-8 place-items-center rounded-full bg-white text-xs font-black text-black">
                     {index + 1}
                   </span>
                   <h3 className="mt-4 font-bold text-white">{step.title}</h3>
-                  <p className="mt-2 text-sm leading-6 text-white/55">{step.text}</p>
+                  <p className="mt-2 text-base leading-7 text-white/62">{step.text}</p>
                 </div>
               ))}
             </div>
           </section>
 
-          <section className="glass mt-8 rounded-[2rem] p-6 sm:p-8">
+          <section className="glass mt-8 rounded-[20px] p-6 sm:p-8">
             <h2 className="text-2xl font-black">Si algo sale mal</h2>
-            <div className="mt-5 space-y-4 text-sm leading-7 text-white/60">
+            <div className="mt-5 space-y-4 text-base leading-7 text-white/62">
               <p>
                 <span className="font-bold text-white">Problemas con una entrada ya comprada.</span> Como la emisión
                 se hace en Bombo, el soporte formal corresponde a esa plataforma. De todos modos, escribinos: te
@@ -124,9 +124,9 @@ export default function AboutPage() {
             </div>
           </section>
 
-          <section className="glass mt-8 rounded-[2rem] p-6 sm:p-8">
+          <section className="glass mt-8 rounded-[20px] p-6 sm:p-8">
             <h2 className="text-2xl font-black">Hablemos</h2>
-            <p className="mt-3 text-sm leading-6 text-white/55">
+            <p className="mt-3 text-base leading-7 text-white/62">
               Consultas sobre fechas, links de compra, mesas VIP o cortesías.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
@@ -149,7 +149,7 @@ export default function AboutPage() {
                 href={siteConfig.instagram}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="rounded-full border border-white/15 px-6 py-3.5 text-sm font-bold text-white/80 transition hover:bg-white/10"
+                className="rounded-full border border-white/15 px-6 py-3.5 text-sm font-bold text-white/78 transition hover:bg-white/10"
               >
                 Instagram
               </a>

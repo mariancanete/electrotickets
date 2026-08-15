@@ -25,7 +25,7 @@ export default async function EventsPage() {
           <div className="max-w-3xl">
             <p className="text-sm font-semibold uppercase tracking-[0.3em] text-violet-200/70">Agenda</p>
             <h1 className="mt-3 text-5xl font-black tracking-tight sm:text-6xl">Eventos electrónicos</h1>
-            <p className="mt-5 text-lg leading-8 text-white/58">
+            <p className="mt-5 text-lg leading-8 text-white/62">
               Filtrá por género, venue o lineup y comprá con el link oficial de Bombo de cada fecha.
             </p>
           </div>

@@ -74,15 +74,15 @@ export default function FaqPage() {
         <section className="mx-auto max-w-4xl">
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-violet-200/70">FAQ</p>
           <h1 className="mt-3 text-5xl font-black tracking-tight sm:text-6xl">Preguntas frecuentes</h1>
-          <p className="mt-5 max-w-2xl text-lg leading-8 text-white/58">
+          <p className="mt-5 max-w-2xl text-lg leading-8 text-white/62">
             Respuestas rápidas sobre compra, links oficiales y contacto.
           </p>
 
           <div className="mt-10 space-y-4">
             {faqs.map((item) => (
-              <details key={item.question} className="glass rounded-[1.6rem] p-5">
+              <details key={item.question} className="glass rounded-[20px] p-5">
                 <summary className="cursor-pointer text-lg font-bold text-white">{item.question}</summary>
-                <p className="mt-4 leading-7 text-white/58">{item.answer}</p>
+                <p className="mt-4 leading-7 text-white/62">{item.answer}</p>
               </details>
             ))}
           </div>
@@ -93,7 +93,7 @@ export default function FaqPage() {
             </Link>
             <Link
               href="/quienes-somos"
-              className="rounded-full border border-white/15 px-6 py-3 text-sm font-bold text-white/80 transition hover:bg-white/10"
+              className="rounded-full border border-white/15 px-6 py-3 text-sm font-bold text-white/78 transition hover:bg-white/10"
             >
               Quiénes somos
             </Link>

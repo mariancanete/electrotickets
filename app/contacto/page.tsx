@@ -22,16 +22,16 @@ export default function ContactPage() {
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.3em] text-violet-200/70">Contacto</p>
             <h1 className="mt-3 text-5xl font-black tracking-tight sm:text-6xl">Hablemos por WhatsApp</h1>
-            <p className="mt-5 max-w-2xl text-lg leading-8 text-white/58">
+            <p className="mt-5 max-w-2xl text-lg leading-8 text-white/62">
               Consultas sobre fechas, links de compra, precios, mesas VIP o novedades de próximos eventos.
             </p>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <WhatsappLink href={contactUrl} source="contact_page" className="glass rounded-[2rem] p-6 transition hover:bg-white/10">
+            <WhatsappLink href={contactUrl} source="contact_page" className="glass rounded-[20px] p-6 transition hover:bg-white/10">
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-200/80">WhatsApp directo</p>
               <h2 className="mt-3 text-2xl font-black">Consultar a {siteConfig.whatsappContactName}</h2>
-              <p className="mt-3 text-sm leading-6 text-white/55">
+              <p className="mt-3 text-base leading-7 text-white/62">
                 Abrí un chat directo para preguntar por una fecha, un precio o disponibilidad.
               </p>
             </WhatsappLink>
@@ -40,11 +40,11 @@ export default function ContactPage() {
               href={siteConfig.whatsappGroup}
               source="contact_group"
               kind="group"
-              className="glass rounded-[2rem] p-6 transition hover:bg-white/10"
+              className="glass rounded-[20px] p-6 transition hover:bg-white/10"
             >
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-200/80">Grupo de difusión</p>
               <h2 className="mt-3 text-2xl font-black">Sumarme al grupo</h2>
-              <p className="mt-3 text-sm leading-6 text-white/55">
+              <p className="mt-3 text-base leading-7 text-white/62">
                 Recibí próximas fechas, preventas, últimas entradas y links de compra.
               </p>
             </WhatsappLink>

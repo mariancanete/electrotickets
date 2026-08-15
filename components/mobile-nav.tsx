@@ -60,7 +60,7 @@ export function MobileNav() {
                 href={link.href}
                 onClick={() => setOpen(false)}
                 className={`border-b border-white/5 py-4 text-base font-semibold transition ${
-                  pathname === link.href ? "text-white" : "text-white/70 hover:text-white"
+                  pathname === link.href ? "text-white" : "text-white/78 hover:text-white"
                 }`}
               >
                 {link.label}

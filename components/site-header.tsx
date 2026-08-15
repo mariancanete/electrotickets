@@ -4,7 +4,7 @@ import { MobileNav } from "@/components/mobile-nav";
 function ElectroTicketsLogo() {
   return (
     <div className="flex items-center gap-3">
-      <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-2xl border border-white/15 bg-white/[0.06] shadow-[0_0_30px_rgba(129,140,248,0.18)]">
+      <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-[12px] border border-white/15 bg-white/[0.06] shadow-[0_0_30px_rgba(129,140,248,0.18)]">
         <svg
           viewBox="0 0 64 64"
           className="h-7 w-7"
@@ -73,7 +73,7 @@ export function SiteHeader() {
           <ElectroTicketsLogo />
         </Link>
 
-        <nav className="hidden items-center gap-6 text-sm text-white/65 sm:flex">
+        <nav className="hidden items-center gap-6 text-sm text-white/62 sm:flex">
           <Link className="transition hover:text-white" href="/eventos">
             Eventos
           </Link>

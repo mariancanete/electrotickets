@@ -1,7 +1,29 @@
 import type { Metadata, Viewport } from "next";
+import { Archivo, DM_Mono } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { absoluteUrl, siteConfig } from "@/lib/site";
+
+/**
+ * Archivo con el eje de ancho variable cubre display y cuerpo desde una sola familia: la
+ * versión expandida y pesada tiene la densidad de la tipografía de flyer, y el ancho normal
+ * sirve para leer. Antes el sitio usaba Arial, que además se resuelve distinto en cada
+ * sistema operativo, así que el tracking ajustado a mano no era el mismo para todos.
+ */
+const archivo = Archivo({
+  subsets: ["latin"],
+  axes: ["wdth"],
+  variable: "--font-archivo",
+  display: "swap"
+});
+
+/** Los horarios de set y las grillas de line-up se imprimen en mono. Las fechas también. */
+const dmMono = DM_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-dm-mono",
+  display: "swap"
+});
 
 const homeTitle = "ElectroTickets · Tickets de electrónica en Argentina";
 const homeImage = absoluteUrl("/og-logo");
@@ -47,7 +69,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   const clarityId = process.env.NEXT_PUBLIC_CLARITY_ID;
 
   return (
-    <html lang="es-AR">
+    <html lang="es-AR" className={`${archivo.variable} ${dmMono.variable}`}>
       <body className="noise min-h-screen antialiased">
         {children}
         {gaId ? (

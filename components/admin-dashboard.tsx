@@ -408,14 +408,14 @@ export function AdminDashboard({
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-violet-200/70">Panel privado</p>
           <h1 className="mt-3 text-4xl font-black tracking-tight sm:text-5xl">Cargar eventos</h1>
-          <p className="mt-3 text-white/55">Subí flyer, elegí venue/género, pegá link de Bombo y publicá rápido.</p>
+          <p className="mt-3 text-white/62">Subí flyer, elegí venue/género, pegá link de Bombo y publicá rápido.</p>
         </div>
         <button
           onClick={async () => {
             await fetch("/api/admin/logout", { method: "POST" });
             window.location.href = "/admin/login";
           }}
-          className="rounded-full border border-white/10 px-4 py-2 text-sm text-white/70 hover:bg-white/10"
+          className="rounded-full border border-white/10 px-4 py-2 text-sm text-white/78 hover:bg-white/10"
         >
           Salir
         </button>
@@ -431,11 +431,11 @@ export function AdminDashboard({
       />
 
       <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
-        <form onSubmit={handleSubmit} className="glass space-y-5 rounded-[2rem] p-5 sm:p-6">
+        <form onSubmit={handleSubmit} className="glass space-y-5 rounded-[20px] p-5 sm:p-6">
           <div className="flex items-center justify-between gap-4">
             <h2 className="text-2xl font-black">{isEditing ? "Editar evento" : "Nuevo evento"}</h2>
             {isEditing ? (
-              <button type="button" onClick={() => setForm(emptyForm)} className="text-sm text-white/55 hover:text-white">
+              <button type="button" onClick={() => setForm(emptyForm)} className="text-sm text-white/62 hover:text-white">
                 Cancelar edición
               </button>
             ) : null}
@@ -514,8 +514,8 @@ export function AdminDashboard({
             <input value={form.map_url} onChange={(event) => updateField("map_url", event.target.value)} className="input" placeholder="https://maps.google.com/..." />
           </Field>
 
-          <details className="rounded-3xl border border-white/10 bg-black/20 p-4">
-            <summary className="cursor-pointer text-sm font-bold text-white/80">Guardar nuevo venue para próximas cargas</summary>
+          <details className="rounded-[20px] border border-white/10 bg-black/20 p-4">
+            <summary className="cursor-pointer text-sm font-bold text-white/78">Guardar nuevo venue para próximas cargas</summary>
             <div className="mt-4 grid gap-3">
               <input value={venueForm.name} onChange={(event) => updateVenueForm("name", event.target.value)} className="input" placeholder="Nombre del venue" />
               <input value={venueForm.address} onChange={(event) => updateVenueForm("address", event.target.value)} className="input" placeholder="Dirección" />
@@ -524,23 +524,23 @@ export function AdminDashboard({
                 <input value={venueForm.province} onChange={(event) => updateVenueForm("province", event.target.value)} className="input" placeholder="Provincia" />
               </div>
               <input value={venueForm.map_url} onChange={(event) => updateVenueForm("map_url", event.target.value)} className="input" placeholder="Google Maps URL" />
-              <button type="button" disabled={catalogLoading} onClick={createVenue} className="rounded-full border border-white/15 px-4 py-3 text-sm font-bold text-white/80 hover:bg-white/10 disabled:opacity-50">
+              <button type="button" disabled={catalogLoading} onClick={createVenue} className="rounded-full border border-white/15 px-4 py-3 text-sm font-bold text-white/78 hover:bg-white/10 disabled:opacity-50">
                 Guardar venue y usarlo
               </button>
             </div>
           </details>
 
-          <details className="rounded-3xl border border-white/10 bg-black/20 p-4">
-            <summary className="cursor-pointer text-sm font-bold text-white/80">Agregar género rápido</summary>
+          <details className="rounded-[20px] border border-white/10 bg-black/20 p-4">
+            <summary className="cursor-pointer text-sm font-bold text-white/78">Agregar género rápido</summary>
             <div className="mt-4 flex flex-col gap-3 sm:flex-row">
               <input value={newGenre} onChange={(event) => setNewGenre(event.target.value)} className="input" placeholder="Ej: Hard Groove" />
-              <button type="button" disabled={catalogLoading} onClick={createGenre} className="rounded-full border border-white/15 px-4 py-3 text-sm font-bold text-white/80 hover:bg-white/10 disabled:opacity-50">
+              <button type="button" disabled={catalogLoading} onClick={createGenre} className="rounded-full border border-white/15 px-4 py-3 text-sm font-bold text-white/78 hover:bg-white/10 disabled:opacity-50">
                 Guardar
               </button>
             </div>
           </details>
 
-          {catalogMessage ? <p className="rounded-2xl bg-violet-400/10 px-4 py-3 text-sm text-violet-100">{catalogMessage}</p> : null}
+          {catalogMessage ? <p className="rounded-[12px] bg-violet-400/10 px-4 py-3 text-sm text-violet-100">{catalogMessage}</p> : null}
 
           <Field label="Lineup">
             <textarea value={form.lineup} onChange={(event) => updateField("lineup", event.target.value)} className="input min-h-24" placeholder="Un artista por línea" />
@@ -556,32 +556,32 @@ export function AdminDashboard({
             <input value={form.flyer_url} onChange={(event) => updateField("flyer_url", event.target.value)} className="input mt-2" placeholder="O pegá una URL de imagen" />
           </Field>
 
-          <div className="grid gap-3 rounded-3xl border border-white/10 bg-black/25 p-4 sm:grid-cols-2">
-            <label className="flex items-center gap-3 text-sm text-white/75">
+          <div className="grid gap-3 rounded-[20px] border border-white/10 bg-black/25 p-4 sm:grid-cols-2">
+            <label className="flex items-center gap-3 text-sm text-white/78">
               <input type="checkbox" checked={form.featured} onChange={(event) => updateField("featured", event.target.checked)} />
               Destacado en home
             </label>
-            <label className="flex items-start gap-3 text-sm text-white/75">
+            <label className="flex items-start gap-3 text-sm text-white/78">
               <input type="checkbox" checked={form.last_tickets} onChange={(event) => updateField("last_tickets", event.target.checked)} className="mt-1" />
               <span>
                 <span className="block">Últimas entradas</span>
-                <span className="mt-1 block text-xs leading-5 text-white/42">Mostrar badge de urgencia en la web pública.</span>
+                <span className="mt-1 block text-xs leading-5 text-white/48">Mostrar badge de urgencia en la web pública.</span>
               </span>
             </label>
-            <label className="flex items-start gap-3 text-sm text-white/75">
+            <label className="flex items-start gap-3 text-sm text-white/78">
               <input type="checkbox" checked={form.sold_out} onChange={(event) => updateField("sold_out", event.target.checked)} className="mt-1" />
               <span>
                 <span className="block">Sold Out</span>
-                <span className="mt-1 block text-xs leading-5 text-white/42">Mostrar badge de evento agotado en la web pública.</span>
+                <span className="mt-1 block text-xs leading-5 text-white/48">Mostrar badge de evento agotado en la web pública.</span>
               </span>
             </label>
-            <label className="flex items-center gap-3 text-sm text-white/75">
+            <label className="flex items-center gap-3 text-sm text-white/78">
               <input type="checkbox" checked={form.published} onChange={(event) => updateField("published", event.target.checked)} />
               Publicado
             </label>
           </div>
 
-          {message ? <p className="rounded-2xl bg-white/10 px-4 py-3 text-sm text-white/75">{message}</p> : null}
+          {message ? <p className="rounded-[12px] bg-white/10 px-4 py-3 text-sm text-white/78">{message}</p> : null}
 
           <button disabled={loading} className="w-full rounded-full bg-white px-6 py-4 text-sm font-black text-black transition hover:bg-white/85 disabled:opacity-50">
             {loading ? "Guardando..." : isEditing ? "Guardar cambios" : "Publicar evento"}
@@ -591,7 +591,7 @@ export function AdminDashboard({
         <section className="space-y-4">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <h2 className="text-2xl font-black">Eventos cargados</h2>
-            <p className="text-sm text-white/45">{venues.length} venues · {genres.length} géneros guardados</p>
+            <p className="text-sm text-white/48">{venues.length} venues · {genres.length} géneros guardados</p>
           </div>
           <div className="inline-flex rounded-full border border-white/10 bg-black/25 p-1">
             {periodOptions.map((option) => (
@@ -601,7 +601,7 @@ export function AdminDashboard({
                 onClick={() => setListPeriod(option.value)}
                 aria-pressed={listPeriod === option.value}
                 className={`rounded-full px-4 py-1.5 text-xs font-bold transition ${
-                  listPeriod === option.value ? "bg-white text-black" : "text-white/60 hover:text-white"
+                  listPeriod === option.value ? "bg-white text-black" : "text-white/62 hover:text-white"
                 }`}
               >
                 {option.label}
@@ -609,13 +609,13 @@ export function AdminDashboard({
             ))}
           </div>
           {visibleEvents.length ? null : (
-            <p className="text-sm text-white/45">
+            <p className="text-sm text-white/48">
               No hay eventos {listPeriod === "upcoming" ? "vigentes" : "finalizados"} cargados.
             </p>
           )}
           {visibleEvents.map((event) => (
-            <article key={event.id} className="glass grid gap-4 rounded-[1.6rem] p-4 sm:grid-cols-[92px_1fr]">
-              <div className="aspect-square overflow-hidden rounded-2xl bg-white/5">
+            <article key={event.id} className="glass grid gap-4 rounded-[20px] p-4 sm:grid-cols-[92px_1fr]">
+              <div className="aspect-square overflow-hidden rounded-[12px] bg-white/5">
                 {/* Miniatura del panel privado: el flyer puede venir de cualquier host pegado
                     a mano, así que no pasa por next/image. */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -625,8 +625,8 @@ export function AdminDashboard({
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <h3 className="font-bold">{event.title}</h3>
-                    <p className="mt-1 text-sm text-white/50">{new Date(event.starts_at).toLocaleString("es-AR")} · {event.genre}</p>
-                    <p className="mt-1 text-xs text-white/38">{event.venue_name || "Sin venue"} · Clicks: {event.clicks_count || 0}</p>
+                    <p className="mt-1 text-sm text-white/62">{new Date(event.starts_at).toLocaleString("es-AR")} · {event.genre}</p>
+                    <p className="mt-1 text-xs text-white/48">{event.venue_name || "Sin venue"} · Clicks: {event.clicks_count || 0}</p>
                   </div>
                   <div className="flex flex-wrap justify-end gap-2">
                     {Boolean(event.sold_out) ? (
@@ -640,8 +640,8 @@ export function AdminDashboard({
                   </div>
                 </div>
                 <div className="mt-4 flex flex-wrap gap-2">
-                  <a href={`/eventos/${event.slug}`} target="_blank" className="rounded-full border border-white/10 px-3 py-2 text-xs text-white/70 hover:bg-white/10">Ver</a>
-                  <button onClick={() => selectEvent(event)} className="rounded-full border border-white/10 px-3 py-2 text-xs text-white/70 hover:bg-white/10">Editar</button>
+                  <a href={`/eventos/${event.slug}`} target="_blank" className="rounded-full border border-white/10 px-3 py-2 text-xs text-white/78 hover:bg-white/10">Ver</a>
+                  <button onClick={() => selectEvent(event)} className="rounded-full border border-white/10 px-3 py-2 text-xs text-white/78 hover:bg-white/10">Editar</button>
                   <button onClick={() => removeEvent(event.id)} className="rounded-full border border-red-400/20 px-3 py-2 text-xs text-red-200 hover:bg-red-400/10">Eliminar</button>
                 </div>
               </div>
@@ -744,11 +744,11 @@ function ConversionPanel({
   }, [events]);
 
   return (
-    <section className="glass mb-8 rounded-[2rem] p-5 sm:p-6">
+    <section className="glass mb-8 rounded-[20px] p-5 sm:p-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h2 className="text-2xl font-black">Conversión</h2>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-white/55">
+          <p className="mt-2 max-w-2xl text-base leading-7 text-white/62">
             Clics enviados a Bombo contra entradas vendidas. Cargá las ventas por evento y por día desde el
             reporte de Bombo para ver la tasa real.
           </p>
@@ -772,7 +772,7 @@ function ConversionPanel({
               onClick={() => setPeriod(option.value)}
               aria-pressed={period === option.value}
               className={`rounded-full px-4 py-1.5 text-xs font-bold transition ${
-                period === option.value ? "bg-white text-black" : "text-white/60 hover:text-white"
+                period === option.value ? "bg-white text-black" : "text-white/62 hover:text-white"
               }`}
             >
               {option.label}
@@ -780,14 +780,14 @@ function ConversionPanel({
           ))}
         </div>
         {hiddenCount > 0 ? (
-          <p className="text-xs text-white/40">
+          <p className="text-xs text-white/48">
             {hiddenCount} {hiddenCount === 1 ? "fecha oculta" : "fechas ocultas"} por este filtro
           </p>
         ) : null}
       </div>
 
       {!analyticsReady ? (
-        <p className="mt-5 rounded-2xl border border-amber-300/25 bg-amber-400/10 px-4 py-3 text-sm leading-6 text-amber-100">
+        <p className="mt-5 rounded-[12px] border border-amber-300/25 bg-amber-400/10 px-4 py-3 text-base leading-7 text-amber-100">
           Faltan las tablas de medición. Ejecutá <code className="font-mono">supabase/05-analytics.sql</code> en el SQL
           Editor de Supabase. Hasta entonces se muestra solo el contador histórico de clics.
         </p>
@@ -799,7 +799,7 @@ function ConversionPanel({
           if (!saleForm.event_id) return;
           onSaveSale(saleForm);
         }}
-        className="mt-5 grid gap-3 rounded-3xl border border-white/10 bg-black/20 p-4 sm:grid-cols-[1.6fr_1fr_0.8fr_auto]"
+        className="mt-5 grid gap-3 rounded-[20px] border border-white/10 bg-black/20 p-4 sm:grid-cols-[1.6fr_1fr_0.8fr_auto]"
       >
         <select
           value={saleForm.event_id}
@@ -850,13 +850,13 @@ function ConversionPanel({
       </form>
 
       {message ? (
-        <p className="mt-3 rounded-2xl bg-white/10 px-4 py-3 text-sm text-white/75">{message}</p>
+        <p className="mt-3 rounded-[12px] bg-white/10 px-4 py-3 text-sm text-white/78">{message}</p>
       ) : null}
 
       {visibleRows.length ? (
         <div className="mt-5 overflow-x-auto">
           <table className="w-full min-w-[640px] text-left text-sm">
-            <thead className="text-xs uppercase tracking-[0.15em] text-white/40">
+            <thead className="text-xs uppercase tracking-[0.15em] text-white/48">
               <tr>
                 <th className="pb-3 pr-4 font-semibold">Evento</th>
                 <th className="pb-3 pr-4 font-semibold">Clics</th>
@@ -870,34 +870,34 @@ function ConversionPanel({
             <tbody className="divide-y divide-white/10">
               {visibleRows.map((row) => (
                 <tr key={row.event.id}>
-                  <td className="py-3 pr-4 font-semibold text-white/85">
+                  <td className="py-3 pr-4 font-semibold text-white/78">
                     {row.event.title}
                     {row.upcoming ? null : (
-                      <span className="ml-2 rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-bold text-white/50">
+                      <span className="ml-2 rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-bold text-white/62">
                         finalizado
                       </span>
                     )}
                   </td>
-                  <td className="py-3 pr-4 text-white/70">{row.clicks}</td>
-                  <td className="py-3 pr-4 text-white/50">{row.clicksLast7Days}</td>
-                  <td className="py-3 pr-4 text-white/70">{row.ticketsSold}</td>
+                  <td className="py-3 pr-4 text-white/78">{row.clicks}</td>
+                  <td className="py-3 pr-4 text-white/62">{row.clicksLast7Days}</td>
+                  <td className="py-3 pr-4 text-white/78">{row.ticketsSold}</td>
                   <td className="py-3 pr-4 font-bold text-white">
                     {row.conversion === null ? "—" : `${(row.conversion * 100).toFixed(1)}%`}
                   </td>
-                  <td className="py-3 pr-4 text-white/50">{row.topPlacement || "—"}</td>
-                  <td className="py-3 text-white/50">{row.topSource || "—"}</td>
+                  <td className="py-3 pr-4 text-white/62">{row.topPlacement || "—"}</td>
+                  <td className="py-3 text-white/62">{row.topSource || "—"}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       ) : reconciliation.length ? (
-        <p className="mt-5 text-sm leading-6 text-white/45">
+        <p className="mt-5 text-base leading-7 text-white/48">
           No hay fechas {period === "upcoming" ? "vigentes" : "finalizadas"} con actividad registrada. Probá con
           otro filtro para ver el resto.
         </p>
       ) : (
-        <p className="mt-5 text-sm leading-6 text-white/45">
+        <p className="mt-5 text-base leading-7 text-white/48">
           Todavía no hay clics registrados en la ventana de análisis. Los datos aparecen acá a medida que la gente
           use los botones de compra.
         </p>
@@ -908,8 +908,8 @@ function ConversionPanel({
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-center">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/40">{label}</p>
+    <div className="rounded-[12px] border border-white/10 bg-black/25 px-4 py-3 text-center">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/48">{label}</p>
       <p className="mt-1 text-xl font-black text-white">{value}</p>
     </div>
   );
@@ -918,7 +918,7 @@ function Metric({ label, value }: { label: string; value: string }) {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-sm font-semibold text-white/68">{label}</span>
+      <span className="mb-2 block text-sm font-semibold text-white/78">{label}</span>
       {children}
     </label>
   );

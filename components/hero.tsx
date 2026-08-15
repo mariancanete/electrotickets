@@ -55,19 +55,24 @@ export function Hero({ featuredEvents }: { featuredEvents: EventRecord[] }) {
       <div className="absolute left-1/2 top-0 h-80 w-[56rem] -translate-x-1/2 rounded-full bg-violet-600/20 blur-3xl" />
       <div className="absolute right-0 top-16 h-72 w-72 rounded-full bg-cyan-500/10 blur-3xl" />
 
-      <div className="relative mx-auto grid max-w-7xl items-start gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(560px,1.1fr)] xl:grid-cols-[minmax(0,0.88fr)_minmax(620px,1.12fr)]">
-        <div className="flex flex-col pt-0 lg:min-h-[604px] lg:pt-1 xl:min-h-[612px]">
-          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.045] px-3.5 py-1.5 text-xs font-semibold text-white/68 backdrop-blur sm:text-sm">
+      {/* Sin `items-start`: las dos columnas se estiran a la misma altura, así el `mt-auto`
+          de los pies funciona en ambas y cierran parejas. */}
+      <div className="relative mx-auto grid max-w-7xl gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(560px,1.1fr)] xl:grid-cols-[minmax(0,0.88fr)_minmax(620px,1.12fr)]">
+        <div className="flex flex-col pt-0 lg:pt-1">
+          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.045] px-3.5 py-1.5 text-xs font-semibold text-white/78 sm:text-sm">
             <span className="h-1.5 w-1.5 rounded-full bg-violet-500 shadow-[0_0_18px_rgba(139,92,246,0.85)]" />
             Agenda de electrónica · Argentina · Compra por Bombo
           </div>
 
           {/* El título anterior ("antes que todos") prometía anticipación que el sitio no
               sustentaba: no había alertas ni preventas. Ahora promete lo que sí entrega. */}
-          <h1 className="max-w-3xl text-balance text-4xl font-black tracking-[-0.055em] text-white sm:text-6xl lg:text-7xl xl:text-[4.9rem] xl:leading-[0.95]">
+          {/* Archivo expandido es bastante más ancho por carácter que Arial, así que al
+              tamaño anterior el titular pasaba a cinco líneas y desbalanceaba el hero. El
+              peso visual lo aporta ahora el ancho de la letra, no el cuerpo. */}
+          <h1 className="max-w-2xl text-balance text-[2.6rem] font-black leading-[0.98] tracking-[-0.03em] text-white sm:text-5xl lg:text-[3.6rem] xl:text-[4rem]">
             Las mejores fechas de electrónica, en un solo lugar.
           </h1>
-          <p className="mt-5 max-w-xl text-base leading-7 text-white/64 sm:text-lg">
+          <p className="mt-5 max-w-xl text-base leading-7 text-white/62 sm:text-lg">
             Descubrí eventos, revisá lineup y ubicación, y comprá con el{" "}
             <span className="font-semibold text-violet-200">link verificado</span> de Bombo de cada fecha. Te
             ayudamos por <span className="font-semibold text-violet-200">WhatsApp</span> antes y después de comprar.
@@ -83,22 +88,22 @@ export function Hero({ featuredEvents }: { featuredEvents: EventRecord[] }) {
             </Link>
             <Link
               href="/destacados"
-              className="inline-flex items-center justify-center rounded-full border border-white/15 bg-black/20 px-7 py-3 text-center text-sm font-bold text-white/82 transition hover:border-white/35 hover:bg-white/10"
+              className="inline-flex items-center justify-center rounded-full border border-white/15 bg-black/20 px-7 py-3 text-center text-sm font-bold text-white/78 transition hover:border-white/35 hover:bg-white/10"
             >
               Ver destacados
             </Link>
           </div>
 
-          <div className="mt-7 grid max-w-2xl gap-0 overflow-hidden rounded-2xl border border-white/10 bg-black/20 backdrop-blur sm:grid-cols-3 lg:mt-auto">
+          <div className="mt-7 grid max-w-2xl gap-0 overflow-hidden rounded-[12px] border border-white/10 bg-black/20 sm:grid-cols-3 lg:mt-auto">
             {microBenefits.map((item) => (
               <div
                 key={item.title}
                 className="flex items-center gap-3 border-white/10 px-4 py-3 text-white/78 sm:border-r sm:last:border-r-0"
               >
-                <span className="text-violet-200">{item.icon}</span>
-                <span>
-                  <span className="block text-sm font-bold leading-tight text-white">{item.title}</span>
-                  <span className="mt-0.5 block text-xs leading-tight text-white/50">{item.text}</span>
+                <span className="shrink-0 text-violet-200">{item.icon}</span>
+                <span className="min-w-0">
+                  <span className="block text-[13px] font-bold leading-tight text-white">{item.title}</span>
+                  <span className="mt-1 block text-[12px] leading-snug text-white/62">{item.text}</span>
                 </span>
               </div>
             ))}
@@ -130,13 +135,13 @@ export function Hero({ featuredEvents }: { featuredEvents: EventRecord[] }) {
                 <EventRow key={event.id} event={event} placement="hero" priority={index === 0} />
               ))
             ) : (
-              <div className="rounded-3xl border border-dashed border-white/10 bg-black/20 p-5 text-sm leading-6 text-white/60">
+              <div className="rounded-[20px] border border-dashed border-white/10 bg-black/20 p-5 text-base leading-7 text-white/62">
                 Muy pronto vas a ver acá las fechas destacadas para comprar tickets.
               </div>
             )}
           </div>
 
-          <div className="mt-4 flex flex-col items-start justify-between gap-3 rounded-3xl border border-white/10 bg-white/[0.035] px-4 py-3.5 backdrop-blur sm:flex-row sm:items-center sm:gap-4 lg:mt-auto">
+          <div className="mt-4 flex flex-col items-start justify-between gap-3 rounded-[20px] border border-white/10 bg-white/[0.035] px-4 py-3.5 sm:flex-row sm:items-center sm:gap-4 lg:mt-auto">
             <div className="flex min-w-0 items-center gap-3">
               <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-violet-300/30 bg-violet-500/10 text-violet-100">
                 <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" aria-hidden="true">
@@ -163,7 +168,7 @@ export function Hero({ featuredEvents }: { featuredEvents: EventRecord[] }) {
             </div>
             <div className="shrink-0 text-right text-sm font-black leading-[0.85] tracking-[0.18em] text-white sm:text-base">
               BOMBO
-              <span className="block text-[9px] tracking-[0.28em] text-white/60 sm:text-[10px]">TICKETS</span>
+              <span className="block text-[9px] tracking-[0.28em] text-white/62 sm:text-[10px]">TICKETS</span>
             </div>
           </div>
         </aside>

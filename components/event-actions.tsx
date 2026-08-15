@@ -50,7 +50,7 @@ export function EventActions({ title, slug, url, startsAt, endAt, venue }: Event
       <button
         type="button"
         onClick={share}
-        className="inline-flex items-center gap-2 rounded-full border border-white/15 px-5 py-3 text-sm font-bold text-white/80 transition hover:bg-white/10"
+        className="inline-flex items-center gap-2 rounded-full border border-white/15 px-5 py-3 text-sm font-bold text-white/78 transition hover:bg-white/10"
       >
         <ShareIcon />
         {copied ? "Link copiado" : "Compartir"}
@@ -60,7 +60,7 @@ export function EventActions({ title, slug, url, startsAt, endAt, venue }: Event
         target="_blank"
         rel="noopener noreferrer"
         onClick={() => track("add_to_calendar", { event_slug: slug })}
-        className="inline-flex items-center gap-2 rounded-full border border-white/15 px-5 py-3 text-sm font-bold text-white/80 transition hover:bg-white/10"
+        className="inline-flex items-center gap-2 rounded-full border border-white/15 px-5 py-3 text-sm font-bold text-white/78 transition hover:bg-white/10"
       >
         <CalendarIcon />
         Guardar en calendario

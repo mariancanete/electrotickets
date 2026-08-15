@@ -88,12 +88,12 @@ export function EventBrowser({
 
   return (
     <div className="space-y-8">
-      <div className="glass grid gap-3 rounded-[2rem] p-4 sm:grid-cols-[1fr_220px]">
+      <div className="glass grid gap-3 rounded-[20px] p-4 sm:grid-cols-[1fr_220px]">
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Buscar por DJ, venue, género..."
-          className="rounded-full border border-white/10 bg-black/30 px-5 py-3 text-sm outline-none transition placeholder:text-white/35 focus:border-white/30"
+          className="rounded-full border border-white/10 bg-black/30 px-5 py-3 text-sm outline-none transition placeholder:text-white/48 focus:border-white/30"
         />
         <select
           value={genre}
@@ -118,9 +118,9 @@ export function EventBrowser({
       ) : (
         // El estado vacío era un callejón sin salida: solo decía que no había resultados.
         <div className="space-y-5">
-          <div className="glass rounded-[2rem] p-8 text-center">
+          <div className="glass rounded-[20px] p-8 text-center">
             <p className="text-lg font-bold text-white">No encontramos eventos con esos filtros.</p>
-            <p className="mt-2 text-sm leading-6 text-white/55">
+            <p className="mt-2 text-base leading-7 text-white/62">
               Probá con otro género o mirá la agenda completa.
             </p>
             <button
