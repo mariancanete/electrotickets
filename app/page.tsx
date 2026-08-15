@@ -1,23 +1,17 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { EventRow } from "@/components/event-row";
-import { Hero } from "@/components/hero";
-import { SiteFooter } from "@/components/site-footer";
-import { SiteHeader } from "@/components/site-header";
-import { VipTables, WhatsappAlerts } from "@/components/whatsapp-alerts";
-import type { CtaPlacement } from "@/lib/analytics";
-import { getLastTicketsEvents, getUpcomingPublishedEvents, getWeekendEvents } from "@/lib/events";
+import { AgendaScreen, type DayTile } from "@/components/agenda-screen";
+import { BottomNav } from "@/components/bottom-nav";
+import { formatRange, getDayKey, getDayTile } from "@/lib/dates";
+import { getUpcomingPublishedEvents } from "@/lib/events";
 import { absoluteUrl, siteConfig } from "@/lib/site";
-import { buildVipWhatsappMessage, whatsappUrlOrGroup } from "@/lib/whatsapp";
+import { buildAlertsWhatsappMessage, whatsappUrlOrGroup } from "@/lib/whatsapp";
+import { getWeekendDays, groupByDay } from "@/lib/weekend";
 import type { EventRecord } from "@/types/event";
 
 export const revalidate = 60;
 
 const homeTitle = "ElectroTickets · Tickets de electrónica en Argentina";
 const homeImage = absoluteUrl("/og-logo");
-
-/** Cuántas fechas se listan en la home antes de derivar a la agenda completa. */
-const HOME_AGENDA_LIMIT = 8;
 
 export const metadata: Metadata = {
   title: homeTitle,
@@ -36,139 +30,36 @@ export const metadata: Metadata = {
 export default async function HomePage() {
   const events = await getUpcomingPublishedEvents();
 
-  const featuredEvents = events.filter((event) => event.featured);
-  const heroEvents = [...featuredEvents, ...events.filter((event) => !event.featured)].slice(0, 3);
-  const heroIds = new Set(heroEvents.map((event) => event.id));
+  const weekendDays = getWeekendDays();
+  const grouped = groupByDay(events);
 
-  // Las secciones curadas se calculan sobre **todos** los eventos, incluidos los del hero.
-  //
-  // Antes partían de una lista que excluía lo que ya estaba arriba, para no repetir. El
-  // efecto colateral era que una fecha marcada como últimas entradas desaparecía de la
-  // sección "Últimas entradas" por el solo hecho de haber quedado entre los tres del hero,
-  // y lo mismo pasaba con las fechas del finde. Una sección de escasez que se saltea fechas
-  // que se están agotando está rota: acá la completitud vale más que no repetir.
-  const weekendEvents = getWeekendEvents(events);
-  const weekendIds = new Set(weekendEvents.map((event) => event.id));
-  // Una fecha que es del finde y además tiene últimas entradas se lista una sola vez, en
-  // "Este finde": la fila ya muestra su chip rojo, así que el dato de escasez no se pierde.
-  const lastTicketsEvents = getLastTicketsEvents(events).filter((event) => !weekendIds.has(event.id));
-  const highlightedIds = new Set([...weekendIds, ...lastTicketsEvents.map((event) => event.id)]);
+  const days: DayTile[] = weekendDays.map((date) => {
+    const tile = getDayTile(date);
+    return { ...tile, count: (grouped.get(tile.key) ?? []).length };
+  });
 
-  // La agenda genérica sí evita repetir: es la lista larga de relleno, y ahí sí molesta
-  // volver a ver lo que ya apareció en el hero o en una sección curada.
-  const restOfAgenda = events.filter((event) => !heroIds.has(event.id) && !highlightedIds.has(event.id));
-  const visibleAgenda = restOfAgenda.slice(0, HOME_AGENDA_LIMIT);
-  const remainingCount = restOfAgenda.length - visibleAgenda.length;
+  const dayKeys = new Set(days.map((day) => day.key));
+  const eventsByDay: Record<string, EventRecord[]> = {};
+  for (const key of dayKeys) {
+    eventsByDay[key] = grouped.get(key) ?? [];
+  }
+
+  // Para el estado vacío: la próxima fecha confirmada fuera del finde. `getUpcomingPublishedEvents`
+  // ya viene ordenada por `starts_at`, así que la primera que no cae en el finde es la próxima.
+  const nextEvent = events.find((event) => !dayKeys.has(getDayKey(event.starts_at))) ?? null;
 
   return (
     <>
-      <SiteHeader />
       <main>
-        <Hero featuredEvents={heroEvents} />
-
-        <div className="mx-auto max-w-7xl space-y-10 px-4 pb-16 pt-4 sm:px-6 lg:px-8">
-          {/* La descripción decía "dentro de los próximos siete días", que era la ventana del
-              filtro contada en voz alta. En pantalla confundía: nadie piensa el finde como un
-              horizonte de días. `getWeekendEvents` no cambia; solo se nombra por lo que
-              devuelve, que son las fechas de viernes, sábado y domingo. */}
-          {weekendEvents.length ? (
-            <AgendaSection
-              eyebrow="Esta semana"
-              title="Este finde"
-              description="Todo lo que hay viernes, sábado y domingo."
-              events={weekendEvents}
-              placement="home_weekend"
-            />
-          ) : null}
-
-          {lastTicketsEvents.length ? (
-            <AgendaSection
-              eyebrow="Se están agotando"
-              title="Últimas entradas"
-              description="Fechas marcadas como últimas entradas por la productora."
-              events={lastTicketsEvents}
-              placement="home_last_tickets"
-            />
-          ) : null}
-
-          {/* Único mecanismo de retorno del sitio: quien llega desde Google y no compra hoy
-              se iba sin dejar ningún punto de contacto. */}
-          <WhatsappAlerts source="home_alerts" />
-
-          <section>
-            <div className="mb-5 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[0.35em] text-violet-200/80">Agenda</p>
-                <h2 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">Próximos eventos</h2>
-                <p className="mt-2 max-w-2xl text-base leading-7 text-white/62">
-                  Fechas publicadas con su link oficial de Bombo, lineup y ubicación para decidir antes de comprar.
-                </p>
-              </div>
-              <Link
-                href="/eventos"
-                className="rounded-full border border-white/20 px-5 py-3 text-sm font-black text-white transition hover:border-white/40 hover:bg-white/10"
-              >
-                Ver todos los eventos
-              </Link>
-            </div>
-
-            {visibleAgenda.length ? (
-              <>
-                <div className="space-y-3">
-                  {visibleAgenda.map((event) => (
-                    <EventRow key={event.id} event={event} placement="home_agenda" />
-                  ))}
-                </div>
-                {remainingCount > 0 ? (
-                  <Link
-                    href="/eventos"
-                    className="mt-4 flex items-center justify-center rounded-[20px] border border-dashed border-white/15 px-5 py-4 text-sm font-bold text-white/78 transition hover:border-white/30 hover:text-white"
-                  >
-                    Ver {remainingCount} {remainingCount === 1 ? "fecha más" : "fechas más"} en la agenda →
-                  </Link>
-                ) : null}
-              </>
-            ) : (
-              <div className="rounded-[20px] border border-dashed border-white/10 bg-white/[0.03] p-6 text-base leading-7 text-white/62">
-                No hay más fechas publicadas por ahora. Sumate a las alertas de WhatsApp y te avisamos apenas
-                publiquemos la próxima.
-              </div>
-            )}
-          </section>
-
-          <VipTables source="home_vip" href={whatsappUrlOrGroup(buildVipWhatsappMessage())} />
-        </div>
+        <AgendaScreen
+          days={days}
+          eventsByDay={eventsByDay}
+          emptyRange={formatRange(weekendDays[0], weekendDays[2])}
+          nextEvent={nextEvent}
+          alertsHref={whatsappUrlOrGroup(buildAlertsWhatsappMessage())}
+        />
       </main>
-      <SiteFooter />
+      <BottomNav />
     </>
-  );
-}
-
-function AgendaSection({
-  eyebrow,
-  title,
-  description,
-  events,
-  placement
-}: {
-  eyebrow: string;
-  title: string;
-  description: string;
-  events: EventRecord[];
-  placement: CtaPlacement;
-}) {
-  return (
-    <section>
-      <div className="mb-5">
-        <p className="text-xs font-bold uppercase tracking-[0.35em] text-violet-200/80">{eyebrow}</p>
-        <h2 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">{title}</h2>
-        <p className="mt-2 max-w-2xl text-base leading-7 text-white/62">{description}</p>
-      </div>
-      <div className="space-y-3">
-        {events.map((event) => (
-          <EventRow key={event.id} event={event} placement={placement} />
-        ))}
-      </div>
-    </section>
   );
 }

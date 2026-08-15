@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
-import { EventBrowser } from "@/components/event-browser";
-import { SiteFooter } from "@/components/site-footer";
-import { SiteHeader } from "@/components/site-header";
-import { VipTables } from "@/components/whatsapp-alerts";
+import Link from "next/link";
+import { ScreenHeader } from "@/components/app-header";
+import { BottomNav, NavSpacer } from "@/components/bottom-nav";
+import { Chip } from "@/components/chips";
+import { DateCard } from "@/components/date-card";
+import { Icon } from "@/components/icons";
+import { formatDayHeading } from "@/lib/dates";
 import { getUpcomingPublishedEvents } from "@/lib/events";
-import { buildVipWhatsappMessage, whatsappUrlOrGroup } from "@/lib/whatsapp";
+import { applyFilters, countActiveFilters, filtersToParams, parseFilters, WEEKEND } from "@/lib/filters";
+import { groupByDay } from "@/lib/weekend";
 
 export const revalidate = 60;
 
@@ -14,29 +17,89 @@ export const metadata: Metadata = {
   description: "Explorá fiestas techno, house, melodic techno y eventos electrónicos en Argentina."
 };
 
-export default async function EventsPage() {
+type PageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+/**
+ * Pantalla 02 — listado de eventos.
+ *
+ * Las fechas se agrupan por día con un encabezado en mono y su contador. La barra de filtros
+ * muestra cuántos hay aplicados y cuáles: editarlos se hace en Buscar (08), que es la
+ * pantalla que tiene el campo y las dos filas de chips. Los filtros llegan por la URL, así
+ * que un listado filtrado se puede compartir tal cual.
+ */
+export default async function EventsPage({ searchParams }: PageProps) {
   const events = await getUpcomingPublishedEvents();
+  const filters = parseFilters(await searchParams);
+  const visible = applyFilters(events, filters);
+  const activeCount = countActiveFilters(filters);
+
+  const groups = Array.from(groupByDay(visible).entries());
+  const searchHref = `/buscar${filtersToParams(filters).toString() ? `?${filtersToParams(filters)}` : ""}`;
 
   return (
     <>
-      <SiteHeader />
-      <main className="px-4 py-14 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl space-y-10">
-          <div className="max-w-3xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-violet-200/70">Agenda</p>
-            <h1 className="mt-3 text-5xl font-black tracking-tight sm:text-6xl">Eventos electrónicos</h1>
-            <p className="mt-5 text-lg leading-8 text-white/62">
-              Filtrá por género, venue o lineup y comprá con el link oficial de Bombo de cada fecha.
-            </p>
-          </div>
-          {/* EventBrowser lee los filtros desde la URL, así que necesita un límite de Suspense. */}
-          <Suspense fallback={null}>
-            <EventBrowser events={events} placement="event_list" />
-          </Suspense>
-          <VipTables source="home_vip" href={whatsappUrlOrGroup(buildVipWhatsappMessage())} />
+      <main className="flex min-h-screen flex-col pt-2">
+        <ScreenHeader title="Todas las fechas" backHref="/" />
+
+        <div className="chips-scroll flex flex-none gap-2 border-b border-white/[0.08] px-[18px] pb-[14px]">
+          <Link href={searchHref} className="flex-none">
+            <Chip active>
+              <Icon name="sliders" size={14} />
+              {activeCount ? `Filtros · ${activeCount}` : "Filtros"}
+            </Chip>
+          </Link>
+          {filters.cuando === WEEKEND ? <Chip className="flex-none">Este finde</Chip> : null}
+          {filters.genero ? <Chip className="flex-none">{filters.genero}</Chip> : null}
+          {filters.zona ? <Chip className="flex-none">{filters.zona}</Chip> : null}
         </div>
+
+        {groups.length ? (
+          <div className="flex flex-col gap-3 px-[18px] pt-[14px]">
+            {groups.map(([key, dayEvents]) => (
+              <section key={key} className="flex flex-col gap-3">
+                <div className="flex items-center gap-[10px]">
+                  <h2 className="dato-seccion">{formatDayHeading(dayEvents[0].starts_at)}</h2>
+                  <span className="h-px flex-1 bg-white/10" />
+                  <span className="font-mono text-[11px] font-bold leading-none text-white/45">{dayEvents.length}</span>
+                </div>
+
+                {/* Una fecha agotada se muestra atenuada con el botón deshabilitado; nunca se
+                    oculta: si desapareciera, el usuario la seguiría buscando. */}
+                {dayEvents.map((event, index) => (
+                  <DateCard
+                    key={event.id}
+                    event={event}
+                    placement="listado_card"
+                    priority={index === 0}
+                  />
+                ))}
+              </section>
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col gap-[14px] px-[18px] pt-4">
+            <div className="rounded-block border border-dashed border-white/20 p-6 text-center">
+              <h2 className="text-[20px] font-bold leading-[1.2] tracking-[-0.025em]">
+                No hay fechas con esos filtros
+              </h2>
+              <p className="mt-2 text-[13.5px] leading-[1.55] text-white/55">
+                Probá con otro género o mirá la agenda completa.
+              </p>
+              <Link
+                href="/eventos"
+                className="mt-4 flex h-12 items-center justify-center rounded-full border border-white/40 text-[14px] font-bold text-white"
+              >
+                Ver todos los eventos
+              </Link>
+            </div>
+          </div>
+        )}
+
+        <NavSpacer />
       </main>
-      <SiteFooter />
+      <BottomNav />
     </>
   );
 }

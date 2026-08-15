@@ -10,8 +10,15 @@
  *    (Supabase, para conciliar contra las ventas que reporta Bombo).
  */
 
-/** Dónde estaba el CTA que originó el clic. Se guarda en `event_clicks.placement`. */
+/**
+ * Dónde estaba el CTA que originó el clic. Se guarda en `event_clicks.placement`.
+ *
+ * Los valores del rediseño Hora Pico se **agregan** a los anteriores en vez de reemplazarlos:
+ * `event_clicks` ya tiene meses de filas con los placements viejos, y renombrarlos partiría
+ * la serie histórica justo en la métrica que se usa para decidir dónde poner el próximo CTA.
+ */
 export type CtaPlacement =
+  // Placements del sistema anterior. Se conservan por la serie histórica de `event_clicks`.
   | "hero"
   | "home_agenda"
   | "home_weekend"
@@ -21,7 +28,29 @@ export type CtaPlacement =
   | "event_detail"
   | "sticky_mobile"
   | "related"
-  | "past_event";
+  | "past_event"
+  // Placements del rediseño de 9 pantallas (§8.2 del PRD).
+  | "home_destacado"
+  | "listado_card"
+  | "detalle_barra"
+  | "compra_barra"
+  | "vacio_proxima"
+  | "mis_entradas_card";
+
+/**
+ * Los seis placements nuevos se dividen en dos familias, y la diferencia importa para leer
+ * los números:
+ *
+ *   **Directos a Bombo** — `home_destacado`, `detalle_barra`, `compra_barra`. Son los botones
+ *   "Comprar en Bombo": navegan a `/go/[slug]` y disparan `click_buy`. Estos son los que
+ *   cuentan como intención de compra.
+ *
+ *   **De card** — `listado_card`, `vacio_proxima`, `mis_entradas_card`. Son los CTA compactos
+ *   que dicen "Entradas" y abren el **detalle**, no Bombo (§1.2). No pueden disparar
+ *   `click_buy` porque no van a `/go/`, así que disparan `select_date`: mide qué superficie
+ *   empuja al detalle sin inflar la métrica de compra contando dos veces la misma intención.
+ */
+export const CARD_PLACEMENTS = ["listado_card", "vacio_proxima", "mis_entradas_card"] as const;
 
 /** De dónde salió una consulta de WhatsApp. Se manda como `wa_source` a GA4. */
 export type WhatsappSource =

@@ -69,7 +69,7 @@ export function EventRow({
               className="object-cover transition duration-500 group-hover:scale-105"
             />
           ) : (
-            <FlyerFallback size="text-2xl" />
+            <FlyerFallback />
           )}
           {/* Solo mobile: en desktop estos badges duplicarían el chip de la columna de texto
               y, con el flyer más chico, taparían el arte entero. */}

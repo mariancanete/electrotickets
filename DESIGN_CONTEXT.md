@@ -1,7 +1,11 @@
 # Contexto de diseño — ElectroTickets
 
 Documento de traspaso para retomar el trabajo visual sin releer todo el historial.
-Última actualización: agosto 2026 (sesión de identidad de marca).
+Última actualización: agosto 2026 (**rediseño Hora Pico — 9 pantallas mobile**).
+
+> El sistema visual vigente es **Hora Pico** (§2.5). Reemplaza al sistema violeta + cyan con
+> Archivo + DM Mono que describen los PR #22 a #26. Todo lo anterior a §2.5 queda como
+> historial: sirve para entender por qué se decidió algo, no para copiar tokens.
 
 ---
 
@@ -12,7 +16,7 @@ Documento de traspaso para retomar el trabajo visual sin releer todo el historia
 | Framework | **Next.js 16.2.6**, App Router, React 19.2 |
 | Estilos | **Tailwind CSS v4** (`@import "tailwindcss"` + bloque `@theme`), sin `tailwind.config.js` |
 | Base de datos | Supabase (`@supabase/supabase-js`) |
-| Iconos | **Phosphor Icons** (`@phosphor-icons/react`) |
+| Iconos | **Set propio de 23 glifos** (`components/icons.tsx`). Phosphor sigue instalado pero solo lo usa el admin |
 | Hosting | Vercel |
 | Idioma | Español rioplatense (voseo). Todo el copy público y los comentarios de código |
 
@@ -22,10 +26,10 @@ Documento de traspaso para retomar el trabajo visual sin releer todo el historia
 **Convenciones detectadas y respetadas:**
 
 - Server components por defecto; `"use client"` solo donde hace falta estado o eventos.
-- Los iconos en server components se importan de **`@phosphor-icons/react/dist/ssr`**.
-  El tipo `Icon` se importa del paquete raíz (`import type { Icon } from "@phosphor-icons/react"`).
-- `@phosphor-icons/react` está en `optimizePackageImports` (`next.config.ts`) para que solo
-  se empaqueten los iconos usados.
+- Los iconos salen de `components/icons.tsx`: `<Icon name="pin" size={14} />`. El sprite
+  (`<IconSprite />`) se monta una sola vez en `app/layout.tsx` y cada ícono es un `<use>`.
+- El admin todavía importa de **`@phosphor-icons/react/dist/ssr`**; sigue en
+  `optimizePackageImports` (`next.config.ts`) por eso.
 - Los comentarios explican **por qué**, no qué hace el código.
 - `npm run typecheck`, `npm run build` y `npx eslint .` tienen que quedar limpios.
 
@@ -230,35 +234,117 @@ y saltear `--design-system`.** La base de datos de la skill es buena; el composi
 
 ---
 
+### Rediseño "Hora Pico" — 9 pantallas mobile (sistema vigente)
+
+Salido de `handoff-prd.md` + `ElectroTickets.dc.html` (Claude Design). Mobile-first, ancho de
+diseño 390px. **No hay definición de tablet ni desktop todavía:** el layout es de una sola
+columna y escala por ancho, así que en desktop se ve como una columna centrada. Cerrar esa
+definición es el próximo trabajo pendiente de diseño.
+
+**Color** — cada token tiene un uso único y cerrado (`app/globals.css`):
+
+| Token | Valor | Uso |
+|---|---|---|
+| `cta` | `#CBFF1F` | CTA de compra y tab activo del nav. **Nada más.** |
+| `cta-pressed` | `#B2E30A` | Pressed del CTA |
+| `marca` | `#2B34FF` | Header, riel de fecha, badges informativos |
+| `urgencia` | `#FF5A3C` | Solo "Últimas entradas" |
+| `ink` / `surface` / `surface-alt` | `#0A0A14` / `#15151F` / `#1F1F2C` | Fondo / cards / deshabilitado |
+
+**Tipografía** — Space Grotesk (display y cuerpo) + JetBrains Mono. El mono es **solo** para
+datos que genera la máquina: fechas, horas, contadores, estados, IDs. Lo que escribe una
+persona va en Space Grotesk.
+
+**Utilidades nuevas:** `.trama` / `.trama-fuerte` (semitono de 7px sobre ultramar, reemplaza a
+la foto cuando no hay flyer), `.rayado` / `.rayado-lg` (placeholder de flyer a 135°),
+`.dato` / `.dato-seccion` (mono), `.display`, `.chips-scroll`.
+
+**Mapa de pantallas → rutas:**
+
+| # | Pantalla | Ruta |
+|---|---|---|
+| 01 | Home / descubrimiento | `/` |
+| 02 | Listado de eventos | `/eventos` |
+| 03 | Detalle de evento | `/eventos/[slug]` |
+| 04 | Compra (pasaje a Bombo) | `/eventos/[slug]/comprar` *(nueva)* |
+| 05 | Estado vacío | estado de `/` cuando el finde no tiene fechas |
+| 06 | Mis entradas | `/mis-entradas` *(nueva)* |
+| 07 | Mis entradas vacío | estado de `/mis-entradas` |
+| 08 | Buscar | `/buscar` *(nueva)* |
+| 09 | Ayuda | `/preguntas-frecuentes` |
+
+**Agrupación por noche, no por día calendario.** Una fecha que arranca 03:00 del domingo es
+la noche del sábado. `getDayKey` corre la fecha 6 horas antes de agrupar (`NIGHT_HOURS` en
+`lib/dates.ts`). Sin eso cada finde se partía en dos y quedaban fechas sueltas bajo un
+domingo que nadie busca.
+
+**Ajustes al PRD por límite técnico o por conflicto interno del propio PRD:**
+
+1. **Placeholder de flyer sin etiqueta.** La §5 pide "franjas + etiqueta mono del formato",
+   pero "flyer 4:5" es una anotación del mockup, no copy de producto: a un usuario no le
+   dice nada. Se dibujan las franjas sin texto. El propio mockup ya lo hace así en la card
+   agotada de la pantalla 02.
+2. **Tab activo de Ayuda en blanco, no chartreuse.** El mockup pinta ese tab de chartreuse,
+   pero la §6.09 exige "cero chartreuse" en esa pantalla. Gana el PRD: si Ayuda encendiera
+   el chartreuse en el nav, rompería su propia regla en el elemento más visible.
+3. **"Ver las N" de la home en blanco, no chartreuse.** El mockup lo pinta de chartreuse
+   pero lleva al listado, no a comprar. Gana el principio 1.
+4. **Título de la 02: "Todas las fechas", no "Este finde".** El mockup muestra el estado
+   filtrado; la ruta lista todo, así que llamarla "Este finde" sería falso cuando aparecen
+   fechas del mes siguiente. Los filtros aplicados se muestran como chips.
+5. **La credencial de RRPP no se renderiza en el estado vacío (05).** Es la pantalla más
+   apretada —tiene que entrar el punteado, la próxima fecha y el bloque de alertas completos
+   arriba del nav— y el mockup de la 05 tampoco la muestra.
+6. **El detalle conserva descripción, video, FAQ y fechas parecidas** debajo de los bloques
+   que sí especifica la §6.03. El PRD no los menciona, pero es el contenido indexable que
+   sostiene el posicionamiento de la URL y alimenta el `FAQPage` del JSON-LD. Sacarlos
+   habría sido una decisión de SEO disfrazada de decisión de diseño.
+7. **Zona de los filtros = `venue_name`, no `city`.** `city` viene cargado como "Buenos
+   Aires" en casi todas las filas: una fila de chips donde todos dicen lo mismo no filtra.
+
+**Pendiente resuelto por decisión del dueño:** el corazón de guardar del detalle se
+implementa **visualmente y sin función** (`components/detail-actions.tsx`); la prueba social
+**no se implementa** y su slot queda oculto; los flyers salen únicamente de `flyer_url` tal
+como lo carga el admin.
+
+---
+
 ## 3. Componentes principales de UI
 
 ### Núcleo — tocar con cuidado, se reutilizan en varias páginas
 
 | Archivo | Qué es |
 |---|---|
-| `app/globals.css` | **Fuente de verdad del sistema visual.** Tokens, `@theme`, `.glass`, `.tabular`, `.flyer-glow`, foco, reduced-motion |
-| `app/layout.tsx` | Carga de fuentes (`next/font`), GA4 y Clarity |
-| `components/event-row.tsx` | **Fila compacta de evento.** Formato denso de la agenda. Se usa en hero, home y relacionados |
-| `components/event-card.tsx` | **Tarjeta de evento** (flyer 4:5). Se usa en `/eventos` y `/destacados` |
-| `components/wordmark.tsx` | **Identidad.** `Wordmark` (lockup ELECTRO/TICKETS) y `WordmarkMonogram` (ET). Se usa en header y footer |
-| `components/section-heading.tsx` | Encabezado de sección con icono. Alinea al comienzo, no al centro |
-| `components/flyer-image.tsx` | `next/image` con fallback sin optimizar si el host no está permitido |
+| `app/globals.css` | **Fuente de verdad del sistema visual.** Tokens de Hora Pico, `@theme`, `.trama`, `.rayado`, `.dato`, `.display`, foco, reduced-motion |
+| `app/layout.tsx` | Carga de fuentes (`next/font`), sprite de íconos, GA4 y Clarity |
+| `components/icons.tsx` | **Set de 23 glifos** + isotipo `Mark`. `IconSprite` va una vez en el layout |
+| `components/date-card.tsx` | **La card de fecha.** Se reusa en 02, 05, 06, 07 y 08. No hay card especial de búsqueda |
+| `components/cta.tsx` | `BuyCta` (56px, va a `/go/`), `CardCta` (44px, abre el detalle), `SoldOutCta`, `WhatsappIconButton` |
+| `components/bottom-nav.tsx` | Nav de 4 tabs + `NavSpacer`, que reserva su alto al final de cada pantalla |
+| `components/app-header.tsx` | `AppHeader` (marca ultramar con trama), `ScreenHeader`, `TabHeader`, `Wordmark` |
+| `components/chips.tsx` | `Chip`, `UrgencyChip`, `CredentialChip`, `InfoBlock` |
+| `components/flyer-image.tsx` | `Flyer` (imagen o placeholder rayado) + `next/image` sin optimizar si el host no está permitido |
+| `lib/saved-dates.ts` | Mis entradas en `localStorage`. Sin cuenta, sin cookie, sin dato personal |
+| `lib/filters.ts` | Filtros de 02 y 08. Todos viven en la URL |
+| `lib/weekend.ts` | Criterio de finde (viernes-sábado-domingo) en horario argentino |
 
-> `EventRow` y `EventCard` son **el mismo objeto en dos densidades**. Comparten tipografía,
-> radios y tratamiento de fecha a propósito. Si cambiás uno, revisá el otro.
+> **`EventRow`, `EventCard` y `SectionHeading` quedaron sin uso** en el rediseño. No se
+> borraron todavía porque el admin y las páginas de confianza podrían necesitarlos; si el
+> próximo pase confirma que no, se eliminan.
 
 ### Páginas
 
 | Archivo | Notas |
 |---|---|
-| `app/page.tsx` | Home. Hero + "Este finde" + "Últimas entradas" + agenda + captura + VIP |
-| `components/hero.tsx` | Hero de la home. Las dos columnas cierran con `lg:mt-auto` en ambas |
-| `app/eventos/[slug]/page.tsx` | **Detalle de evento. El archivo más grande y más sensible.** Contiene el JSON-LD |
-| `app/eventos/page.tsx`, `app/destacados/page.tsx` | Listados. Usan `EventBrowser` dentro de `<Suspense>` |
-| `components/event-browser.tsx` | Buscador y filtros. Estado en la URL (`?q=`, `?genero=`) |
-| `app/quienes-somos/page.tsx`, `app/privacidad/page.tsx` | Páginas de confianza |
-| `components/site-header.tsx` + `components/mobile-nav.tsx` | Header y menú hamburguesa |
-| `components/site-footer.tsx` | Footer con contacto y redes |
+| `app/page.tsx` + `components/agenda-screen.tsx` | Pantallas **01 y 05**. Misma ruta, dos estados: el vacío no es un error |
+| `app/eventos/page.tsx` | Pantalla **02**. Agrupado por noche, con la barra de filtros aplicados |
+| `app/eventos/[slug]/page.tsx` | Pantalla **03**. **El archivo más grande y más sensible.** Contiene el JSON-LD |
+| `app/eventos/[slug]/comprar/page.tsx` | Pantalla **04**. `noindex`: es pantalla de paso, no landing |
+| `app/mis-entradas/page.tsx` + `components/my-tickets-screen.tsx` | Pantallas **06 y 07**. `noindex` |
+| `app/buscar/page.tsx` + `components/event-browser.tsx` | Pantalla **08**. Filtros en la URL (`?q=`, `?genero=`, `?zona=`, `?cuando=`) |
+| `app/preguntas-frecuentes/page.tsx` | Pantalla **09**. Acordeón `<details>`, cero chartreuse |
+| `app/destacados/page.tsx` | Fuera de las 9, pero es URL indexada: se pasó a `DateCard` porque `EventBrowser` ahora es la pantalla Buscar entera |
+| `app/quienes-somos/page.tsx`, `app/contacto/page.tsx`, `app/privacidad/page.tsx` | **Fuera del rediseño.** Heredan tokens y tipografía pero conservan su layout y su `SiteHeader`/`SiteFooter` |
 
 ### Captura y conversión
 
@@ -293,8 +379,17 @@ Incluye el panel de Conversión con filtro Vigentes/Finalizados/Todos.
 
 - **Todo CTA hacia `/go/[slug]` tiene que pasar un `placement`.** Sin eso no se sabe qué
   sección vende. En la práctica esto se cumple solo mientras todo CTA siga pasando por
-  `<BuyButton event placement>`, que construye la URL con `buildGoUrl`. **Nunca escribir un
-  `href` a `/go/` a mano:** rediseñar un botón es cambiarle `className` y los hijos, nada más.
+  `<BuyCta event placement>`, que construye la URL con `buildGoUrl`. **Nunca escribir un
+  `href` a `/go/` a mano:** rediseñar un botón es cambiarle `className`, nada más.
+- **Los placements de Hora Pico se agregaron a los viejos, no los reemplazaron.**
+  `event_clicks` ya tiene meses de filas con los nombres anteriores y renombrarlos partiría
+  la serie histórica justo en la métrica que decide dónde va el próximo CTA.
+- Los seis placements nuevos son de **dos familias distintas** y se leen distinto:
+  `home_destacado`, `detalle_barra` y `compra_barra` son botones "Comprar en Bombo" que van a
+  `/go/` y disparan `click_buy` — esos son intención de compra. `listado_card`,
+  `vacio_proxima` y `mis_entradas_card` son los CTA compactos "Entradas", que **abren el
+  detalle, no Bombo** (§1.2 del PRD), así que disparan `select_date`: miden qué superficie
+  empuja al detalle sin inflar `click_buy` contando dos veces la misma intención.
 - **Todo CTA de WhatsApp tiene que llevar un `WhatsappSource`.**
 - `/go/[slug]` es una redirección de servidor, así que GA4 no la ve: el clic se registra dos
   veces, en el cliente (`track("click_buy")`) y en el servidor (fila en `event_clicks`).
@@ -307,9 +402,18 @@ Incluye el panel de Conversión con filtro Vigentes/Finalizados/Todos.
 - **No inventar datos.** Nada de testimonios, cantidad de clientes, estadísticas ni
   credenciales que no estén respaldadas por un dato real. Los huecos viven en
   `lib/credentials.ts` y no renderizan mientras estén vacíos.
-- **La ley de color no se negocia.** Cyan relleno = comprar y nada más; emerald = WhatsApp;
-  rojo = escasez; violeta = atmósfera. Meter un quinto color o usar cyan para navegación
-  vuelve a dejar el sitio sin color de marca, que es de donde se venía.
+- **La ley de color no se negocia.** Chartreuse = comprar y nada más (más el tab activo del
+  nav y la fecha en mono, que son las dos excepciones que fija el propio sistema); ultramar =
+  marca e informativo; coral = solo "Últimas entradas"; blanco = selección. Un filtro
+  activo, un día seleccionado o un botón de alertas **nunca** van en chartreuse: si el color
+  de compra decora, deja de significar compra.
+- **Sold out y últimas entradas nunca se muestran juntos.** Una fecha agotada no puede estar
+  además por agotarse. `sold_out` apaga la card y el CTA; `last_tickets` pinta el chip coral.
+- **Mis entradas no pide cuenta ni dato personal.** Vive entera en `localStorage`. No agregar
+  auth, tabla ni endpoint: mandar la lista al servidor convertiría en dato de servidor
+  justamente lo que se decidió que no saliera del dispositivo.
+- **No se agregan campos a `events`.** Todo el rediseño se construye con las columnas que ya
+  existen. Fue por eso que se descartó mostrar lotes en la pantalla 04.
 - **Los eventos pasados nunca devuelven 404.** Su URL conserva posicionamiento; se renderiza
   el estado "finalizado" con alternativas.
 - **Mobile no se degrada.** Es de donde entra la mayoría. Cualquier cambio de layout va en
