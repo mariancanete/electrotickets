@@ -6,7 +6,7 @@ import { buildGeneralWhatsappMessage, whatsappUrlOrGroup } from "@/lib/whatsapp"
 export function SiteFooter() {
   return (
     <footer className="border-t border-white/10 py-12">
-      <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 text-sm text-white/55 sm:px-6 lg:px-8">
+      <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 text-sm text-white/62 sm:px-6 lg:px-8">
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <p className="font-black text-white">ElectroTickets</p>
@@ -17,7 +17,7 @@ export function SiteFooter() {
           </div>
 
           <div>
-            <p className="font-semibold text-white/80">Eventos</p>
+            <p className="font-semibold text-white/78">Eventos</p>
             <ul className="mt-3 space-y-2">
               <li>
                 <Link className="hover:text-white" href="/eventos">
@@ -33,7 +33,7 @@ export function SiteFooter() {
           </div>
 
           <div>
-            <p className="font-semibold text-white/80">ElectroTickets</p>
+            <p className="font-semibold text-white/78">ElectroTickets</p>
             <ul className="mt-3 space-y-2">
               <li>
                 <Link className="hover:text-white" href="/quienes-somos">
@@ -54,7 +54,7 @@ export function SiteFooter() {
           </div>
 
           <div>
-            <p className="font-semibold text-white/80">Contacto</p>
+            <p className="font-semibold text-white/78">Contacto</p>
             <ul className="mt-3 space-y-2">
               <li>
                 <WhatsappLink
@@ -94,7 +94,7 @@ export function SiteFooter() {
           </div>
         </div>
 
-        <p className="border-t border-white/5 pt-6 text-xs leading-6 text-white/35">
+        <p className="border-t border-white/5 pt-6 text-xs leading-6 text-white/48">
           ElectroTickets no emite tickets propios ni procesa pagos. La compra y la emisión de la entrada se completan
           en Bombo, la plataforma oficial de cada evento. Ante un problema con un ticket ya comprado, el soporte
           corresponde a Bombo, y podés escribirnos para que te ayudemos a gestionarlo.

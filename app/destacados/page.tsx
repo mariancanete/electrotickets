@@ -24,7 +24,7 @@ export default async function FeaturedEventsPage() {
           <div className="mb-10 max-w-3xl">
             <p className="text-sm font-semibold uppercase tracking-[0.3em] text-violet-200/70">Destacados</p>
             <h1 className="mt-3 text-5xl font-black tracking-tight sm:text-6xl">Eventos destacados</h1>
-            <p className="mt-5 text-lg leading-8 text-white/58">
+            <p className="mt-5 text-lg leading-8 text-white/62">
               Fechas seleccionadas para comprar desde links oficiales y encontrar rápido tu próxima salida.
             </p>
           </div>

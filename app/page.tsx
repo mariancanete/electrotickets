@@ -88,7 +88,7 @@ export default async function HomePage() {
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.35em] text-violet-200/80">Agenda</p>
                 <h2 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">Próximos eventos</h2>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-white/55">
+                <p className="mt-2 max-w-2xl text-base leading-7 text-white/62">
                   Fechas publicadas con su link oficial de Bombo, lineup y ubicación para decidir antes de comprar.
                 </p>
               </div>
@@ -110,14 +110,14 @@ export default async function HomePage() {
                 {remainingCount > 0 ? (
                   <Link
                     href="/eventos"
-                    className="mt-4 flex items-center justify-center rounded-3xl border border-dashed border-white/15 px-5 py-4 text-sm font-bold text-white/70 transition hover:border-white/30 hover:text-white"
+                    className="mt-4 flex items-center justify-center rounded-[20px] border border-dashed border-white/15 px-5 py-4 text-sm font-bold text-white/78 transition hover:border-white/30 hover:text-white"
                   >
                     Ver {remainingCount} {remainingCount === 1 ? "fecha más" : "fechas más"} en la agenda →
                   </Link>
                 ) : null}
               </>
             ) : (
-              <div className="rounded-[1.75rem] border border-dashed border-white/10 bg-white/[0.03] p-6 text-sm leading-6 text-white/60">
+              <div className="rounded-[20px] border border-dashed border-white/10 bg-white/[0.03] p-6 text-base leading-7 text-white/62">
                 No hay más fechas publicadas por ahora. Sumate a las alertas de WhatsApp y te avisamos apenas
                 publiquemos la próxima.
               </div>
@@ -150,7 +150,7 @@ function AgendaSection({
       <div className="mb-5">
         <p className="text-xs font-bold uppercase tracking-[0.35em] text-violet-200/80">{eyebrow}</p>
         <h2 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">{title}</h2>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-white/55">{description}</p>
+        <p className="mt-2 max-w-2xl text-base leading-7 text-white/62">{description}</p>
       </div>
       <div className="space-y-3">
         {events.map((event) => (

@@ -169,7 +169,7 @@ export default async function EventDetailPage({ params }: PageProps) {
 
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.9fr_1.1fr]">
           <div className="lg:sticky lg:top-24 lg:self-start">
-            <div className="relative aspect-[4/5] overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 shadow-2xl shadow-black/30">
+            <div className="relative aspect-[4/5] overflow-hidden rounded-[20px] border border-white/10 bg-white/5 shadow-2xl shadow-black/30">
               {event.flyer_url ? (
                 <FlyerImage
                   src={event.flyer_url}
@@ -185,13 +185,13 @@ export default async function EventDetailPage({ params }: PageProps) {
           </div>
 
           <section className="space-y-8">
-            <div className="glass rounded-[2rem] p-6 sm:p-8">
+            <div className="glass rounded-[20px] p-6 sm:p-8">
               <div className="flex flex-wrap gap-3">
                 <span className="rounded-full bg-violet-400/15 px-3 py-1 text-sm text-violet-100">
                   {event.genre || "Electrónica"}
                 </span>
                 {finished ? (
-                  <span className="rounded-full bg-white/10 px-3 py-1 text-sm font-bold text-white/70">Finalizado</span>
+                  <span className="rounded-full bg-white/10 px-3 py-1 text-sm font-bold text-white/78">Finalizado</span>
                 ) : null}
                 {event.featured && !finished ? (
                   <span className="rounded-full bg-white px-3 py-1 text-sm font-bold text-black">Destacado</span>
@@ -233,13 +233,13 @@ export default async function EventDetailPage({ params }: PageProps) {
             {/* Lineup y videoset arriba: son lo que hace que alguien decida ir. Antes estaban
                 al final, debajo de dos acordeones de texto escrito para buscadores. */}
             {event.lineup?.length ? (
-              <div className="glass rounded-[2rem] p-6 sm:p-8">
+              <div className="glass rounded-[20px] p-6 sm:p-8">
                 <h2 className="text-2xl font-black">Lineup</h2>
                 <div className="mt-5 flex flex-wrap gap-3">
                   {event.lineup.map((artist) => (
                     <span
                       key={artist}
-                      className="rounded-full border border-white/10 bg-black/30 px-4 py-2 text-sm text-white/80"
+                      className="rounded-full border border-white/10 bg-black/30 px-4 py-2 text-sm text-white/78"
                     >
                       {artist}
                     </span>
@@ -249,9 +249,9 @@ export default async function EventDetailPage({ params }: PageProps) {
             ) : null}
 
             {embedUrl && videoId ? (
-              <div className="glass rounded-[2rem] p-4 sm:p-5">
+              <div className="glass rounded-[20px] p-4 sm:p-5">
                 <h2 className="px-2 pb-4 text-2xl font-black">Videoset</h2>
-                <div className="aspect-video overflow-hidden rounded-[1.4rem] bg-black">
+                <div className="aspect-video overflow-hidden rounded-[12px] bg-black">
                   <YoutubeFacade
                     embedUrl={embedUrl}
                     videoId={videoId}
@@ -266,9 +266,9 @@ export default async function EventDetailPage({ params }: PageProps) {
               <VipTables source="event_vip" eventTitle={event.title} eventSlug={event.slug} href={vipUrl} />
             ) : null}
 
-            <div className="glass rounded-[2rem] p-6 sm:p-8">
+            <div className="glass rounded-[20px] p-6 sm:p-8">
               <h2 className="text-2xl font-black">Sobre el evento</h2>
-              <p className="mt-4 text-sm leading-7 text-white/62">{aboutEvent}</p>
+              <p className="mt-4 text-base leading-7 text-white/62">{aboutEvent}</p>
 
               {!finished ? (
                 <div className="mt-6">
@@ -285,9 +285,9 @@ export default async function EventDetailPage({ params }: PageProps) {
             </div>
 
             {!finished ? (
-              <div className="glass rounded-[2rem] p-6 sm:p-8">
+              <div className="glass rounded-[20px] p-6 sm:p-8">
                 <h2 className="text-2xl font-black">¿Tenés dudas sobre este evento?</h2>
-                <p className="mt-3 text-sm leading-6 text-white/55">
+                <p className="mt-3 text-base leading-7 text-white/62">
                   Escribinos por WhatsApp para consultar por la fecha o sumate al grupo de difusión para recibir
                   próximos eventos.
                 </p>
@@ -313,11 +313,11 @@ export default async function EventDetailPage({ params }: PageProps) {
               </div>
             ) : null}
 
-            <details className="group glass rounded-[2rem] p-6 sm:p-8">
+            <details className="group glass rounded-[20px] p-6 sm:p-8">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-2xl font-black marker:hidden">
                 <span>Cómo comprar</span>
                 <span
-                  className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/10 bg-black/25 text-base text-white/70 transition group-open:rotate-45 group-open:bg-white group-open:text-black"
+                  className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/10 bg-black/25 text-base text-white/78 transition group-open:rotate-45 group-open:bg-white group-open:text-black"
                   aria-hidden="true"
                 >
                   +
@@ -330,18 +330,18 @@ export default async function EventDetailPage({ params }: PageProps) {
               </div>
             </details>
 
-            <div className="glass rounded-[2rem] p-6 sm:p-8">
+            <div className="glass rounded-[20px] p-6 sm:p-8">
               <h2 className="text-2xl font-black">Preguntas frecuentes del evento</h2>
               <div className="mt-5 divide-y divide-white/10">
                 {faqItems.map((item) => (
                   <details key={item.question} className="group py-4 first:pt-0 last:pb-0">
                     <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-bold text-white marker:hidden">
                       <span>{item.question}</span>
-                      <span className="text-xl text-white/45 transition group-open:rotate-45" aria-hidden="true">
+                      <span className="text-xl text-white/48 transition group-open:rotate-45" aria-hidden="true">
                         +
                       </span>
                     </summary>
-                    <p className="mt-3 text-sm leading-6 text-white/55">{item.answer}</p>
+                    <p className="mt-3 text-base leading-7 text-white/62">{item.answer}</p>
                   </details>
                 ))}
               </div>
@@ -432,9 +432,9 @@ function PurchaseBlock({
   return (
     <div className="mt-8 space-y-4">
       {isSoldOut ? (
-        <div className="rounded-3xl border border-red-300/25 bg-red-500/10 p-5">
+        <div className="rounded-[20px] border border-red-300/25 bg-red-500/10 p-5">
           <p className="text-sm font-bold text-red-50">Esta fecha está agotada en Bombo.</p>
-          <p className="mt-2 text-sm leading-6 text-white/60">
+          <p className="mt-2 text-base leading-7 text-white/62">
             Podemos avisarte si se libera alguna entrada, y consultar disponibilidad de mesas.
           </p>
           <WhatsappLink
@@ -448,7 +448,7 @@ function PurchaseBlock({
         </div>
       ) : (
         <>
-          <p className="text-sm leading-6 text-white/55">
+          <p className="text-base leading-7 text-white/62">
             Te abrimos el evento en Bombo, donde vas a ver el precio y la disponibilidad actualizados.
             ElectroTickets no procesa el pago.
           </p>
@@ -473,7 +473,7 @@ function PurchaseBlock({
                 href={event.map_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="rounded-full border border-white/15 px-6 py-4 text-center text-sm font-bold text-white/80 transition hover:bg-white/10"
+                className="rounded-full border border-white/15 px-6 py-4 text-center text-sm font-bold text-white/78 transition hover:bg-white/10"
               >
                 Ver ubicación
               </a>
@@ -484,14 +484,14 @@ function PurchaseBlock({
 
       {/* Los links de instalación quedan plegados y después del CTA: antes ocupaban espacio
           principal delante de un usuario que todavía no manifestó intención de comprar. */}
-      <details className="rounded-3xl border border-white/10 bg-black/20 p-4 text-sm text-white/48">
-        <summary className="cursor-pointer font-semibold text-white/60">¿No tenés la app de Bombo?</summary>
+      <details className="rounded-[20px] border border-white/10 bg-black/20 p-4 text-sm text-white/48">
+        <summary className="cursor-pointer font-semibold text-white/62">¿No tenés la app de Bombo?</summary>
         <div className="mt-3 flex flex-wrap gap-2">
           <a
             href={bomboAppLinks.ios}
             target="_blank"
             rel="noopener noreferrer"
-            className="rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-2 text-xs font-bold text-white/72 transition hover:border-white/25 hover:text-white"
+            className="rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-2 text-xs font-bold text-white/78 transition hover:border-white/25 hover:text-white"
           >
             App Store
           </a>
@@ -499,7 +499,7 @@ function PurchaseBlock({
             href={bomboAppLinks.android}
             target="_blank"
             rel="noopener noreferrer"
-            className="rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-2 text-xs font-bold text-white/72 transition hover:border-white/25 hover:text-white"
+            className="rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-2 text-xs font-bold text-white/78 transition hover:border-white/25 hover:text-white"
           >
             Google Play
           </a>
@@ -518,9 +518,9 @@ function FinishedEventBlock({
 }) {
   return (
     <div className="mt-8 space-y-4">
-      <div className="rounded-3xl border border-white/10 bg-black/25 p-5">
-        <p className="text-sm font-bold text-white/85">Este evento ya finalizó.</p>
-        <p className="mt-2 text-sm leading-6 text-white/55">
+      <div className="rounded-[20px] border border-white/10 bg-black/25 p-5">
+        <p className="text-sm font-bold text-white/78">Este evento ya finalizó.</p>
+        <p className="mt-2 text-base leading-7 text-white/62">
           Dejamos la página online para que encuentres la información de la fecha y las próximas parecidas.
         </p>
         <div className="mt-4 flex flex-wrap gap-3">
@@ -634,21 +634,21 @@ function shouldAppendPlaceToTitle(title: string, place: string) {
 
 function InfoCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-3xl border border-white/10 bg-black/25 p-4">
-      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/35">{label}</p>
-      <p className="mt-2 text-sm font-semibold leading-6 text-white/86">{value}</p>
+    <div className="rounded-[20px] border border-white/10 bg-black/25 p-4">
+      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/48">{label}</p>
+      <p className="mt-2 text-sm font-semibold leading-6 text-white/78">{value}</p>
     </div>
   );
 }
 
 function StepCard({ number, title, description }: { number: string; title: string; description: string }) {
   return (
-    <div className="rounded-3xl border border-white/10 bg-black/25 p-4">
+    <div className="rounded-[20px] border border-white/10 bg-black/25 p-4">
       <span className="grid h-8 w-8 place-items-center rounded-full bg-white text-xs font-black text-black">
         {number}
       </span>
       <h3 className="mt-4 font-bold text-white">{title}</h3>
-      <p className="mt-2 text-sm leading-6 text-white/52">{description}</p>
+      <p className="mt-2 text-base leading-7 text-white/62">{description}</p>
     </div>
   );
 }

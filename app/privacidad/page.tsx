@@ -27,9 +27,9 @@ export default function PrivacyPage() {
         <div className="mx-auto max-w-3xl">
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-violet-200/70">Legales</p>
           <h1 className="mt-3 text-4xl font-black tracking-tight sm:text-5xl">Política de privacidad</h1>
-          <p className="mt-5 text-white/50">Última actualización: agosto de 2026.</p>
+          <p className="mt-5 text-white/62">Última actualización: agosto de 2026.</p>
 
-          <div className="mt-10 space-y-8 text-sm leading-7 text-white/62">
+          <div className="mt-10 space-y-8 text-base leading-7 text-white/62">
             <section>
               <h2 className="text-xl font-black text-white">Qué datos recopilamos</h2>
               <p className="mt-3">
@@ -53,8 +53,8 @@ export default function PrivacyPage() {
             <section>
               <h2 className="text-xl font-black text-white">Herramientas de terceros</h2>
               <p className="mt-3">
-                Usamos <span className="font-semibold text-white/80">Google Analytics 4</span> para métricas de
-                audiencia y <span className="font-semibold text-white/80">Microsoft Clarity</span> para entender cómo
+                Usamos <span className="font-semibold text-white/78">Google Analytics 4</span> para métricas de
+                audiencia y <span className="font-semibold text-white/78">Microsoft Clarity</span> para entender cómo
                 se usa el sitio. Ambas utilizan cookies y se rigen por sus propias políticas de privacidad. Podés
                 bloquearlas desde la configuración de tu navegador sin que eso afecte el funcionamiento del sitio.
               </p>

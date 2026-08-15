@@ -9,7 +9,7 @@ export default function NotFound() {
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-violet-200/70">404</p>
           <h1 className="mt-4 text-5xl font-black">Evento no encontrado</h1>
-          <p className="mt-4 text-white/55">Puede que la fecha ya no esté publicada.</p>
+          <p className="mt-4 text-white/62">Puede que la fecha ya no esté publicada.</p>
           <Link href="/eventos" className="mt-8 inline-flex rounded-full bg-white px-6 py-3 font-bold text-black">
             Ver eventos activos
           </Link>

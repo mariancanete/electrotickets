@@ -44,7 +44,7 @@ export function EventRow({
     "whitespace-nowrap rounded-full border px-2.5 py-1 text-[11px] sm:px-2 sm:text-[10px]";
 
   return (
-    <article className="group w-full max-w-full overflow-hidden rounded-3xl border border-white/10 bg-white/[0.035] shadow-2xl shadow-black/15 backdrop-blur transition duration-300 hover:border-violet-300/30 hover:bg-white/[0.06]">
+    <article className="group w-full max-w-full overflow-hidden rounded-[20px] border border-white/10 bg-white/[0.035] shadow-2xl shadow-black/15 transition duration-300 hover:border-violet-300/30 hover:bg-white/[0.06]">
       {/* El flyer ocupaba 210px de una columna de ~700px, así que al título le quedaban unos
           190px y se cortaba. A 100px el título recibe ~304px y entra completo, y de paso el
           recorte deja de ser una franja horizontal sobre un flyer vertical.
@@ -52,7 +52,7 @@ export function EventRow({
       <div className="flex min-w-0 flex-col gap-3 p-3 sm:grid sm:min-h-[139px] sm:grid-cols-[92px_48px_minmax(0,1fr)_auto] sm:items-center sm:gap-4 lg:grid-cols-[96px_52px_minmax(0,1fr)_auto] xl:grid-cols-[100px_56px_minmax(0,1fr)_auto]">
         <Link
           href={`/eventos/${event.slug}`}
-          className="relative h-32 w-full overflow-hidden rounded-2xl bg-white/5 sm:h-[115px] sm:w-full lg:h-[120px] xl:h-[125px]"
+          className="relative h-32 w-full overflow-hidden rounded-[12px] bg-white/5 sm:h-[115px] sm:w-full lg:h-[120px] xl:h-[125px]"
         >
           {event.flyer_url ? (
             <FlyerImage
@@ -86,30 +86,34 @@ export function EventRow({
           <span
             className={`absolute left-3 ${
               event.featured || isSoldOut || hasLastTickets ? "top-12" : "top-3"
-            } grid min-w-9 place-items-center rounded-xl border border-white/10 bg-black/70 px-2 py-1.5 text-center shadow-lg shadow-black/25 backdrop-blur sm:hidden`}
+            } grid min-w-9 place-items-center rounded-[12px] border border-white/10 bg-black/70 px-2 py-1.5 text-center shadow-lg shadow-black/25 sm:hidden`}
           >
-            <span className="text-lg font-black leading-none text-white">{badge.day}</span>
-            <span className="mt-0.5 text-[8px] font-black uppercase tracking-[0.16em] text-white/65">{badge.month}</span>
+            <span className="tabular text-lg font-medium leading-none text-white">{badge.day}</span>
+            <span className="tabular mt-0.5 text-[8px] uppercase tracking-[0.16em] text-white/62">{badge.month}</span>
           </span>
         </Link>
 
+        {/* La fecha es el único elemento que se repite en cada fila, tarjeta y detalle, así
+            que es donde vive la identidad. En mono con cifras tabulares la columna alinea
+            verticalmente y la agenda se lee como una grilla de horarios impresa. */}
         <div className="hidden text-center sm:block">
-          <p className="text-[11px] font-black uppercase tracking-[0.16em] text-white/45">{badge.month}</p>
-          <p className="mt-1 text-3xl font-black leading-none text-white/78">{badge.day}</p>
+          <p className="tabular text-[10px] uppercase tracking-[0.2em] text-white/48">{badge.month}</p>
+          <p className="tabular mt-1.5 text-[28px] font-medium leading-none text-white">{badge.day}</p>
+          <span className="mx-auto mt-2 block h-px w-5 bg-white/20" aria-hidden="true" />
         </div>
 
         <div className="min-w-0 px-1 sm:px-0">
           <Link href={`/eventos/${event.slug}`}>
             {/* Mobile conserva `truncate` tal cual está hoy. En desktop el nombre entra
                 completo y, si alguno fuera muy largo, baja a una segunda línea. */}
-            <h3 className="truncate text-lg font-black leading-tight tracking-tight text-white sm:line-clamp-2 sm:whitespace-normal sm:text-xl">
+            <h3 className="font-display truncate text-lg font-black leading-tight tracking-[-0.02em] text-white sm:line-clamp-2 sm:whitespace-normal sm:text-xl">
               {event.title}
             </h3>
           </Link>
-          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/52">
+          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-white/62">
             <span className="inline-flex items-center gap-1">
               <ClockIcon />
-              {eventTime} hs
+              <span className="tabular">{eventTime}</span> hs
             </span>
             <span className="inline-flex min-w-0 items-center gap-1">
               <PinIcon />
