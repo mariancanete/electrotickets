@@ -344,7 +344,18 @@ como lo carga el admin.
 | `app/buscar/page.tsx` + `components/event-browser.tsx` | Pantalla **08**. Filtros en la URL (`?q=`, `?genero=`, `?zona=`, `?cuando=`) |
 | `app/preguntas-frecuentes/page.tsx` | Pantalla **09**. Acordeón `<details>`, cero chartreuse |
 | `app/destacados/page.tsx` | Fuera de las 9, pero es URL indexada: se pasó a `DateCard` porque `EventBrowser` ahora es la pantalla Buscar entera |
-| `app/quienes-somos/page.tsx`, `app/contacto/page.tsx`, `app/privacidad/page.tsx` | **Fuera del rediseño.** Heredan tokens y tipografía pero conservan su layout y su `SiteHeader`/`SiteFooter` |
+| `app/quienes-somos/page.tsx`, `app/contacto/page.tsx`, `app/privacidad/page.tsx` | Páginas de confianza, **también en Hora Pico**. Cero chartreuse: acá no se compra, se decide si confiar |
+| `app/not-found.tsx` | 404 con el patrón del estado vacío: la salida es la agenda |
+
+> **Ya no hay footer.** El nav inferior de 4 tabs lo reemplaza. Las tres páginas de confianza
+> se enlazan desde el pie de **Ayuda** (`/preguntas-frecuentes`): sin ese bloque quedarían
+> huérfanas, que son URLs indexadas sin ningún link interno que las alimente.
+
+> **Se eliminó el sistema visual anterior entero.** `site-header`, `site-footer`, `hero`,
+> `event-card`, `event-row`, `section-heading`, `mobile-nav`, `buy-button`, `wordmark`,
+> `official-venues`, `whatsapp-alerts`, `event-actions` y `event-countdown` ya no existen.
+> Eran un bloque cerrado de código muerto que solo se referenciaba a sí mismo, y dejarlo era
+> invitar a que alguien reusara un componente del sistema viejo sin darse cuenta.
 
 ### Captura y conversión
 

@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { SiteFooter } from "@/components/site-footer";
-import { SiteHeader } from "@/components/site-header";
-import { CheckCircle, XCircle } from "@phosphor-icons/react/dist/ssr";
-import { OfficialVenues } from "@/components/official-venues";
+import { ScreenHeader } from "@/components/app-header";
+import { BottomNav, NavSpacer } from "@/components/bottom-nav";
+import { InfoBlock } from "@/components/chips";
+import { Icon } from "@/components/icons";
 import { WhatsappLink } from "@/components/whatsapp-link";
+import { credentials } from "@/lib/credentials";
 import { absoluteUrl, siteConfig } from "@/lib/site";
 import { buildGeneralWhatsappMessage, whatsappUrlOrGroup } from "@/lib/whatsapp";
 
@@ -15,7 +16,7 @@ import { buildGeneralWhatsappMessage, whatsappUrlOrGroup } from "@/lib/whatsapp"
  * una credencial inventada destruye exactamente la confianza que la página busca construir.
  *
  * Ya cargado: los venues donde ElectroTickets es RRPP oficial, que viven en
- * `lib/credentials.ts` y se muestran con `<OfficialVenues />`.
+ * `lib/credentials.ts`.
  *
  * Lo que sigue faltando es lo que solo vos podés agregar: nombre completo, una foto y el
  * tiempo típico de respuesta por WhatsApp. En un negocio de RRPP, la cara es el producto.
@@ -47,137 +48,176 @@ const steps = [
   }
 ];
 
+const weDo = [
+  "Publicamos y mantenemos la agenda de fechas.",
+  "Verificamos el link de compra de cada evento.",
+  "Consolidamos lineup, venue, horario y ubicación.",
+  "Respondemos consultas por WhatsApp.",
+  "Gestionamos mesas VIP y cortesías.",
+  "Avisamos de nuevas fechas y últimas entradas."
+];
+
+const weDont = [
+  "No emitimos las entradas.",
+  "No procesamos el pago.",
+  "No definimos precios ni lotes.",
+  "No organizamos los eventos."
+];
+
+/**
+ * Página de confianza, en el sistema Hora Pico.
+ *
+ * **Cero chartreuse**, igual que Ayuda: acá no se compra, se decide si confiar. El único
+ * acento es el bloque ultramar de la credencial, y los dos botones de WhatsApp van
+ * delineados porque WhatsApp es siempre secundario.
+ */
 export default function AboutPage() {
   const contactUrl = whatsappUrlOrGroup(buildGeneralWhatsappMessage());
+  const venues = credentials.officialVenues;
 
   return (
     <>
-      <SiteHeader />
-      <main className="px-4 py-14 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-4xl">
-          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-violet-200/70">Quiénes somos</p>
-          <h1 className="mt-3 text-4xl font-black tracking-tight sm:text-6xl">
-            Una agenda de electrónica con asistencia real
-          </h1>
-          <p className="mt-6 text-lg leading-8 text-white/62">
-            ElectroTickets es una agenda especializada en música electrónica en Argentina. Centralizamos las fechas
-            que importan, verificamos el link de compra de cada una y te acompañamos por WhatsApp antes y después de
-            comprar.
-          </p>
+      <main className="flex min-h-screen flex-col pt-2">
+        <ScreenHeader title="Quiénes somos" backHref="/" />
 
-          {/* La credencial que faltaba. Esta página aclaraba en su encabezado que no lleva
-              cantidad de clientes ni testimonios porque no hay dato real que los respalde;
-              los venues donde ElectroTickets es RRPP oficial sí son un dato real, y son la
-              razón concreta por la que los links son oficiales y no una promesa. */}
-          <OfficialVenues className="mt-6 rounded-[12px] border border-white/10 bg-black/20 px-4 py-3" />
+        <div className="flex flex-col gap-5 px-[18px]">
+          <div>
+            <h2 className="text-[24px] font-bold leading-[1.15] tracking-[-0.03em]">
+              Una agenda de electrónica con asistencia real
+            </h2>
+            <p className="mt-3 text-[13.5px] leading-[1.65] text-white/60">
+              ElectroTickets es una agenda especializada en música electrónica en Argentina. Centralizamos las fechas
+              que importan, verificamos el link de compra de cada una y te acompañamos por WhatsApp antes y después
+              de comprar.
+            </p>
+          </div>
 
-          <section className="glass mt-10 rounded-[20px] p-6 sm:p-8">
-            <h2 className="text-2xl font-black">Qué somos y qué no somos</h2>
-            <div className="mt-6 grid gap-5 sm:grid-cols-2">
-              <div className="rounded-[20px] border border-emerald-300/20 bg-emerald-400/[0.06] p-5">
-                <p className="text-sm font-bold uppercase tracking-[0.18em] text-emerald-200/80">Sí hacemos</p>
-                <ul className="mt-4 space-y-2 text-base leading-7 text-white/62">
-                  <li className="flex gap-2.5"><CheckCircle size={19} weight="fill" aria-hidden="true" className="mt-0.5 shrink-0 text-emerald-300" />Publicamos y mantenemos la agenda de fechas.</li>
-                  <li className="flex gap-2.5"><CheckCircle size={19} weight="fill" aria-hidden="true" className="mt-0.5 shrink-0 text-emerald-300" />Verificamos el link de compra de cada evento.</li>
-                  <li className="flex gap-2.5"><CheckCircle size={19} weight="fill" aria-hidden="true" className="mt-0.5 shrink-0 text-emerald-300" />Consolidamos lineup, venue, horario y ubicación.</li>
-                  <li className="flex gap-2.5"><CheckCircle size={19} weight="fill" aria-hidden="true" className="mt-0.5 shrink-0 text-emerald-300" />Respondemos consultas por WhatsApp.</li>
-                  <li className="flex gap-2.5"><CheckCircle size={19} weight="fill" aria-hidden="true" className="mt-0.5 shrink-0 text-emerald-300" />Gestionamos mesas VIP y cortesías.</li>
-                  <li className="flex gap-2.5"><CheckCircle size={19} weight="fill" aria-hidden="true" className="mt-0.5 shrink-0 text-emerald-300" />Avisamos de nuevas fechas y últimas entradas.</li>
-                </ul>
-              </div>
-              <div className="rounded-[20px] border border-white/10 bg-black/25 p-5">
-                <p className="text-sm font-bold uppercase tracking-[0.18em] text-white/48">No hacemos</p>
-                <ul className="mt-4 space-y-2 text-base leading-7 text-white/62">
-                  <li className="flex gap-2.5"><XCircle size={19} weight="fill" aria-hidden="true" className="mt-0.5 shrink-0 text-white/48" />No emitimos las entradas.</li>
-                  <li className="flex gap-2.5"><XCircle size={19} weight="fill" aria-hidden="true" className="mt-0.5 shrink-0 text-white/48" />No procesamos el pago.</li>
-                  <li className="flex gap-2.5"><XCircle size={19} weight="fill" aria-hidden="true" className="mt-0.5 shrink-0 text-white/48" />No definimos precios ni lotes.</li>
-                  <li className="flex gap-2.5"><XCircle size={19} weight="fill" aria-hidden="true" className="mt-0.5 shrink-0 text-white/48" />No organizamos los eventos.</li>
-                </ul>
-                <p className="mt-4 text-base leading-7 text-white/48">
-                  Todo eso ocurre en Bombo, que es la plataforma oficial donde se completa la compra.
-                </p>
-              </div>
-            </div>
+          {/* Los venues donde somos RRPP oficial son la razón concreta por la que los links
+              son oficiales y no una promesa. Si el archivo queda vacío, no se renderiza. */}
+          {venues.length ? (
+            <InfoBlock icon="shield">
+              Somos RRPP oficial de {venues.length === 1 ? venues[0] : `${venues.slice(0, -1).join(", ")} y ${venues[venues.length - 1]}`}.
+            </InfoBlock>
+          ) : null}
+
+          <section>
+            <h3 className="dato-seccion">Qué hacemos</h3>
+            <ul className="mt-3 flex flex-col gap-2 rounded-card border border-white/10 bg-surface p-[15px]">
+              {weDo.map((item) => (
+                <li key={item} className="flex gap-[10px] text-[13.5px] leading-[1.5] text-white/[0.72]">
+                  <span className="mt-[2px] flex-none text-white">
+                    <Icon name="check" size={15} />
+                  </span>
+                  {item}
+                </li>
+              ))}
+            </ul>
           </section>
 
-          <section className="mt-8">
-            <h2 className="text-2xl font-black">Cómo funciona la compra</h2>
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
+          <section>
+            <h3 className="dato-seccion">Qué no hacemos</h3>
+            <ul className="mt-3 flex flex-col gap-2 rounded-card border border-white/10 bg-surface p-[15px]">
+              {weDont.map((item) => (
+                <li key={item} className="flex gap-[10px] text-[13.5px] leading-[1.5] text-white/55">
+                  <span className="mt-[2px] flex-none text-white/40">
+                    <Icon name="x" size={15} />
+                  </span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+            <p className="mt-3 text-[12.5px] leading-[1.5] text-white/45">
+              Todo eso ocurre en Bombo, que es la plataforma oficial donde se completa la compra.
+            </p>
+          </section>
+
+          <section>
+            <h3 className="dato-seccion">Cómo funciona la compra</h3>
+            <ol className="mt-3 flex flex-col gap-[13px]">
               {steps.map((step, index) => (
-                <div key={step.title} className="glass rounded-[20px] p-5">
-                  <span className="grid h-8 w-8 place-items-center rounded-full bg-white text-xs font-black text-black">
+                <li key={step.title} className="flex items-start gap-3">
+                  <span className="grid h-[26px] w-[26px] flex-none place-items-center rounded-full bg-marca font-mono text-[12px] font-extrabold leading-none">
                     {index + 1}
                   </span>
-                  <h3 className="mt-4 font-bold text-white">{step.title}</h3>
-                  <p className="mt-2 text-base leading-7 text-white/62">{step.text}</p>
-                </div>
+                  <span>
+                    <span className="block text-[14px] font-bold leading-[1.2]">{step.title}</span>
+                    <span className="mt-[5px] block text-[13px] leading-[1.5] text-white/60">{step.text}</span>
+                  </span>
+                </li>
               ))}
+            </ol>
+          </section>
+
+          <section>
+            <h3 className="dato-seccion">Si algo sale mal</h3>
+            <div className="mt-3 flex flex-col gap-3">
+              <Note title="Problemas con una entrada ya comprada.">
+                Como la emisión se hace en Bombo, el soporte formal corresponde a esa plataforma. De todos modos,
+                escribinos: te ayudamos a encontrar el canal correcto y a hacer el seguimiento.
+              </Note>
+              <Note title="Cancelaciones o cambios de fecha.">
+                Las define la productora del evento y se comunican a través de Bombo. Cuando nos enteramos, lo
+                avisamos por el grupo de difusión y actualizamos la página del evento.
+              </Note>
+              <Note title="Dudas antes de comprar.">
+                Escribinos por WhatsApp. Es el canal más rápido y el que usamos para consultas de precio,
+                disponibilidad y mesas.
+              </Note>
             </div>
           </section>
 
-          <section className="glass mt-8 rounded-[20px] p-6 sm:p-8">
-            <h2 className="text-2xl font-black">Si algo sale mal</h2>
-            <div className="mt-5 space-y-4 text-base leading-7 text-white/62">
-              <p>
-                <span className="font-bold text-white">Problemas con una entrada ya comprada.</span> Como la emisión
-                se hace en Bombo, el soporte formal corresponde a esa plataforma. De todos modos, escribinos: te
-                ayudamos a encontrar el canal correcto y a hacer el seguimiento.
-              </p>
-              <p>
-                <span className="font-bold text-white">Cancelaciones o cambios de fecha.</span> Las define la
-                productora del evento y se comunican a través de Bombo. Cuando nos enteramos, lo avisamos por el
-                grupo de difusión y actualizamos la página del evento.
-              </p>
-              <p>
-                <span className="font-bold text-white">Dudas antes de comprar.</span> Escribinos por WhatsApp. Es el
-                canal más rápido y el que usamos para consultas de precio, disponibilidad y mesas.
-              </p>
+          <div className="flex flex-col gap-3 rounded-card border border-marca-edge bg-marca-tint p-[15px]">
+            <div className="flex items-start gap-[11px]">
+              <span className="flex-none text-marca-ink">
+                <Icon name="chat" size={20} />
+              </span>
+              <span>
+                <span className="block text-[15px] font-bold leading-[1.2]">Hablemos</span>
+                <span className="mt-[6px] block text-[12.5px] leading-[1.5] text-white/[0.72]">
+                  Consultas sobre fechas, links de compra, mesas VIP o cortesías.
+                </span>
+              </span>
             </div>
-          </section>
-
-          <section className="glass mt-8 rounded-[20px] p-6 sm:p-8">
-            <h2 className="text-2xl font-black">Hablemos</h2>
-            <p className="mt-3 text-base leading-7 text-white/62">
-              Consultas sobre fechas, links de compra, mesas VIP o cortesías.
-            </p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <WhatsappLink
-                href={contactUrl}
-                source="contact_page"
-                className="rounded-full bg-emerald-400 px-6 py-3.5 text-sm font-black text-black transition hover:bg-emerald-300"
-              >
-                Escribir por WhatsApp
-              </WhatsappLink>
-              <WhatsappLink
-                href={siteConfig.whatsappGroup}
-                source="contact_group"
-                kind="group"
-                className="rounded-full border border-emerald-300/30 px-6 py-3.5 text-sm font-bold text-emerald-100 transition hover:bg-emerald-300/10"
-              >
-                Grupo de difusión
-              </WhatsappLink>
-              <a
-                href={siteConfig.instagram}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="rounded-full border border-white/15 px-6 py-3.5 text-sm font-bold text-white/78 transition hover:bg-white/10"
-              >
-                Instagram
-              </a>
-            </div>
-          </section>
-
-          <div className="mt-10">
-            <Link
-              href="/eventos"
-              className="rounded-full bg-white px-6 py-3.5 text-sm font-black text-black transition hover:bg-white/85"
+            <WhatsappLink
+              href={contactUrl}
+              source="contact_page"
+              className="flex h-12 items-center justify-center gap-2 rounded-full border border-white/40 text-[14px] font-bold text-white"
             >
-              Ver próximas fechas
-            </Link>
+              <Icon name="chat" size={16} />
+              Escribir por WhatsApp
+            </WhatsappLink>
+            <WhatsappLink
+              href={siteConfig.whatsappGroup}
+              source="contact_group"
+              kind="group"
+              className="flex h-12 items-center justify-center gap-2 rounded-full border border-white/[0.18] text-[14px] font-bold text-white/[0.78]"
+            >
+              <Icon name="bell" size={16} />
+              Grupo de difusión
+            </WhatsappLink>
           </div>
+
+          <Link
+            href="/eventos"
+            className="flex h-12 items-center justify-center rounded-full border border-white/40 text-[14px] font-bold text-white"
+          >
+            Ver próximas fechas
+          </Link>
         </div>
+
+        <NavSpacer />
       </main>
-      <SiteFooter />
+      <BottomNav />
     </>
+  );
+}
+
+function Note({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-card border border-white/10 bg-surface p-[14px]">
+      <p className="text-[13.5px] leading-[1.55] text-white/60">
+        <span className="font-bold text-white">{title}</span> {children}
+      </p>
+    </div>
   );
 }

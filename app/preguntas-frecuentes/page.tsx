@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { TabHeader } from "@/components/app-header";
 import { BottomNav, NavSpacer } from "@/components/bottom-nav";
 import { Icon } from "@/components/icons";
@@ -161,6 +162,29 @@ export default function FaqPage() {
               <span className="text-[14px] font-bold leading-none">Hablar por WhatsApp</span>
             </a>
           </div>
+
+          {/**
+           * Enlaces al resto del sitio.
+           *
+           * Con el nav inferior de 4 tabs no queda footer, y estas tres páginas se
+           * convertirían en huérfanas: URLs indexadas a las que no llega ningún link interno.
+           * Ayuda es el lugar natural para colgarlas —quien busca "quiénes son" o "cómo me
+           * contacto" ya está acá—, y van en texto chico y blanco tenue para no competir con
+           * el bloque de contacto.
+           */}
+          <nav className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2 pt-2 text-[12px] leading-none text-white/45">
+            <Link href="/quienes-somos" className="underline decoration-white/25 underline-offset-4">
+              Quiénes somos
+            </Link>
+            <span aria-hidden="true">·</span>
+            <Link href="/contacto" className="underline decoration-white/25 underline-offset-4">
+              Contacto
+            </Link>
+            <span aria-hidden="true">·</span>
+            <Link href="/privacidad" className="underline decoration-white/25 underline-offset-4">
+              Privacidad
+            </Link>
+          </nav>
         </div>
 
         <NavSpacer />
