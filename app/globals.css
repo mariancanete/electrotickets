@@ -1,77 +1,64 @@
 @import "tailwindcss";
 
 /**
- * Sistema visual de ElectroTickets.
+ * Sistema visual de ElectroTickets — **Hora Pico**.
  *
- * Posición: el activo gráfico más fuerte del sitio son los flyers, que cambian cada semana
- * y ya vienen cargados de contraste. El sitio los enmarca en vez de competir con ellos, así
- * que todo lo que rodea al flyer baja el volumen y gana precisión. Lo único expresivo es la
- * tipografía de nombres y fechas.
+ * Reemplaza al sistema anterior (violeta + cyan, Archivo + DM Mono) por el del rediseño de
+ * 9 pantallas: ultramar + chartreuse + coral sobre negro, trama de semitono, íconos sólidos.
  *
- * Concepto de marca: **la lista**. ElectroTickets no es un marketplace, es el RRPP que tiene
- * la lista. De ahí salen las tres decisiones que sostienen todo el sistema: la fecha en mono
- * tabular como elemento firma (tipografía de lista impresa), la densidad de fila por encima
- * de la grilla de tarjetas, y el troquelado de ticket como forma que se repite.
+ * La regla que sostiene todo: **el chartreuse es el color de comprar**. Si un elemento es
+ * `#CBFF1F`, lleva a comprar. Nada más lo usa: ni filtros, ni selección, ni alertas. Cuando
+ * hace falta destacar algo que no es una compra, se usa blanco (selección) o ultramar
+ * (marca, informativo). El coral avisa escasez y nada más.
  */
 
 @theme {
-  /* Archivo cubre display y cuerpo desde una familia; DM Mono, los datos. */
-  --font-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-dm-mono), ui-monospace, SFMono-Regular, monospace;
-
-  /* Tres pasos de radio. Antes había ocho, cuatro de ellos valores sueltos. */
-  --radius-chip: 12px;
-  --radius-card: 20px;
+  /* Space Grotesk cubre display y cuerpo; JetBrains Mono, los datos que genera la máquina. */
+  --font-sans: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, monospace;
 
   /**
-   * Color de acción y de marca.
+   * Color. Cada token tiene un uso único y cerrado; no hay tokens "de apoyo".
    *
-   * Antes el botón de comprar tenía cuatro tratamientos distintos según la superficie
-   * (degradé violeta en la fila, `bg-white/10` fantasma en la tarjeta, blanco sólido en el
-   * detalle y en la barra fija). Ninguno era propiedad de nadie: el blanco es el default de
-   * todos los sitios y no se puede recordar.
-   *
-   * El cyan es el complemento del campo violeta del fondo, así que salta en vez de fundirse
-   * —que es la razón por la que el violeta nunca funcionó como CTA y se terminó cayendo al
-   * blanco—. Da ~12:1 sobre la tinta oscura y está bien lejos del emerald de WhatsApp, así
-   * que los dos roles no se confunden nunca.
+   *   cta        → CTA de compra y tab activo del nav. Nada más en toda la app.
+   *   marca      → header, riel de fecha, badges informativos.
+   *   urgencia   → solo "Últimas entradas".
+   *   ink        → fondo de app y texto sobre chartreuse.
+   *   surface    → cards y campos.
+   *   surface-alt→ botón deshabilitado y riel de fecha agotada.
    */
-  --color-brand: #3de8f5;
-  --color-brand-strong: #7cf2fb;
-  --color-brand-ink: #04121a;
+  --color-cta: #cbff1f;
+  --color-cta-pressed: #b2e30a;
+  --color-marca: #2b34ff;
+  --color-urgencia: #ff5a3c;
+  --color-ink: #0a0a14;
+  --color-surface: #15151f;
+  --color-surface-alt: #1f1f2c;
+
+  /* Tinte ultramar de los bloques informativos (credencial, alertas, aviso de Bombo). */
+  --color-marca-tint: rgba(43, 52, 255, 0.14);
+  --color-marca-edge: rgba(154, 160, 255, 0.3);
+  --color-marca-ink: #c3c7ff;
+
+  --radius-card: 16px;
+  --radius-block: 20px;
 }
 
 :root {
   color-scheme: dark;
-  /* Violeta muy oscuro en vez de negro de terminal: la misma luminosidad, pero con la
-     temperatura del contexto nocturno del que habla el sitio. */
-  --background: #0b0714;
-  --foreground: #f5f5f7;
+  --background: #0a0a14;
+  --foreground: #ffffff;
 
-  /**
-   * Ley de color: cuatro roles cerrados, sin excepciones.
-   *
-   *   brand (cyan)  → **relleno** = comprar, y nada más en todo el sitio.
-   *                   **filete o tinte** = firma de marca (la regla del wordmark, el día de
-   *                   la semana en el riel de fecha, el monograma). Nunca un relleno pleno
-   *                   que pueda confundirse con un botón de compra.
-   *   emerald       → acciones de WhatsApp. Se retiró de toda decoración.
-   *   rojo          → escasez (sold out, últimas entradas). Nada más.
-   *   violeta       → atmósfera: fondo, glow del flyer, campo de marca. Nunca un CTA.
-   *
-   * Antes convivían seis familias de color sin rol asignado y el verde de WhatsApp había
-   * quedado de hecho como co-primario. Con seis colores compitiendo ninguno significa nada:
-   * nadie puede aprender "violeta = ElectroTickets" si el verde pesa lo mismo en pantalla.
-   */
-  --accent: #8b5cf6;
-  --accent-strong: #a78bfa;
-
-  /* Superficies: tres niveles reales de elevación, no seis paneles equivalentes. */
-  --surface-1: rgba(255, 255, 255, 0.03);
-  --surface-2: rgba(255, 255, 255, 0.055);
+  /* Bordes: .10 en cards, .18 en botones delineados. Dos valores, no una escala. */
   --edge: rgba(255, 255, 255, 0.1);
-  --edge-strong: rgba(255, 255, 255, 0.16);
+  --edge-strong: rgba(255, 255, 255, 0.18);
+
+  /* Padding lateral de pantalla y ritmo vertical de la §5. */
+  --gutter: 18px;
+
+  /* Alto del nav inferior + safe area, para reservar espacio al final de cada pantalla. */
+  --nav-h: 74px;
 }
 
 * {
@@ -84,172 +71,105 @@ html {
 
 body {
   margin: 0;
-  background:
-    radial-gradient(circle at 10% -10%, rgba(124, 58, 237, 0.26), transparent 28rem),
-    radial-gradient(circle at 88% 0%, rgba(6, 182, 212, 0.14), transparent 24rem),
-    linear-gradient(180deg, #0b0714 0%, #100a1c 50%, #0a0612 100%);
+  background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
   font-synthesis-weight: none;
+  -webkit-font-smoothing: antialiased;
 }
 
 /**
- * Los titulares usan el eje de ancho expandido: es la letra ancha y densa de la gráfica de
- * fiesta. Se aplica por elemento y no globalmente para que el cuerpo siga en ancho normal.
- */
-h1,
-h2,
-.font-display {
-  font-family: var(--font-display);
-  font-variation-settings: "wdth" 112;
-  text-wrap: balance;
-}
-
-::selection {
-  background: rgba(168, 85, 247, 0.35);
-}
-
-/**
- * Foco visible. Antes no había ninguna regla de foco en todo el proyecto, así que sobre
- * fondo casi negro el contorno por defecto del navegador era prácticamente invisible y no
- * se podía navegar con teclado.
- */
-:focus-visible {
-  outline: 2px solid var(--accent-strong);
-  outline-offset: 3px;
-  border-radius: 6px;
-}
-
-.noise::before {
-  content: "";
-  pointer-events: none;
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  opacity: 0.025;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-
-/**
- * Superficie de tarjeta. Sin desenfoque: cuando seis paneles traslúcidos se apilan en la
- * misma pantalla, ninguno se lee como elevado y el flyer deja de ser lo más fuerte. El
- * desenfoque queda para donde realmente pasa contenido por detrás.
- */
-.glass {
-  border: 1px solid var(--edge);
-  background: var(--surface-2);
-  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.28);
-}
-
-/**
- * Flyer encendido.
+ * Trama de semitono.
  *
- * El flyer es el único activo gráfico real del sitio y hasta ahora se apoyaba sobre una
- * caja con borde blanco. Una sombra de color lo ilumina en vez de enmarcarlo: el afiche
- * pasa a ser una fuente de luz, no un contenido pegado.
+ * Es el gesto de afiche de festival del sistema y reemplaza a la foto cuando no hay flyer.
+ * Va **solo sobre ultramar**: sobre negro desaparece y sobre chartreuse ensucia, así que no
+ * existe variante para esos dos fondos.
  */
-.flyer-glow {
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.08),
-    0 18px 50px -12px rgba(124, 58, 237, 0.55),
-    0 30px 90px -20px rgba(37, 99, 235, 0.35);
+.trama {
+  background-color: var(--color-marca);
+  background-image: radial-gradient(rgba(255, 255, 255, 0.22) 1.2px, transparent 1.4px);
+  background-size: 7px 7px;
 }
 
-/** Variante suave para las miniaturas de la agenda, donde el brillo pleno sería ruido. */
-.flyer-glow-sm {
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.07),
-    0 10px 26px -10px rgba(124, 58, 237, 0.45);
+/** Variante para superficies chicas (riel de fecha, tiles), donde la trama necesita más punto. */
+.trama-fuerte {
+  background-color: var(--color-marca);
+  background-image: radial-gradient(rgba(255, 255, 255, 0.26) 1.2px, transparent 1.4px);
+  background-size: 7px 7px;
 }
 
 /**
- * Troquelado de ticket.
+ * Placeholder de flyer.
  *
- * Es la única forma que se repite en todo el sitio: fila, tarjeta y detalle comparten la
- * misma perforación donde el bloque de fecha se separa del contenido. La recordación visual
- * se construye repitiendo *una* forma, y antes había cinco ideas sin parentesco (cuadrado
- * redondeado en el header, glow en el flyer, pill blanco en el CTA, chips redondos, mono en
- * la fecha).
- *
- * Se recorta con máscara en vez de dibujar dos semicírculos del color del fondo, porque el
- * fondo del sitio es un degradé: cualquier semicírculo sólido se vería como un parche en
- * cuanto se scrollea.
+ * Franjas a 135° sobre surface. Aparece cuando el evento no tiene `flyer_url` cargado desde
+ * el admin. Reemplaza al tile "ET" con degradado del sistema anterior: un placeholder que
+ * dice "acá va un flyer" se lee mejor que uno que pretende ser un logo.
  */
-.ticket-cut {
-  --cut-x: 84px;
-  --cut-r: 8px;
-  -webkit-mask-image:
-    radial-gradient(circle var(--cut-r) at var(--cut-x) 0, transparent 98%, #000 100%),
-    radial-gradient(circle var(--cut-r) at var(--cut-x) 100%, transparent 98%, #000 100%);
-  mask-image:
-    radial-gradient(circle var(--cut-r) at var(--cut-x) 0, transparent 98%, #000 100%),
-    radial-gradient(circle var(--cut-r) at var(--cut-x) 100%, transparent 98%, #000 100%);
-  -webkit-mask-composite: source-in;
-  mask-composite: intersect;
-}
-
-/**
- * Variante horizontal, para la tarjeta vertical de `/eventos` y `/destacados`.
- *
- * La perforación cae justo encima del botón de comprar, que es donde la separación significa
- * algo: arriba queda la información y abajo el talón que se entrega. La distancia se mide
- * desde abajo y no desde arriba porque el alto del flyer depende del ancho de la grilla,
- * mientras que el alto del pie es fijo.
- */
-.ticket-cut-h {
-  --cut-y: 80px;
-  --cut-r: 8px;
-  -webkit-mask-image:
-    radial-gradient(circle var(--cut-r) at 0 calc(100% - var(--cut-y)), transparent 98%, #000 100%),
-    radial-gradient(circle var(--cut-r) at 100% calc(100% - var(--cut-y)), transparent 98%, #000 100%);
-  mask-image:
-    radial-gradient(circle var(--cut-r) at 0 calc(100% - var(--cut-y)), transparent 98%, #000 100%),
-    radial-gradient(circle var(--cut-r) at 100% calc(100% - var(--cut-y)), transparent 98%, #000 100%);
-  -webkit-mask-composite: source-in;
-  mask-composite: intersect;
-}
-
-/**
- * La elevación va en el contenedor y no en la pieza troquelada: la máscara recorta todo lo
- * que pinta el elemento, sombra incluida, así que un `box-shadow` sobre `.ticket-cut`
- * desaparecería. `drop-shadow` sobre el padre sigue el contorno real, muescas incluidas.
- */
-.ticket-elev {
-  filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.32));
-}
-
-/** Línea de perforación entre la fecha y el contenido. Acompaña a las muescas. */
-.ticket-perf {
-  background-image: linear-gradient(
-    to bottom,
-    rgba(255, 255, 255, 0.22) 0 5px,
-    transparent 5px 11px
+.rayado {
+  background-color: var(--color-surface);
+  background-image: repeating-linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.07) 0 6px,
+    rgba(255, 255, 255, 0.02) 6px 12px
   );
-  background-size: 1px 11px;
-  background-repeat: repeat-y;
+}
+
+/** Variante de 7px para superficies grandes (flyer del detalle, hero del destacado). */
+.rayado-lg {
+  background-color: var(--color-surface);
+  background-image: repeating-linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.07) 0 7px,
+    rgba(255, 255, 255, 0.02) 7px 14px
+  );
 }
 
 /**
- * Lockup del wordmark.
- *
- * El logo anterior eran tres barras inclinadas con un degradé de tres paradas: no funcionaba
- * en un solo color (requisito mínimo para un sello, un avatar o una story), a 40px leía como
- * un ícono genérico de audio, y no tenía ningún parentesco con la tipografía del nombre que
- * llevaba al lado.
- *
- * Ahora el logo *es* la tipografía, con las dos familias que el sitio ya carga: cero peso
- * nuevo, y cada h1 del sitio refuerza el logo porque están puestos en la misma letra.
+ * Dato duro. Fechas, horas, contadores, estados, IDs: todo lo que genera la máquina.
+ * Lo que escribe una persona va en Space Grotesk, sin excepción.
+ */
+.dato {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  text-transform: uppercase;
+}
+
+/** Encabezado de sección en mono: "SÁBADO 31.10", "LO PRÓXIMO CONFIRMADO", "4 RESULTADOS". */
+.dato-seccion {
+  font-family: var(--font-mono);
+  font-weight: 800;
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+/**
+ * Display / hero. Mayúsculas, tracking negativo fuerte, interlínea cerrada: es la letra de
+ * afiche. Se aplica por clase y no a todos los h1 porque no todos los títulos son display.
+ */
+.display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 0.94;
+  text-transform: uppercase;
+}
+
+/**
+ * Lockup del wordmark. El logo *es* la tipografía: "ELECTRO" en Space Grotesk 700 con una
+ * regla chartreuse debajo, y "TICKETS" en mono con tracking abierto.
  */
 .wordmark-electro {
   font-family: var(--font-display);
-  font-variation-settings: "wdth" 112;
-  font-weight: 900;
-  letter-spacing: -0.02em;
+  font-weight: 700;
+  letter-spacing: -0.03em;
 }
 
 .wordmark-tickets {
   font-family: var(--font-mono);
-  font-weight: 500;
+  font-weight: 700;
   letter-spacing: 0.34em;
   text-transform: uppercase;
   /* El tracking deja aire después de la última letra: sin compensarlo, el bloque mide más
@@ -257,14 +177,25 @@ h2,
   margin-right: -0.34em;
 }
 
-/** Fechas y horarios: cifras tabulares para que la columna de la agenda alinee. */
-.tabular {
-  font-family: var(--font-mono);
-  font-variant-numeric: tabular-nums;
+/**
+ * Foco visible. Sobre fondo casi negro el contorno por defecto del navegador es
+ * prácticamente invisible, así que sin esta regla no se puede navegar con teclado.
+ */
+:focus-visible {
+  outline: 2px solid var(--color-cta);
+  outline-offset: 3px;
+  border-radius: 8px;
 }
 
-.text-balance {
-  text-wrap: balance;
+/** Fila de chips que scrollea en horizontal sin mostrar barra. */
+.chips-scroll {
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.chips-scroll::-webkit-scrollbar {
+  display: none;
 }
 
 .line-clamp-2 {
@@ -274,16 +205,20 @@ h2,
   overflow: hidden;
 }
 
+.text-balance {
+  text-wrap: balance;
+}
+
 input,
 textarea,
 select {
   color-scheme: dark;
 }
 
-/* Campos del panel de administración. */
+/* Campos del panel de administración, que no entra en el rediseño. */
 .input {
   width: 100%;
-  border-radius: var(--radius-chip);
+  border-radius: 12px;
   border: 1px solid var(--edge);
   background: rgba(0, 0, 0, 0.28);
   padding: 0.78rem 0.95rem;
@@ -297,8 +232,18 @@ select {
 }
 
 .input option {
-  background: #09090b;
+  background: #0a0a14;
   color: white;
+}
+
+/**
+ * Superficie de tarjeta heredada. La siguen usando las páginas que el rediseño no cubre
+ * (`/quienes-somos`, `/contacto`, `/privacidad`, `/destacados`, `/admin`), que heredan los
+ * tokens nuevos pero conservan su layout.
+ */
+.glass {
+  border: 1px solid var(--edge);
+  background: rgba(255, 255, 255, 0.055);
 }
 
 @media (prefers-reduced-motion: reduce) {

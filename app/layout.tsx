@@ -1,27 +1,29 @@
 import type { Metadata, Viewport } from "next";
-import { Archivo, DM_Mono } from "next/font/google";
+import { JetBrains_Mono, Space_Grotesk } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
+import { IconSprite } from "@/components/icons";
 import { absoluteUrl, siteConfig } from "@/lib/site";
 
 /**
- * Archivo con el eje de ancho variable cubre display y cuerpo desde una sola familia: la
- * versión expandida y pesada tiene la densidad de la tipografía de flyer, y el ancho normal
- * sirve para leer. Antes el sitio usaba Arial, que además se resuelve distinto en cada
- * sistema operativo, así que el tracking ajustado a mano no era el mismo para todos.
+ * Space Grotesk cubre display y cuerpo desde una sola familia. En 700 y mayúsculas tiene la
+ * densidad del afiche de fiesta; en 400 se lee parado, con una mano y en la cola.
  */
-const archivo = Archivo({
+const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
-  axes: ["wdth"],
-  variable: "--font-archivo",
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-space-grotesk",
   display: "swap"
 });
 
-/** Los horarios de set y las grillas de line-up se imprimen en mono. Las fechas también. */
-const dmMono = DM_Mono({
+/**
+ * El mono es **solo** para datos que genera la máquina: fechas, horas, contadores, estados,
+ * IDs. Lo que escribe una persona va en Space Grotesk.
+ */
+const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
-  weight: ["400", "500"],
-  variable: "--font-dm-mono",
+  weight: ["400", "700", "800"],
+  variable: "--font-jetbrains-mono",
   display: "swap"
 });
 
@@ -59,12 +61,14 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  // Tiene que coincidir con el primer stop del degradé del body. Con `#050507` la barra del
-  // navegador quedaba de un negro distinto al del sitio y en mobile se veía una costura
-  // arriba de todo, justo en la plataforma de la que entra la mayoría del tráfico.
-  themeColor: "#0b0714",
+  // Tiene que coincidir con el fondo del body (`ink`). Si no coincide, la barra del navegador
+  // queda de un negro distinto al del sitio y en mobile se ve una costura arriba de todo,
+  // justo en la plataforma de la que entra la mayoría del tráfico.
+  themeColor: "#0A0A14",
   width: "device-width",
-  initialScale: 1
+  initialScale: 1,
+  // El diseño es mobile-first a 390px y el nav inferior se apoya en la safe area.
+  viewportFit: "cover"
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -72,8 +76,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   const clarityId = process.env.NEXT_PUBLIC_CLARITY_ID;
 
   return (
-    <html lang="es-AR" className={`${archivo.variable} ${dmMono.variable}`}>
-      <body className="noise min-h-screen antialiased">
+    <html lang="es-AR" className={`${spaceGrotesk.variable} ${jetbrainsMono.variable}`}>
+      <body className="min-h-screen antialiased">
+        {/* El sprite de íconos va una sola vez por documento; cada ícono es un `<use>`. */}
+        <IconSprite />
         {children}
         {gaId ? (
           <>

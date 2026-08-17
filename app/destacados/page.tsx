@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
-import { EventBrowser } from "@/components/event-browser";
-import { SiteFooter } from "@/components/site-footer";
-import { SiteHeader } from "@/components/site-header";
+import Link from "next/link";
+import { ScreenHeader } from "@/components/app-header";
+import { BottomNav, NavSpacer } from "@/components/bottom-nav";
+import { DateCard } from "@/components/date-card";
 import { getUpcomingPublishedEvents } from "@/lib/events";
 
 export const revalidate = 60;
@@ -12,28 +12,44 @@ export const metadata: Metadata = {
   description: "Explorá eventos destacados de electrónica en Argentina y comprá desde links oficiales."
 };
 
+/**
+ * `/destacados` no es una de las 9 pantallas del rediseño, pero es una URL indexada, así que
+ * se conserva con su metadata intacta. Lo único que cambia es que pasa a usar la card de
+ * fecha del sistema: antes montaba `EventBrowser`, que ahora es la pantalla Buscar completa
+ * —con su header, su campo y su nav— y no tenía sentido acá.
+ */
 export default async function FeaturedEventsPage() {
   const events = await getUpcomingPublishedEvents();
   const featuredEvents = events.filter((event) => event.featured);
 
   return (
     <>
-      <SiteHeader />
-      <main className="px-4 py-14 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <div className="mb-10 max-w-3xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-violet-200/70">Destacados</p>
-            <h1 className="mt-3 text-5xl font-black tracking-tight sm:text-6xl">Eventos destacados</h1>
-            <p className="mt-5 text-lg leading-8 text-white/62">
-              Fechas seleccionadas para comprar desde links oficiales y encontrar rápido tu próxima salida.
-            </p>
-          </div>
-          <Suspense fallback={null}>
-            <EventBrowser events={featuredEvents} placement="featured_list" />
-          </Suspense>
+      <main className="flex min-h-screen flex-col pt-2">
+        <ScreenHeader title="Destacados" backHref="/" />
+
+        <div className="flex flex-col gap-3 px-[18px]">
+          {featuredEvents.length ? (
+            featuredEvents.map((event, index) => (
+              <DateCard key={event.id} event={event} placement="listado_card" priority={index === 0} />
+            ))
+          ) : (
+            <div className="rounded-block border border-dashed border-white/20 p-6 text-center">
+              <h2 className="text-[20px] font-bold leading-[1.2] tracking-[-0.025em]">
+                No hay fechas destacadas ahora
+              </h2>
+              <Link
+                href="/eventos"
+                className="mt-4 flex h-12 items-center justify-center rounded-full border border-white/40 text-[14px] font-bold text-white"
+              >
+                Ver todos los eventos
+              </Link>
+            </div>
+          )}
         </div>
+
+        <NavSpacer />
       </main>
-      <SiteFooter />
+      <BottomNav />
     </>
   );
 }

@@ -1,34 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { BuyButton } from "@/components/buy-button";
-import { EventActions } from "@/components/event-actions";
-import { EventRow } from "@/components/event-row";
-import { FlyerFallback, FlyerImage } from "@/components/flyer-image";
-import { SiteFooter } from "@/components/site-footer";
-import { SiteHeader } from "@/components/site-header";
-import { VipTables, WhatsappAlerts } from "@/components/whatsapp-alerts";
-import { EventCountdown } from "@/components/event-countdown";
-import { SectionHeading } from "@/components/section-heading";
-import { WhatsappLink } from "@/components/whatsapp-link";
+import { Chip, InfoBlock, UrgencyChip } from "@/components/chips";
+import { BuyCta, SoldOutCta, WhatsappIconButton } from "@/components/cta";
+import { DateCard } from "@/components/date-card";
+import { DetailActions } from "@/components/detail-actions";
+import { Flyer } from "@/components/flyer-image";
+import { Icon } from "@/components/icons";
 import { YoutubeFacade } from "@/components/youtube-facade";
-import {
-  CalendarBlank,
-  CurrencyDollarSimple,
-  Fire,
-  Info,
-  MapPin,
-  MapTrifold,
-  ProhibitInset,
-  Question,
-  ShoppingBagOpen,
-  SpeakerHigh,
-  Ticket,
-  UsersThree,
-  WhatsappLogo
-} from "@phosphor-icons/react/dist/ssr";
-import type { Icon } from "@phosphor-icons/react";
-import { formatEventLongDate } from "@/lib/dates";
+import { formatDatoRange, formatEventLongDate, formatLongDay, formatTime } from "@/lib/dates";
 import {
   getEventBySlug,
   getRecentPastPublishedEvents,
@@ -36,13 +16,12 @@ import {
   getUpcomingPublishedEvents,
   isPastEvent
 } from "@/lib/events";
-import { absoluteUrl, bomboAppLinks, siteConfig } from "@/lib/site";
+import { credentials } from "@/lib/credentials";
+import { absoluteUrl, siteConfig } from "@/lib/site";
 import { normalizeText } from "@/lib/slugify";
 import { getYoutubeEmbedUrl, getYoutubeVideoId } from "@/lib/video";
 import {
-  buildEventWhatsappMessage,
   buildPriceWhatsappMessage,
-  buildVipWhatsappMessage,
   buildWaitlistWhatsappMessage,
   whatsappUrlOrGroup
 } from "@/lib/whatsapp";
@@ -94,6 +73,16 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
+/**
+ * Pantalla 03 — detalle de evento.
+ *
+ * Flyer a sangre, datos de la fecha y barra fija de compra. La barra está fija desde el
+ * primer scroll y el contenido reserva su alto, así que nunca tapa el último bloque.
+ *
+ * **No aparece ningún precio.** En su lugar, arriba del CTA, la línea "Link oficial · precio
+ * y lotes actualizados en Bombo" fija la expectativa *antes* del clic: el monto y los lotes
+ * viven en Bombo y cambian ahí. Descubrir eso después de tocar es donde se pierde la gente.
+ */
 export default async function EventDetailPage({ params }: PageProps) {
   const { slug } = await params;
   const event = await getEventBySlug(slug);
@@ -109,14 +98,12 @@ export default async function EventDetailPage({ params }: PageProps) {
   const relatedEvents = getRelatedEvents(event, upcomingEvents, finished ? 4 : 3);
   const sameArtistEvent = finished ? findSameArtistEvent(event, upcomingEvents) : null;
 
-  const videoId = getYoutubeVideoId(event.video_url);
   const embedUrl = getYoutubeEmbedUrl(event.video_url);
+  const videoId = getYoutubeVideoId(event.video_url);
   const isSoldOut = Boolean(event.sold_out) && !finished;
   const hasLastTickets = Boolean(event.last_tickets) && !isSoldOut && !finished;
 
-  const contactUrl = whatsappUrlOrGroup(buildEventWhatsappMessage(event.title));
   const priceUrl = whatsappUrlOrGroup(buildPriceWhatsappMessage(event.title));
-  const vipUrl = whatsappUrlOrGroup(buildVipWhatsappMessage(event.title));
   const waitlistUrl = whatsappUrlOrGroup(buildWaitlistWhatsappMessage(event.title));
 
   const seoDescription = buildSeoDescription(event, finished);
@@ -126,6 +113,8 @@ export default async function EventDetailPage({ params }: PageProps) {
   const goUrl = absoluteUrl(`/go/${event.slug}`);
   const eventImage = absoluteUrl(event.flyer_url || "/og-logo");
   const venueName = event.venue_name || "Venue a confirmar";
+  const lineup = event.lineup?.filter(Boolean) ?? [];
+  const mapUrl = getMapUrl(event);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -179,367 +168,194 @@ export default async function EventDetailPage({ params }: PageProps) {
   };
 
   return (
-    <>
-      <SiteHeader />
-      <main className={`px-4 py-10 sm:px-6 lg:px-8 ${finished ? "pb-10" : "pb-28 sm:pb-10"}`}>
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
+    <main className="flex min-h-screen flex-col">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
 
-        <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.9fr_1.1fr]">
-          <div className="lg:sticky lg:top-24 lg:self-start">
-            {/* El flyer pasa de estar enmarcado a estar encendido: la sombra de color lo
-                convierte en fuente de luz en vez de contenido pegado sobre una caja. */}
-            <div className="flyer-glow relative aspect-[4/5] overflow-hidden rounded-[20px] bg-white/5">
-              {event.flyer_url ? (
-                <FlyerImage
-                  src={event.flyer_url}
-                  alt={`Flyer de ${event.title}`}
-                  sizes="(max-width: 1024px) 100vw, 42vw"
-                  priority
-                  className="object-cover"
-                />
-              ) : (
-                <FlyerFallback size="text-6xl" />
-              )}
-            </div>
+      <div className="relative h-[300px] flex-none">
+        <Flyer src={event.flyer_url} alt={`Flyer de ${event.title}`} sizes="100vw" priority large />
+        <DetailActions title={event.title} slug={event.slug} />
+      </div>
+
+      <div className="flex-none px-[18px] pt-[18px]">
+        {hasLastTickets || event.genre ? (
+          <div className="flex flex-wrap gap-[7px]">
+            {hasLastTickets ? <UrgencyChip size="md" label="Últimas entradas" /> : null}
+            {event.genre ? <Chip>{event.genre}</Chip> : null}
           </div>
-
-          <section className="space-y-8">
-            <div className="glass rounded-[20px] p-6 sm:p-8">
-              <div className="flex flex-wrap gap-3">
-                <span className="rounded-full bg-violet-400/15 px-3 py-1 text-sm text-violet-100">
-                  {event.genre || "Electrónica"}
-                </span>
-                {finished ? (
-                  <span className="rounded-full bg-white/10 px-3 py-1 text-sm font-bold text-white/78">Finalizado</span>
-                ) : null}
-                {event.featured && !finished ? (
-                  <span className="rounded-full bg-brand px-3 py-1 text-sm font-black text-brand-ink">Destacado</span>
-                ) : null}
-                {/* Los estados comerciales llevan icono: se reconocen sin leer, que es lo
-                    que importa cuando se scrollea en un teléfono. */}
-                {isSoldOut ? (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-red-700 px-3 py-1 text-sm font-black text-white shadow-lg shadow-red-950/40">
-                    <ProhibitInset size={15} weight="fill" aria-hidden="true" />
-                    Sold Out
-                  </span>
-                ) : hasLastTickets ? (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-red-600 px-3 py-1 text-sm font-black text-white shadow-lg shadow-red-950/30">
-                    <Fire size={15} weight="fill" aria-hidden="true" />
-                    Últimas entradas
-                  </span>
-                ) : null}
-              </div>
-
-              <h1 className="mt-5 text-4xl font-black tracking-tight sm:text-6xl">{event.title}</h1>
-
-              <div className="mt-8 grid gap-4 md:grid-cols-3">
-                <InfoCard icon={CalendarBlank} label="Fecha y horario" value={formatEventLongDate(event.starts_at)} />
-                <InfoCard
-                  icon={MapPin}
-                  label="Venue"
-                  value={`${event.venue_name || "A confirmar"}${event.city ? ` · ${event.city}` : ""}`}
-                />
-                <InfoCard icon={MapTrifold} label="Ubicación" value={event.venue_address || event.city || "Argentina"} />
-              </div>
-
-              {!finished ? <EventCountdown startsAt={event.starts_at} /> : null}
-
-              {finished ? (
-                <FinishedEventBlock event={event} sameArtistEvent={sameArtistEvent} />
-              ) : (
-                <PurchaseBlock
-                  event={event}
-                  isSoldOut={isSoldOut}
-                  waitlistUrl={waitlistUrl}
-                  priceUrl={priceUrl}
-                />
-              )}
-            </div>
-
-            {/* Lineup y videoset arriba: son lo que hace que alguien decida ir. Antes estaban
-                al final, debajo de dos acordeones de texto escrito para buscadores. */}
-            {event.lineup?.length ? (
-              <div className="glass rounded-[20px] p-6 sm:p-8">
-                <SectionHeading icon={UsersThree}>Lineup</SectionHeading>
-                <div className="mt-5 flex flex-wrap gap-3">
-                  {event.lineup.map((artist) => (
-                    <span
-                      key={artist}
-                      className="rounded-full border border-white/10 bg-black/30 px-4 py-2 text-sm text-white/78"
-                    >
-                      {artist}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-
-            {embedUrl && videoId ? (
-              <div className="glass rounded-[20px] p-4 sm:p-5">
-                <SectionHeading icon={SpeakerHigh} className="px-2 pb-4">Videoset</SectionHeading>
-                <div className="aspect-video overflow-hidden rounded-[12px] bg-black">
-                  <YoutubeFacade
-                    embedUrl={embedUrl}
-                    videoId={videoId}
-                    title={`Videoset de ${event.title}`}
-                    eventSlug={event.slug}
-                  />
-                </div>
-              </div>
-            ) : null}
-
-            {!finished ? (
-              <VipTables source="event_vip" eventTitle={event.title} eventSlug={event.slug} href={vipUrl} />
-            ) : null}
-
-            <div className="glass rounded-[20px] p-6 sm:p-8">
-              <SectionHeading icon={Info}>Sobre el evento</SectionHeading>
-              <p className="mt-4 text-base leading-7 text-white/62">{aboutEvent}</p>
-
-              {!finished ? (
-                <div className="mt-6">
-                  <EventActions
-                    title={event.title}
-                    slug={event.slug}
-                    url={eventUrl}
-                    startsAt={event.starts_at}
-                    endAt={event.end_at}
-                    venue={`${venueName}${event.city ? `, ${event.city}` : ""}`}
-                  />
-                </div>
-              ) : null}
-            </div>
-
-            {!finished ? (
-              <div className="glass rounded-[20px] p-6 sm:p-8">
-                <SectionHeading icon={WhatsappLogo}>¿Tenés dudas sobre este evento?</SectionHeading>
-                <p className="mt-3 text-base leading-7 text-white/62">
-                  Escribinos por WhatsApp para consultar por la fecha o sumate al grupo de difusión para recibir
-                  próximos eventos.
-                </p>
-                <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-                  <WhatsappLink
-                    href={contactUrl}
-                    source="event_question"
-                    eventSlug={event.slug}
-                    className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-emerald-400 px-5 text-center text-sm font-black text-black transition hover:scale-[1.01] hover:bg-emerald-300"
-                  >
-                    Consultar por WhatsApp
-                  </WhatsappLink>
-                  <WhatsappLink
-                    href={siteConfig.whatsappGroup}
-                    source="event_question"
-                    kind="group"
-                    eventSlug={event.slug}
-                    className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-emerald-300/30 px-5 text-center text-sm font-bold text-emerald-100 transition hover:bg-emerald-300/10"
-                  >
-                    Grupo de difusión
-                  </WhatsappLink>
-                </div>
-              </div>
-            ) : null}
-
-            <details className="group glass rounded-[20px] p-6 sm:p-8">
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-2xl font-black marker:hidden">
-                <span className="flex items-center gap-2.5"><span className="grid h-9 w-9 shrink-0 place-items-center rounded-[12px] border border-violet-300/20 bg-violet-500/10 text-violet-200"><ShoppingBagOpen size={19} weight="duotone" aria-hidden="true" /></span>Cómo comprar</span>
-                <span
-                  className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/10 bg-black/25 text-base text-white/78 transition group-open:rotate-45 group-open:bg-white group-open:text-black"
-                  aria-hidden="true"
-                >
-                  +
-                </span>
-              </summary>
-              <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                <StepCard number="1" title="Revisá la fecha" description="Confirmá lineup, venue, horario y detalles del evento." />
-                <StepCard number="2" title="Tocá comprar" description="Te abrimos el evento en Bombo, donde vas a ver precio y disponibilidad." />
-                <StepCard number="3" title="Finalizá en Bombo" description="El pago y la emisión del ticket se completan fuera de ElectroTickets." />
-              </div>
-            </details>
-
-            <div className="glass rounded-[20px] p-6 sm:p-8">
-              <SectionHeading icon={Question}>Preguntas frecuentes del evento</SectionHeading>
-              <div className="mt-5 divide-y divide-white/10">
-                {faqItems.map((item) => (
-                  <details key={item.question} className="group py-4 first:pt-0 last:pb-0">
-                    <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-bold text-white marker:hidden">
-                      <span>{item.question}</span>
-                      <span className="text-xl text-white/48 transition group-open:rotate-45" aria-hidden="true">
-                        +
-                      </span>
-                    </summary>
-                    <p className="mt-3 text-base leading-7 text-white/62">{item.answer}</p>
-                  </details>
-                ))}
-              </div>
-            </div>
-          </section>
-        </div>
-
-        {/* Eventos relacionados: sin esto, la página de evento era un callejón sin salida —
-            quien no compraba se iba del sitio. */}
-        {relatedEvents.length ? (
-          <section className="mx-auto mt-12 max-w-7xl">
-            <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[0.35em] text-violet-200/80">Seguí explorando</p>
-                <h2 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">
-                  {finished ? "Próximas fechas parecidas" : "Eventos que también te pueden gustar"}
-                </h2>
-              </div>
-              <Link href="/eventos" className="inline-flex min-h-11 items-center text-sm font-bold text-violet-200 transition hover:text-white">
-                Ver agenda completa →
-              </Link>
-            </div>
-            <div className="space-y-3">
-              {relatedEvents.map((related) => (
-                <EventRow key={related.id} event={related} placement="related" />
-              ))}
-            </div>
-          </section>
         ) : null}
 
-        {finished ? (
-          <section className="mx-auto mt-8 max-w-7xl">
-            <WhatsappAlerts
-              source="past_event"
-              title="Que no se te escape la próxima"
-              text="Esta fecha ya pasó. Recibí las próximas por WhatsApp antes de que se agoten."
-            />
-          </section>
-        ) : null}
-      </main>
+        <h1 className="display mt-[14px] text-[40px] leading-[0.92] tracking-[-0.045em]">{event.title}</h1>
 
-      {!finished ? (
-        <div className="fixed inset-x-4 bottom-4 z-50 sm:hidden">
-          {isSoldOut ? (
-            <WhatsappLink
-              href={waitlistUrl}
-              source="soldout"
-              eventSlug={event.slug}
-              className="flex min-h-[52px] items-center justify-center gap-2 rounded-full bg-emerald-400 px-5 text-center text-sm font-black text-black shadow-2xl shadow-black/50"
-            >
-              <WhatsappLogo size={19} weight="fill" aria-hidden="true" />
-              Avisame si se libera
-            </WhatsappLink>
-          ) : (
-            /* Es el elemento de mayor intención de todo el sitio y está fijo en pantalla
-               durante todo el scroll del detalle. Estaba en blanco sobre negro: podía ser de
-               cualquier sitio de cualquier rubro. Ahora es el píxel más de marca que hay. */
-            <BuyButton
-              event={event}
-              placement="sticky_mobile"
-              className="flex min-h-[52px] items-center justify-center gap-2 rounded-full bg-brand px-5 text-center text-sm font-black text-brand-ink shadow-[0_16px_40px_-8px_rgba(61,232,245,0.55)]"
-            >
-              <Ticket size={19} weight="fill" aria-hidden="true" />
-              Comprar en Bombo
-            </BuyButton>
-          )}
+        {/* Fecha en mono chartreuse: es el dato firma del sistema, no un CTA. */}
+        <p className="mt-3 font-mono text-[12px] font-bold uppercase leading-none tracking-[0.05em] text-cta">
+          {formatDatoRange(event.starts_at, event.end_at)}
+        </p>
+      </div>
+
+      <div className="flex flex-none flex-col gap-[9px] px-[18px] pt-4">
+        <InfoRow icon="cal" title={formatLongDay(event.starts_at)} detail={`Puertas ${formatTime(event.starts_at)}`} />
+        <InfoRow
+          icon="pin"
+          title={venueName}
+          detail={formatAddress(event)}
+          action={
+            mapUrl ? (
+              <a
+                href={mapUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex flex-none items-center gap-[6px] rounded-full border border-white/[0.18] px-[13px] py-[9px] text-[12px] font-semibold leading-none"
+              >
+                <Icon name="map" size={14} />
+                Mapa
+              </a>
+            ) : null
+          }
+        />
+      </div>
+
+      {lineup.length ? (
+        <section className="flex-none px-[18px] pt-5">
+          <h2 className="text-[18px] font-bold leading-none tracking-[-0.02em]">Lineup</h2>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {lineup.map((artist) => (
+              <span
+                key={artist}
+                className="rounded-full border border-white/[0.12] bg-surface px-4 py-[11px] text-[13px] font-semibold leading-none"
+              >
+                {artist}
+              </span>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {/**
+       * Slot de prueba social.
+       *
+       * Se renderiza **vacío** mientras no haya dato real: no hay reseñas, ni contador de
+       * asistentes, ni "X personas van". Inventarlos en un negocio de RRPP cuesta más de lo
+       * que rinde, así que el bloque directamente no existe en pantalla hasta que exista el
+       * dato que lo respalde. Cuando lo haya, se renderiza acá.
+       */}
+
+      {credentials.officialVenues.length ? (
+        <div className="flex-none px-[18px] pt-[14px]">
+          <InfoBlock icon="shield">
+            Somos RRPP oficial de {formatVenueList(credentials.officialVenues)}. Entrada nominada, sin reventa.
+          </InfoBlock>
         </div>
       ) : null}
 
-      <SiteFooter />
-    </>
+      {/**
+       * Contenido indexable de la fecha. El PRD no lo especifica en la pantalla, pero se
+       * conserva: es el texto que sostiene el posicionamiento de la URL y las preguntas que
+       * alimentan el `FAQPage` del JSON-LD. Sacarlo sería una decisión de SEO disfrazada de
+       * decisión de diseño.
+       */}
+      <section className="flex-none px-[18px] pt-6">
+        <h2 className="text-[18px] font-bold leading-none tracking-[-0.02em]">Sobre la fecha</h2>
+        <p className="mt-3 text-[13.5px] leading-[1.65] text-white/60">{aboutEvent}</p>
+      </section>
+
+      {embedUrl && videoId ? (
+        <section className="flex-none px-[18px] pt-6">
+          <h2 className="text-[18px] font-bold leading-none tracking-[-0.02em]">Escuchá el sonido</h2>
+          <div className="mt-3 overflow-hidden rounded-block border border-white/10">
+            <YoutubeFacade
+              embedUrl={embedUrl}
+              videoId={videoId}
+              title={`Video de ${event.title}`}
+              eventSlug={event.slug}
+            />
+          </div>
+        </section>
+      ) : null}
+
+      <section className="flex-none px-[18px] pt-6">
+        <h2 className="text-[18px] font-bold leading-none tracking-[-0.02em]">Preguntas frecuentes</h2>
+        <div className="mt-3 flex flex-col gap-2">
+          {faqItems.map((item) => (
+            <details key={item.question} className="rounded-card border border-white/10 bg-surface p-[14px]">
+              <summary className="cursor-pointer text-[14px] font-bold leading-[1.3]">{item.question}</summary>
+              <p className="mt-[10px] text-[13px] leading-[1.6] text-white/[0.62]">{item.answer}</p>
+            </details>
+          ))}
+        </div>
+      </section>
+
+      {finished ? <FinishedEventBlock event={event} sameArtistEvent={sameArtistEvent} /> : null}
+
+      {relatedEvents.length ? (
+        <section className="flex-none px-[18px] pt-6">
+          <h2 className="dato-seccion">Fechas parecidas</h2>
+          <div className="mt-3 flex flex-col gap-3">
+            {relatedEvents.map((related) => (
+              <DateCard key={related.id} event={related} placement="listado_card" />
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {/* Reserva el alto de la barra fija para que no tape el último bloque. */}
+      <div aria-hidden="true" style={{ height: "calc(132px + env(safe-area-inset-bottom))" }} />
+
+      {finished ? null : (
+        <div
+          className="fixed inset-x-0 bottom-0 z-40 flex flex-col gap-[9px] border-t border-white/10 bg-ink px-[18px] pt-[13px]"
+          style={{ paddingBottom: "calc(18px + env(safe-area-inset-bottom))" }}
+        >
+          {/* La expectativa va **antes** del CTA, no debajo: descubrir que la compra termina
+              afuera después del clic es donde se pierde la gente. */}
+          <Link
+            href={`/eventos/${event.slug}/comprar`}
+            className="flex items-center justify-center gap-[6px] text-[11.5px] leading-none text-white/50"
+          >
+            <Icon name="shield" size={13} />
+            Link oficial · precio y lotes actualizados en Bombo
+          </Link>
+
+          <div className="flex gap-[9px]">
+            {isSoldOut ? (
+              <SoldOutCta className="flex-1" />
+            ) : (
+              <BuyCta event={event} placement="detalle_barra" className="flex-1" />
+            )}
+            <WhatsappIconButton
+              href={isSoldOut ? waitlistUrl : priceUrl}
+              source={isSoldOut ? "event_waitlist" : "event_price"}
+              eventSlug={event.slug}
+              label={isSoldOut ? "Anotarme en la lista de espera" : "Consultar precio por WhatsApp"}
+            />
+          </div>
+        </div>
+      )}
+    </main>
   );
 }
 
-/**
- * Bloque de compra.
- *
- * El microcopy va *arriba* del botón, no debajo: la expectativa hay que fijarla antes del
- * clic. El CTA dice "Comprar en Bombo" y no solo "Comprar" porque la compra efectivamente
- * se completa afuera, y descubrirlo después del clic es donde se pierde al usuario.
- */
-function PurchaseBlock({
-  event,
-  isSoldOut,
-  waitlistUrl,
-  priceUrl
+function InfoRow({
+  icon,
+  title,
+  detail,
+  action
 }: {
-  event: EventRecord;
-  isSoldOut: boolean;
-  waitlistUrl: string;
-  priceUrl: string;
+  icon: "cal" | "pin";
+  title: string;
+  detail?: string;
+  action?: React.ReactNode;
 }) {
   return (
-    <div className="mt-8 space-y-4">
-      {isSoldOut ? (
-        <div className="rounded-[20px] border border-red-300/25 bg-red-500/10 p-5">
-          <p className="text-sm font-bold text-red-50">Esta fecha está agotada en Bombo.</p>
-          <p className="mt-2 text-base leading-7 text-white/62">
-            Podemos avisarte si se libera alguna entrada, y consultar disponibilidad de mesas.
-          </p>
-          <WhatsappLink
-            href={waitlistUrl}
-            source="event_waitlist"
-            eventSlug={event.slug}
-            className="mt-4 inline-flex rounded-full bg-emerald-400 px-6 py-3.5 text-sm font-black text-black transition hover:bg-emerald-300"
-          >
-            Avisame si se libera
-          </WhatsappLink>
-        </div>
-      ) : (
-        <>
-          <p className="text-base leading-7 text-white/62">
-            Te abrimos el evento en Bombo, donde vas a ver el precio y la disponibilidad actualizados.
-            ElectroTickets no procesa el pago.
-          </p>
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <BuyButton
-              event={event}
-              placement="event_detail"
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-brand px-6 text-center text-sm font-black text-brand-ink shadow-[0_14px_36px_-10px_rgba(61,232,245,0.55)] transition hover:scale-[1.01] hover:bg-brand-strong"
-            >
-              <Ticket size={19} weight="fill" aria-hidden="true" />
-              Comprar en Bombo
-            </BuyButton>
-            <WhatsappLink
-              href={priceUrl}
-              source="event_price"
-              eventSlug={event.slug}
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-emerald-300/30 px-6 text-center text-sm font-bold text-emerald-100 transition hover:bg-emerald-300/10"
-            >
-              <CurrencyDollarSimple size={18} weight="bold" aria-hidden="true" />
-              Consultar precio por WhatsApp
-            </WhatsappLink>
-            {event.map_url ? (
-              <a
-                href={event.map_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-white/15 px-6 text-center text-sm font-bold text-white/78 transition hover:bg-white/10"
-              >
-                <MapTrifold size={18} weight="bold" aria-hidden="true" />
-                Ver ubicación
-              </a>
-            ) : null}
-          </div>
-        </>
-      )}
-
-      {/* Los links de instalación quedan plegados y después del CTA: antes ocupaban espacio
-          principal delante de un usuario que todavía no manifestó intención de comprar. */}
-      <details className="rounded-[20px] border border-white/10 bg-black/20 p-4 text-sm text-white/48">
-        <summary className="cursor-pointer font-semibold text-white/62">¿No tenés la app de Bombo?</summary>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <a
-            href={bomboAppLinks.ios}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex min-h-11 items-center rounded-full border border-white/10 bg-white/[0.04] px-4 text-xs font-bold text-white/78 transition hover:border-white/25 hover:text-white"
-          >
-            App Store
-          </a>
-          <a
-            href={bomboAppLinks.android}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex min-h-11 items-center rounded-full border border-white/10 bg-white/[0.04] px-4 text-xs font-bold text-white/78 transition hover:border-white/25 hover:text-white"
-          >
-            Google Play
-          </a>
-        </div>
-      </details>
+    <div className="flex items-center gap-3 rounded-card border border-white/10 bg-surface px-[15px] py-[13px]">
+      <span className="grid h-[38px] w-[38px] flex-none place-items-center rounded-[11px] bg-marca text-white">
+        <Icon name={icon} size={19} />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-[14px] font-semibold leading-[1.2]">{title}</span>
+        {detail ? <span className="mt-1 block text-[12px] leading-[1.2] text-white/55">{detail}</span> : null}
+      </span>
+      {action}
     </div>
   );
 }
@@ -552,31 +368,61 @@ function FinishedEventBlock({
   sameArtistEvent: EventRecord | null;
 }) {
   return (
-    <div className="mt-8 space-y-4">
-      <div className="rounded-[20px] border border-white/10 bg-black/25 p-5">
-        <p className="text-sm font-bold text-white/78">Este evento ya finalizó.</p>
-        <p className="mt-2 text-base leading-7 text-white/62">
+    <section className="flex-none px-[18px] pt-6">
+      <div className="rounded-block border border-white/10 bg-surface p-5">
+        <p className="text-[14px] font-bold text-white/[0.78]">Este evento ya finalizó.</p>
+        <p className="mt-2 text-[13.5px] leading-[1.6] text-white/60">
           Dejamos la página online para que encuentres la información de la fecha y las próximas parecidas.
         </p>
-        <div className="mt-4 flex flex-wrap gap-3">
+        <div className="mt-4 flex flex-col gap-2">
           <Link
             href="/eventos"
-            className="rounded-full border border-white/20 px-5 py-3 text-sm font-black text-white transition hover:border-white/40 hover:bg-white/10"
+            className="flex h-12 items-center justify-center rounded-full border border-white/40 text-[14px] font-bold text-white"
           >
             Ver próximos eventos
           </Link>
           {sameArtistEvent ? (
             <Link
               href={`/eventos/${sameArtistEvent.slug}`}
-              className="rounded-full border border-violet-300/30 px-5 py-3 text-sm font-bold text-violet-100 transition hover:bg-violet-300/10"
+              className="flex h-12 items-center justify-center rounded-full border border-marca-edge bg-marca-tint text-[14px] font-bold text-marca-ink"
             >
               Próxima fecha de {sharedArtistName(event, sameArtistEvent) || sameArtistEvent.title}
             </Link>
           ) : null}
         </div>
       </div>
-    </div>
+    </section>
   );
+}
+
+/**
+ * Dirección de la fila de lugar. La ciudad se agrega solo si `venue_address` no la nombra ya:
+ * el admin la carga a mano y muchas veces escribe la dirección completa, así que concatenar
+ * a ciegas daba "Buenos Aires, Argentina, Buenos Aires".
+ */
+function formatAddress(event: EventRecord) {
+  const address = event.venue_address?.trim();
+  const city = event.city?.trim();
+
+  if (!address) return city || "";
+  if (!city || normalizeText(address).includes(normalizeText(city))) return address;
+
+  return `${address}, ${city}`;
+}
+
+/** Mapa: usa el link cargado en el admin y, si no hay, arma una búsqueda con venue y dirección. */
+function getMapUrl(event: EventRecord) {
+  if (event.map_url?.trim()) return event.map_url.trim();
+
+  const query = [event.venue_name, event.venue_address, event.city].filter(Boolean).join(", ");
+  if (!query) return null;
+
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+}
+
+function formatVenueList(venues: string[]) {
+  if (venues.length === 1) return venues[0];
+  return `${venues.slice(0, -1).join(", ")} y ${venues[venues.length - 1]}`;
 }
 
 function findSameArtistEvent(event: EventRecord, candidates: EventRecord[]) {
@@ -665,28 +511,4 @@ function getEventPrimaryPlace(event: EventRecord) {
 function shouldAppendPlaceToTitle(title: string, place: string) {
   if (!place) return false;
   return !normalizeText(title).includes(normalizeText(place));
-}
-
-function InfoCard({ icon: IconComponent, label, value }: { icon: Icon; label: string; value: string }) {
-  return (
-    <div className="rounded-[20px] border border-white/10 bg-black/25 p-4">
-      <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-white/48">
-        <IconComponent size={14} weight="bold" aria-hidden="true" />
-        {label}
-      </p>
-      <p className="mt-2 text-sm font-semibold leading-6 text-white/78">{value}</p>
-    </div>
-  );
-}
-
-function StepCard({ number, title, description }: { number: string; title: string; description: string }) {
-  return (
-    <div className="rounded-[20px] border border-white/10 bg-black/25 p-4">
-      <span className="tabular grid h-8 w-8 place-items-center rounded-full border border-brand/40 bg-brand/10 text-xs font-medium text-brand">
-        {number}
-      </span>
-      <h3 className="mt-4 font-bold text-white">{title}</h3>
-      <p className="mt-2 text-base leading-7 text-white/62">{description}</p>
-    </div>
-  );
 }

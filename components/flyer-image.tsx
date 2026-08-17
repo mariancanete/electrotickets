@@ -50,13 +50,40 @@ export function FlyerImage({ src, alt, sizes, priority = false, className }: Fly
   );
 }
 
-/** Placeholder cuando el evento todavía no tiene flyer cargado. */
-export function FlyerFallback({ className = "", size = "text-4xl" }: { className?: string; size?: string }) {
-  return (
-    <div
-      className={`grid h-full w-full place-items-center bg-gradient-to-br from-violet-500/30 via-cyan-500/10 to-white/5 font-black ${size} ${className}`}
-    >
-      ET
-    </div>
-  );
+/**
+ * Placeholder cuando el evento todavía no tiene flyer cargado.
+ *
+ * Franjas a 135° sobre surface. Reemplaza al tile "ET" con degradado del sistema anterior:
+ * un placeholder que se lee como "acá va un flyer" es más honesto que uno que pretende ser
+ * un logo, y además no compite con la marca real del header.
+ *
+ * `flyer_url` es opcional a propósito —lo carga el admin al bucket `event-flyers`— así que
+ * este estado no es un error: es el estado normal de una fecha recién publicada.
+ */
+export function FlyerFallback({ className = "", large = false }: { className?: string; large?: boolean }) {
+  return <div aria-hidden="true" className={`h-full w-full ${large ? "rayado-lg" : "rayado"} ${className}`} />;
+}
+
+/**
+ * Flyer con su placeholder. Un solo lugar decide qué se dibuja cuando no hay imagen.
+ *
+ * El recorte es `cover` centrado: si el flyer viene cuadrado o vertical se recorta, nunca se
+ * deforma. Deformar la gráfica de una productora es peor que recortarla.
+ */
+export function Flyer({
+  src,
+  alt,
+  sizes,
+  priority = false,
+  large = false
+}: {
+  src: string | null;
+  alt: string;
+  sizes: string;
+  priority?: boolean;
+  large?: boolean;
+}) {
+  if (!src) return <FlyerFallback large={large} />;
+
+  return <FlyerImage src={src} alt={alt} sizes={sizes} priority={priority} className="object-cover object-center" />;
 }
