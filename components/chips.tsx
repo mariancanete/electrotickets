@@ -32,8 +32,10 @@ export function Chip({
 }) {
   return (
     <span
-      className={`inline-flex items-center gap-[6px] whitespace-nowrap rounded-full leading-none ${sizes[size]} ${
-        active ? "bg-white font-bold text-ink" : "border border-white/[0.18] font-medium text-white/[0.72]"
+      className={`t150 inline-flex items-center gap-[6px] whitespace-nowrap rounded-full leading-none ${sizes[size]} ${
+        active
+          ? "chip-activo bg-white font-bold text-ink"
+          : "chip-inactivo border border-white/[0.18] font-medium text-white/[0.72]"
       } ${className}`}
     >
       {children}

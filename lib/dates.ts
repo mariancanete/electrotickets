@@ -135,6 +135,33 @@ export function getDayKey(date: string) {
   return part(nightOf(date), { year: "numeric", month: "2-digit", day: "2-digit" });
 }
 
+/**
+ * Misma clave de noche, en formato ISO (`2026-08-21`).
+ *
+ * Es la que viaja en la URL del filtro de día: `21/08/2026` sería ambigua para cualquiera que
+ * lea el link, y además se ordena mal.
+ */
+export function getDayKeyIso(date: string) {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).format(nightOf(date));
+}
+
+/** Hora local del evento, 0–23. La usa el filtro de horario. */
+export function getHour(date: string) {
+  return Number(part(new Date(date), { hour: "2-digit", hour12: false }));
+}
+
+/** Etiqueta corta de un día para el sidebar de filtros: `Viernes 21`. */
+export function formatDayLabel(date: string) {
+  const value = nightOf(date);
+  const weekday = part(value, { weekday: "long" });
+  return `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)} ${part(value, { day: "2-digit" })}`;
+}
+
 /** Tile del selector de tres días de la home: `VIE` / `30`. */
 export function getDayTile(date: Date) {
   return {

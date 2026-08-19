@@ -4,6 +4,7 @@ import { ScreenHeader } from "@/components/app-header";
 import { BottomNav, NavSpacer } from "@/components/bottom-nav";
 import { DateCard } from "@/components/date-card";
 import { getUpcomingPublishedEvents } from "@/lib/events";
+import { DesktopHeader } from "@/components/desktop-header";
 
 export const revalidate = 60;
 
@@ -24,6 +25,7 @@ export default async function FeaturedEventsPage() {
 
   return (
     <>
+      <DesktopHeader />
       <main className="flex min-h-screen flex-col pt-2">
         <ScreenHeader title="Destacados" backHref="/" />
 

@@ -13,7 +13,20 @@ import { track } from "@/lib/analytics";
  * renderiza como `<span>` y no como `<button>` para no anunciar a un lector de pantalla una
  * acción que no existe; el día que se defina, pasa a `<button>` y se conecta.
  */
-export function DetailActions({ title, slug }: { title: string; slug: string }) {
+export function DetailActions({
+  title,
+  slug,
+  variant = "flotante"
+}: {
+  title: string;
+  slug: string;
+  /**
+   * `flotante` es el de mobile, sobre el flyer. `desktop` los baja a botones delineados con
+   * etiqueta, debajo del flyer y dentro de la columna sticky. Siguen sin usar chartreuse: no
+   * llevan a comprar.
+   */
+  variant?: "flotante" | "desktop";
+}) {
   const router = useRouter();
 
   async function share() {
@@ -33,6 +46,24 @@ export function DetailActions({ title, slug }: { title: string; slug: string }) 
 
   const circle =
     "grid h-[42px] w-[42px] place-items-center rounded-full bg-ink/60 text-white backdrop-blur-sm";
+
+  if (variant === "desktop") {
+    const pill =
+      "btn-out t150 flex h-12 flex-1 items-center justify-center gap-[9px] rounded-full border border-white/[0.18] text-[13.5px] font-semibold text-white";
+
+    return (
+      <div className="flex gap-3">
+        <span aria-hidden="true" className={pill}>
+          <Icon name="heart" size={17} />
+          Guardar
+        </span>
+        <button type="button" onClick={share} className={pill}>
+          <Icon name="share" size={17} />
+          Compartir
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="absolute inset-x-[18px] top-[52px] flex justify-between">

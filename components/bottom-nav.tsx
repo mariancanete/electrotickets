@@ -22,6 +22,9 @@ const tabs: { href: string; label: string; icon: IconName; match: (path: string)
  * chartreuse, así que su tab activo se resuelve en blanco. Es una inconsistencia deliberada:
  * si Ayuda encendiera el chartreuse en el nav, la pantalla dejaría de cumplir su propia
  * regla justo en el elemento más visible.
+ *
+ * A partir de 1024px esta barra desaparece entera y su contenido pasa al header superior
+ * (`DesktopHeader`). No hay ningún ancho en el que convivan las dos.
  */
 export function BottomNav() {
   const pathname = usePathname() || "/";
@@ -30,7 +33,7 @@ export function BottomNav() {
   return (
     <nav
       aria-label="Navegación principal"
-      className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 items-center border-t border-white/10 bg-ink pb-3 pt-1"
+      className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 items-center border-t border-white/10 bg-ink pb-3 pt-1 lg:hidden"
       style={{ minHeight: 74, paddingBottom: "calc(12px + env(safe-area-inset-bottom))" }}
     >
       {tabs.map((tab) => {
@@ -61,5 +64,13 @@ export function BottomNav() {
  * suele ser justamente el CTA o el botón de alertas.
  */
 export function NavSpacer() {
-  return <div aria-hidden="true" style={{ height: "calc(86px + env(safe-area-inset-bottom))" }} />;
+  // A partir de 1024px el nav se va arriba y deja de tapar nada, así que el espaciador
+  // desaparece: si no, cada pantalla de desktop terminaría con 86px de vacío al pie.
+  return (
+    <div
+      aria-hidden="true"
+      className="lg:hidden"
+      style={{ height: "calc(86px + env(safe-area-inset-bottom))" }}
+    />
+  );
 }

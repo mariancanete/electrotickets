@@ -1,7 +1,7 @@
 # Contexto de diseño — ElectroTickets
 
 Documento de traspaso para retomar el trabajo visual sin releer todo el historial.
-Última actualización: agosto 2026 (**rediseño Hora Pico — 9 pantallas mobile**).
+Última actualización: agosto 2026 (**rediseño Hora Pico — 9 pantallas mobile + desktop**).
 
 > El sistema visual vigente es **Hora Pico** (§2.5). Reemplaza al sistema violeta + cyan con
 > Archivo + DM Mono que describen los PR #22 a #26. Todo lo anterior a §2.5 queda como
@@ -237,9 +237,7 @@ y saltear `--design-system`.** La base de datos de la skill es buena; el composi
 ### Rediseño "Hora Pico" — 9 pantallas mobile (sistema vigente)
 
 Salido de `handoff-prd.md` + `ElectroTickets.dc.html` (Claude Design). Mobile-first, ancho de
-diseño 390px. **No hay definición de tablet ni desktop todavía:** el layout es de una sola
-columna y escala por ancho, así que en desktop se ve como una columna centrada. Cerrar esa
-definición es el próximo trabajo pendiente de diseño.
+diseño 390px. La adaptación a desktop está más abajo, en §2.6.
 
 **Color** — cada token tiene un uso único y cerrado (`app/globals.css`):
 
@@ -306,6 +304,97 @@ domingo que nadie busca.
 implementa **visualmente y sin función** (`components/detail-actions.tsx`); la prueba social
 **no se implementa** y su slot queda oculto; los flyers salen únicamente de `flyer_url` tal
 como lo carga el admin.
+
+
+### Adaptación a desktop (§10 del PRD)
+
+**Es reflow de layout, no rediseño.** No entra ni un token nuevo: los mismos colores, la misma
+escala tipográfica, el mismo sprite de 23 glifos y los mismos componentes base. Lo único que
+cambia es dónde se paran las cosas y qué pasa cuando hay un mouse.
+
+**El mobile ya aprobado no se movió un pixel.** Está verificado con un diff pixel a pixel de
+las 11 rutas públicas a 390px, comparando contra el commit anterior: 11 de 11 idénticas.
+Cuando un cambio de desktop movía algo en mobile —el wrapper de la barra de Buscar, el margen
+del bloque de contacto de Ayuda— se corrigió hasta que el diff volvió a cero.
+
+**Breakpoints:**
+
+| Rango | Layout | Nav |
+|---|---|---|
+| ≤767 | Mobile, sin cambios | Barra inferior fija |
+| 768–1023 | Mobile centrado, máximo 560px (`.app-shell`) | Barra inferior fija |
+| ≥1024 | Desktop, padding lateral 44px | **Header superior de 76px** |
+| ≥1280 | Grillas de 3, sidebar de 260px | Header |
+| ≥1440 | Grillas de 4 donde aplica, sidebar 280px, padding 60px | Header |
+
+La transición de nav ocurre **exactamente en 1024px** y no hay estado intermedio: `BottomNav`
+lleva `lg:hidden` y `DesktopHeader` lleva `hidden lg:flex`. Verificado a 1023 y 1024.
+
+**Trampa que costó encontrar: el breakpoint de 1440 no puede ser un `--breakpoint-*` custom.**
+Tailwind v4 ordena las variantes de breakpoint **por nombre, no por valor**, así que un
+`--breakpoint-3xl` emite sus reglas *antes* que las de `lg`. A 1440 las dos condiciones se
+cumplen y ganaba la de 1024 por orden de aparición: el ancho de 1440 no se aplicaba nunca y
+en pantalla no se notaba salvo midiendo. Todo lo que cambia a 1440 vive ahora en clases
+propias de `globals.css` (`grilla-cards`, `col-detalle`, `col-listado`, `col-vacio`,
+`col-entradas`, `col-ayuda`, `titular-hero`, `titular-detalle`, `destacada`), que están fuera
+de las capas de Tailwind y por eso ganan siempre.
+
+**Misma razón, otra trampa:** una clase propia como `.line-clamp-2` le gana a `lg:hidden` por
+estar fuera de las capas. Se eliminó en favor del `line-clamp-*` nativo de Tailwind v4. Regla
+general: **no escribir clases propias que compitan con utilidades de Tailwind**; las clases
+propias son para lo que Tailwind no puede expresar (layouts con dos cortes, sticky
+condicionado por alto, la trama).
+
+**Sticky.** Solo tres cosas se pegan, más el header:
+- Sidebar de filtros del listado: `top: 100px`, con `max-height: calc(100vh - 124px)` y scroll
+  interno. Nunca se convierte en drawer.
+- Barra de búsqueda de Buscar: pegada al header, mismo fondo ink y su borde.
+- Columna izquierda del detalle: `top: 100px`, y lleva el CTA adentro. **Si la columna es más
+  alta que el viewport, libera el sticky** (`@media (max-height: 859.98px)` a 1024 y 949.98px
+  a 1440) y scrollea con la página: antes que recortar el único punto de conversión de la
+  pantalla, se pierde el pegado. Verificado a 1280×720.
+
+**Hover y foco.** Todo detrás de `@media (hover: hover)`, incluidos los `:active` — en un touch
+`:active` se dispara al tocar, y encerrarlo garantiza que mobile se comporte igual que antes.
+Transición única de 150ms ease-out (`.t150`). El anillo de foco pasó de chartreuse a blanco:
+un anillo recorriendo filtros y links diluía el significado del color de compra. **El hover
+nunca introduce chartreuse donde no lo había.** Con `prefers-reduced-motion` se anulan también
+los `transform`, no solo las transiciones.
+
+**Qué se duplica en el DOM y por qué.** El bloque de compra del detalle y el de la pantalla de
+compra se renderizan dos veces —barra fija en mobile, dentro de la columna sticky o al pie de
+la columna en desktop— porque una media query cambia estilos pero no mueve un nodo de lugar.
+Se alternan con `display`, así que en cada ancho hay exactamente uno en el árbol de
+accesibilidad y un lector de pantalla nunca escucha dos CTA. Lo mismo pasa con el selector de
+días de la home, que en desktop viaja adentro del campo ultramar.
+
+**Filtros nuevos, sin campos nuevos.** El sidebar suma `dia` (ISO, `2026-08-21`) y `horario`
+(`temprano` / `tarde`, cortado a las 2). Los dos salen de `starts_at` y viajan en la URL como
+los demás. `getDayKeyIso` usa la misma corrección de noche que `getDayKey`.
+
+**Ajustes al PRD por conflicto interno de la §10:**
+
+1. **El flyer de la destacada se achica en ventanas bajas.** La §10 pide flyer de 400px *y*
+   CTA visible en el primer viewport a 1280×800; con el header y el hero, el botón cae 22px
+   abajo del pliegue. Se resuelve por alto de ventana —igual que la propia §10 resuelve el
+   sticky del detalle—: 400px en pantallas altas, 340px en bajas. Medido: CTA a 747px en
+   1280×800.
+2. **El CTA del detalle mide 402px a 1280 y 472px a 1440**, no 400 y 470. La cuenta del PRD
+   (columna − 56 de WhatsApp − 12 de gap) da esos valores; se usa `flex: 1` para que cierre
+   sola en vez de dejar 2px de aire.
+3. **El listado se queda en 3 columnas a 1440**, no 4: los 280px del sidebar se comen el ancho.
+   Es lo que muestra el propio frame `D02 Listado 1440`.
+4. **El chip "+18"** de los frames no se implementa: no hay columna que lo respalde, mismo
+   criterio que la prueba social.
+5. **El riel de la card muestra la fecha calendario real, no la de la noche.** Una fecha que
+   arranca 03:00 del domingo se agrupa bajo el sábado (encabezado "SÁBADO 22.08") pero su riel
+   dice "DOM 23 · 03:00". Los frames muestran "SÁB" en los dos lugares. Se prefirió el dato
+   real: quien va a la fiesta tiene que presentarse el domingo, y un riel que dijera sábado lo
+   mandaría un día antes.
+
+**Numeración.** La §6 y la §10 numeran distinto las mismas pantallas (en la §6 la 03 es Detalle
+y la 08 es Buscar; en la §10 la 03 es Buscar y la 04 es Detalle). Las rutas son las mismas y no
+cambian: conviene nombrarlas por ruta.
 
 ---
 

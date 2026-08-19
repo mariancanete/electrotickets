@@ -180,11 +180,21 @@ body {
 /**
  * Foco visible. Sobre fondo casi negro el contorno por defecto del navegador es
  * prácticamente invisible, así que sin esta regla no se puede navegar con teclado.
+ *
+ * El anillo es **blanco, nunca chartreuse**: el chartreuse significa comprar, y un anillo de
+ * foco recorriendo filtros y links lo diluiría. Se dibuja siempre como anillo y nunca como
+ * cambio de relleno, para que se distinga del hover a simple vista.
  */
 :focus-visible {
-  outline: 2px solid var(--color-cta);
+  outline: 2px solid #fff;
   outline-offset: 3px;
   border-radius: 8px;
+}
+
+/** El chip activo ya es blanco, así que su anillo va en ultramar para poder verse. */
+.chip-activo:focus-visible {
+  outline-color: var(--color-marca);
+  outline-offset: 2px;
 }
 
 /** Fila de chips que scrollea en horizontal sin mostrar barra. */
@@ -196,13 +206,6 @@ body {
 
 .chips-scroll::-webkit-scrollbar {
   display: none;
-}
-
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 
 .text-balance {
@@ -246,6 +249,448 @@ select {
   background: rgba(255, 255, 255, 0.055);
 }
 
+/* ===================================================================================== *
+ * Desktop (§10 del PRD)
+ *
+ * Es **reflow de layout, no rediseño**: no entra ni un token nuevo. Los mismos colores, la
+ * misma escala tipográfica, el mismo sprite de 23 glifos y los mismos componentes base.
+ * Lo único que cambia es dónde se paran las cosas y qué pasa cuando hay un mouse.
+ * ===================================================================================== */
+
+/**
+ * Padding lateral de pantalla.
+ *
+ * Reemplaza al `px-[18px]` suelto que estaba repetido en cada bloque. **El valor mobile es
+ * idéntico** (18px), así que abajo de 1024 no se mueve nada; sirve para no tener que repetir
+ * tres breakpoints en cada contenedor.
+ */
+.gutter {
+  padding-left: 18px;
+  padding-right: 18px;
+}
+
+@media (min-width: 1024px) {
+  .gutter {
+    padding-left: 44px;
+    padding-right: 44px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .gutter {
+    padding-left: 60px;
+    padding-right: 60px;
+  }
+}
+
+/**
+ * Padding lateral **solo desde 1024**.
+ *
+ * Para los contenedores que en mobile van a sangre —el flyer del detalle, la columna de
+ * compra— y que en desktop sí necesitan margen. `gutter` no sirve ahí porque agregaría 18px
+ * en mobile, y `lg:gutter` no existe: las variantes de Tailwind no se pueden anteponer a una
+ * clase propia.
+ */
+.gutter-lg {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+@media (min-width: 1024px) {
+  .gutter-lg {
+    padding-left: 44px;
+    padding-right: 44px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .gutter-lg {
+    padding-left: 60px;
+    padding-right: 60px;
+  }
+}
+
+/**
+ * Rango 768–1023: no tiene diseño propio y no lo va a tener.
+ *
+ * Se sirve el layout mobile centrado con un máximo de 560px. Es una decisión tomada, no un
+ * pendiente: una tablet mostrando la columna mobile centrada se lee bien, y un tercer layout
+ * intermedio sería una superficie más para mantener sin tráfico que la justifique.
+ */
+@media (min-width: 768px) and (max-width: 1023.98px) {
+  .app-shell {
+    max-width: 560px;
+    margin-inline: auto;
+  }
+}
+
+/**
+ * Fecha destacada de la home.
+ *
+ * El flyer va a 400px (460 a 1440), que con la relación 4:5 son 500 y 575px de alto.
+ *
+ * El PRD pide además que el CTA entre en el primer viewport a 1280×800, y esas dos cosas no
+ * entran juntas: con el header de 76px y el hero arriba, el botón termina 22px abajo del
+ * pliegue. Se resuelve **por alto de ventana**, con el mismo criterio que la §10 usa para
+ * liberar la columna sticky del detalle: en pantallas altas el flyer va al tamaño
+ * especificado, y en las bajas se achica hasta que el CTA vuelve a entrar. Entre perder
+ * 60px de flyer y perder de vista el único punto de conversión de la pantalla, se pierde
+ * flyer.
+ */
+@media (min-width: 1024px) {
+  .destacada {
+    grid-template-columns: 400px minmax(0, 1fr);
+  }
+}
+
+@media (min-width: 1024px) and (max-height: 860px) {
+  .destacada {
+    grid-template-columns: 340px minmax(0, 1fr);
+  }
+}
+
+@media (min-width: 1440px) {
+  .destacada {
+    grid-template-columns: 460px minmax(0, 1fr);
+  }
+}
+
+@media (min-width: 1440px) and (max-height: 940px) {
+  .destacada {
+    grid-template-columns: 400px minmax(0, 1fr);
+  }
+}
+
+/* ---------------------------------------------------------------------------------- *
+ * Layouts de desktop
+ *
+ * Los tres cortes del sistema son 1024, 1280 y 1440. Los dos primeros son `lg` y `xl` de
+ * Tailwind; **el de 1440 se escribe a mano, acá**.
+ *
+ * El motivo es concreto: Tailwind v4 ordena las variantes de breakpoint por nombre, no por
+ * valor, así que un `--breakpoint-3xl` custom emite sus reglas *antes* que las de `lg`. A
+ * 1440 las dos condiciones se cumplen y ganaba la de 1024 por orden de aparición, con lo
+ * cual el ancho de 1440 nunca llegaba a aplicarse. Estas clases viven fuera de las capas de
+ * Tailwind, así que ganan siempre y el orden deja de importar.
+ *
+ * Además se leen mejor: `grilla-cards` dice qué es, y una cadena de seis variantes no.
+ * ---------------------------------------------------------------------------------- */
+
+/** Grilla de cards: 2 columnas a 1024, 3 a 1280, 4 a 1440. */
+@media (min-width: 1024px) {
+  .grilla-cards {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .grilla-cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1440px) {
+  .grilla-cards {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 28px;
+  }
+}
+
+/**
+ * Grilla de cards con sidebar al lado. Se queda en 3 columnas a 1440: los 280px del sidebar
+ * se comen el ancho que haría falta para una cuarta, y una cuarta columna espachurrada se
+ * lee peor que tres cómodas.
+ */
+@media (min-width: 1024px) {
+  .grilla-cards-con-sidebar {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .grilla-cards-con-sidebar {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1440px) {
+  .grilla-cards-con-sidebar {
+    gap: 28px;
+  }
+}
+
+/** Listado: sidebar de filtros + grilla. */
+@media (min-width: 1024px) {
+  .col-listado {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    align-items: start;
+    gap: 36px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .col-listado {
+    grid-template-columns: 280px minmax(0, 1fr);
+  }
+}
+
+/** Detalle: columna sticky del flyer + contenido. De acá salen los 400 y 470px del CTA. */
+@media (min-width: 1024px) {
+  .col-detalle {
+    display: grid;
+    grid-template-columns: 470px minmax(0, 1fr);
+    align-items: start;
+    gap: 40px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .col-detalle {
+    grid-template-columns: 540px minmax(0, 1fr);
+  }
+}
+
+/** Estado vacío de la agenda: contenido + alertas. El lateral nunca pasa de 420px. */
+@media (min-width: 1024px) {
+  .col-vacio {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 380px;
+    align-items: start;
+    gap: 36px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .col-vacio {
+    grid-template-columns: minmax(0, 1fr) 420px;
+  }
+}
+
+/** Mis entradas: lista + aviso de Bombo. Recién a 1280, por ancho de card. */
+@media (min-width: 1280px) {
+  .col-entradas {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 300px;
+    align-items: start;
+    gap: 32px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .col-entradas {
+    grid-template-columns: minmax(0, 1fr) 340px;
+  }
+}
+
+/** Ayuda: título y contacto + acordeón. */
+@media (min-width: 1024px) {
+  .col-ayuda {
+    display: grid;
+    grid-template-columns: 340px minmax(0, 1fr);
+    align-items: start;
+    gap: 42px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .col-ayuda {
+    grid-template-columns: 380px minmax(0, 1fr);
+  }
+}
+
+/** Titular del hero: 60px a 1024 y 68px a 1440. */
+@media (min-width: 1024px) {
+  .titular-hero {
+    font-size: 60px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .titular-hero {
+    font-size: 68px;
+  }
+}
+
+/** Título del detalle: 66px a 1024 y 76px a 1440. */
+@media (min-width: 1024px) {
+  .titular-detalle {
+    font-size: 66px;
+    line-height: 0.9;
+    letter-spacing: -0.05em;
+  }
+}
+
+@media (min-width: 1440px) {
+  .titular-detalle {
+    font-size: 76px;
+  }
+}
+
+/* ---------------------------------------------------------------------------------- *
+ * Interacción: hover, active y foco
+ *
+ * El hover va detrás de `@media (hover: hover)` para que un touch no lo dispare y deje
+ * elementos "pegados" en estado hover después de tocarlos. El foco, en cambio, aplica en
+ * todo ancho: se navega con teclado también en un celular con teclado conectado.
+ *
+ * Regla que gobierna toda esta sección: **el hover nunca introduce chartreuse donde no lo
+ * había.** Una card de Mis entradas, que no lleva a comprar, no gana borde ni fondo
+ * chartreuse al pasar el mouse. Lo único que se pone chartreuse al hacer hover es lo que ya
+ * era chartreuse en reposo.
+ * ---------------------------------------------------------------------------------- */
+
+/** Transición única de todo el sistema. Nada dura más que esto. */
+.t150 {
+  transition:
+    color 150ms ease-out,
+    background-color 150ms ease-out,
+    border-color 150ms ease-out,
+    opacity 150ms ease-out,
+    transform 150ms ease-out;
+}
+
+/**
+ * CTA de compra, en sus dos tamaños. El ícono acompaña el gesto de "esto sale de acá".
+ *
+ * El `:active` también está detrás de `hover: hover` a propósito: en un touch, `:active` se
+ * dispara al tocar, y el mobile ya aprobado no tiene escala de pressed. Encerrarlo acá
+ * garantiza que mobile se comporte exactamente igual que antes de este cambio.
+ */
+@media (hover: hover) {
+  .cta-hov:hover {
+    background-color: var(--color-cta-pressed);
+  }
+
+  .cta-hov:hover .cta-icon {
+    transform: translateX(2px);
+  }
+
+  .cta-hov:active {
+    background-color: var(--color-cta-pressed);
+    transform: scale(0.99);
+  }
+}
+
+/**
+ * Card de grilla. El borde sube de .10 a .18 y el flyer hace un zoom mínimo dentro de su
+ * propio recorte. El CTA compacto de adentro tiene su hover propio y no lo pisa el de la card.
+ */
+@media (hover: hover) {
+  .card-hov:hover {
+    border-color: rgba(255, 255, 255, 0.18);
+  }
+
+  .card-hov:hover .card-flyer {
+    transform: scale(1.03);
+  }
+}
+
+/** Chip inactivo: sube borde y texto. Nunca se rellena, para no confundirse con el activo. */
+@media (hover: hover) {
+  .chip-inactivo:hover {
+    border-color: rgba(255, 255, 255, 0.32);
+    color: #fff;
+  }
+
+  /* El activo ya es blanco pleno: lo único que puede hacer es bajar un punto la opacidad. */
+  .chip-activo:hover {
+    opacity: 0.92;
+  }
+
+  .chip-inactivo:active {
+    background-color: rgba(255, 255, 255, 0.06);
+  }
+
+  .chip-activo:active {
+    opacity: 0.88;
+  }
+}
+
+/** Botón delineado: WhatsApp, Guardar, Compartir, Ver la agenda, Activar alertas. */
+@media (hover: hover) {
+  .btn-out:hover {
+    border-color: rgba(255, 255, 255, 0.7);
+    background-color: rgba(255, 255, 255, 0.06);
+  }
+
+  .btn-out:active {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+/** Destino del header superior. */
+@media (hover: hover) {
+  .nav-link:hover {
+    color: #fff;
+  }
+}
+
+/** Ítem del acordeón de Ayuda: sube el borde y enciende el `plus`. El fondo no se toca. */
+@media (hover: hover) {
+  .acc-hov:hover {
+    border-color: rgba(255, 255, 255, 0.16);
+  }
+
+  .acc-hov:hover .acc-icon {
+    color: #fff;
+  }
+}
+
+/** Agotado no responde a hover ni recibe foco: no hay ninguna acción detrás. */
+.cta-disabled {
+  pointer-events: none;
+}
+
+/* ---------------------------------------------------------------------------------- *
+ * Sticky
+ *
+ * Solo tres cosas son sticky en todo el sistema, más el header, que es fijo en las 9
+ * pantallas. Nada más se pega.
+ * ---------------------------------------------------------------------------------- */
+
+/** Sidebar de filtros del listado y columna izquierda del detalle. 76px de header + 24 de aire. */
+@media (min-width: 1024px) {
+  .sticky-col {
+    position: sticky;
+    top: 100px;
+  }
+
+  /**
+   * El sidebar de filtros sí puede scrollear por dentro: es una lista de chips y recortarla
+   * no pierde ninguna acción crítica.
+   */
+  .sticky-filtros {
+    max-height: calc(100vh - 124px);
+    overflow-y: auto;
+  }
+}
+
+/**
+ * La columna del detalle **no** puede recortarse: adentro va el único punto de conversión de
+ * la pantalla. Si el viewport es más bajo que la columna (1280×720 y parecidos), se libera el
+ * sticky y la columna scrollea con la página. Antes recortar el CTA, preferimos perder el
+ * pegado.
+ *
+ * Los umbrales salen del alto real de la columna: flyer 4:5 sobre 470px son 587px, más los
+ * botones, el CTA y la línea de link oficial; a 1440 el flyer es de 540px y la columna crece.
+ */
+@media (min-width: 1024px) and (max-height: 859.98px) {
+  .sticky-detalle {
+    position: static;
+  }
+}
+
+@media (min-width: 1440px) and (max-height: 949.98px) {
+  .sticky-detalle {
+    position: static;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -258,5 +703,15 @@ select {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  /**
+   * Anular la transición no alcanza: el zoom del flyer y el desplazamiento del ícono
+   * seguirían ocurriendo, solo que de golpe. Con movimiento reducido no ocurren.
+   */
+  .card-hov:hover .card-flyer,
+  .cta-hov:hover .cta-icon,
+  .cta-hov:active {
+    transform: none !important;
   }
 }

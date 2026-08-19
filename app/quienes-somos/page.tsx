@@ -8,6 +8,7 @@ import { WhatsappLink } from "@/components/whatsapp-link";
 import { credentials } from "@/lib/credentials";
 import { absoluteUrl, siteConfig } from "@/lib/site";
 import { buildGeneralWhatsappMessage, whatsappUrlOrGroup } from "@/lib/whatsapp";
+import { DesktopHeader } from "@/components/desktop-header";
 
 /**
  * PERSONALIZAR ANTES DE PRODUCCIÓN:
@@ -77,6 +78,7 @@ export default function AboutPage() {
 
   return (
     <>
+      <DesktopHeader />
       <main className="flex min-h-screen flex-col pt-2">
         <ScreenHeader title="Quiénes somos" backHref="/" />
 
