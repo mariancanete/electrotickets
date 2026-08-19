@@ -1,4 +1,4 @@
-import { getDayKey } from "@/lib/dates";
+import { formatDayLabel, getDayKey, getDayKeyIso, getHour } from "@/lib/dates";
 import { normalizeText } from "@/lib/slugify";
 import { getWeekendDays } from "@/lib/weekend";
 import type { EventRecord } from "@/types/event";
@@ -24,9 +24,21 @@ export type Filters = {
   genero: string;
   zona: string;
   cuando: string;
+  /** Día puntual, en ISO (`2026-08-21`). Sale del sidebar de desktop. */
+  dia: string;
+  /** `temprano` antes de las 2, `tarde` de las 2 en adelante. */
+  horario: string;
 };
 
-export const EMPTY_FILTERS: Filters = { q: "", genero: "", zona: "", cuando: "" };
+export const EMPTY_FILTERS: Filters = { q: "", genero: "", zona: "", cuando: "", dia: "", horario: "" };
+
+/** Corte de la madrugada. Las 2 es donde la noche se parte en la práctica. */
+const HORA_CORTE = 2;
+
+export const HORARIOS = [
+  { value: "temprano", label: "Antes de las 2" },
+  { value: "tarde", label: "Después de las 2" }
+] as const;
 
 /** El único valor de `cuando` por ahora. Se nombra para no repetir el string suelto. */
 export const WEEKEND = "finde";
@@ -36,6 +48,8 @@ export function parseFilters(params: {
   genero?: string | string[];
   zona?: string | string[];
   cuando?: string | string[];
+  dia?: string | string[];
+  horario?: string | string[];
 }): Filters {
   const one = (value?: string | string[]) => (Array.isArray(value) ? value[0] : value) || "";
 
@@ -43,13 +57,15 @@ export function parseFilters(params: {
     q: one(params.q).trim(),
     genero: one(params.genero).trim(),
     zona: one(params.zona).trim(),
-    cuando: one(params.cuando).trim()
+    cuando: one(params.cuando).trim(),
+    dia: one(params.dia).trim(),
+    horario: one(params.horario).trim()
   };
 }
 
 /** Cuántos filtros están aplicados. La query no cuenta: tiene su propio campo en pantalla. */
 export function countActiveFilters(filters: Filters) {
-  return [filters.genero, filters.zona, filters.cuando].filter(Boolean).length;
+  return [filters.genero, filters.zona, filters.cuando, filters.dia, filters.horario].filter(Boolean).length;
 }
 
 export function hasAnyFilter(filters: Filters) {
@@ -62,6 +78,8 @@ export function filtersToParams(filters: Filters) {
   if (filters.genero) params.set("genero", filters.genero);
   if (filters.zona) params.set("zona", filters.zona);
   if (filters.cuando) params.set("cuando", filters.cuando);
+  if (filters.dia) params.set("dia", filters.dia);
+  if (filters.horario) params.set("horario", filters.horario);
   return params;
 }
 
@@ -74,6 +92,20 @@ export function filtersToParams(filters: Filters) {
  */
 export function getGenres(events: EventRecord[]) {
   return collect(events, (event) => event.genre);
+}
+
+/** Días disponibles, para el sidebar. Devuelve `{ iso, label }` ya ordenados. */
+export function getDias(events: EventRecord[]) {
+  const seen = new Map<string, string>();
+
+  for (const event of events) {
+    const iso = getDayKeyIso(event.starts_at);
+    if (!seen.has(iso)) seen.set(iso, formatDayLabel(event.starts_at));
+  }
+
+  return Array.from(seen.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([iso, label]) => ({ iso, label }));
 }
 
 /**
@@ -109,6 +141,18 @@ export function applyFilters(events: EventRecord[], filters: Filters) {
     if (genre && normalizeText(event.genre) !== genre) return false;
     if (zone && normalizeText(event.venue_name) !== zone) return false;
     if (weekendKeys && !weekendKeys.has(getDayKey(event.starts_at))) return false;
+    if (filters.dia && getDayKeyIso(event.starts_at) !== filters.dia) return false;
+
+    if (filters.horario) {
+      // Una fecha que arranca 23:00 es "antes de las 2"; una que arranca 03:00, "después".
+      // El corte se lee sobre la hora local: de mediodía en adelante todavía es la noche que
+      // arranca, y de 00:00 a 01:59 sigue siendo temprano dentro de esa misma noche.
+      const hora = getHour(event.starts_at);
+      const antesDeLasDos = hora >= 12 || hora < HORA_CORTE;
+      if (filters.horario === "temprano" && !antesDeLasDos) return false;
+      if (filters.horario === "tarde" && antesDeLasDos) return false;
+    }
+
     if (!query) return true;
 
     const haystack = normalizeText(

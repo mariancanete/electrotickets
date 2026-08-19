@@ -48,7 +48,7 @@ export function DateCard({
 
   return (
     <article
-      className={`grid grid-cols-[66px_1fr] overflow-hidden rounded-card border border-white/10 bg-surface ${
+      className={`card-hov t150 grid grid-cols-[66px_1fr] overflow-hidden rounded-card border border-white/10 bg-surface lg:grid-cols-[78px_1fr] ${
         soldOut ? "opacity-55" : ""
       }`}
     >
@@ -62,13 +62,13 @@ export function DateCard({
         <span className="text-[9px] font-bold uppercase leading-none tracking-[0.18em] text-white/85">
           {rail.weekday}
         </span>
-        <span className="text-[26px] font-extrabold leading-none tabular-nums">{rail.day}</span>
+        <span className="text-[26px] font-extrabold leading-none tabular-nums lg:text-[29px]">{rail.day}</span>
         <span className="text-[9px] font-bold uppercase leading-none tracking-[0.14em] text-white/85">
           {railBottom === "month" ? rail.month : rail.time}
         </span>
       </div>
 
-      <div className="flex flex-col gap-[10px] p-[13px]">
+      <div className="flex flex-col gap-[10px] p-[13px] lg:gap-3 lg:px-[18px] lg:py-4">
         <div className="flex gap-[11px]">
           {showFlyer ? (
             <div className="relative h-[78px] w-[62px] flex-none overflow-hidden rounded-[10px]">
@@ -83,7 +83,9 @@ export function DateCard({
 
           <div className="flex min-w-0 flex-1 flex-col gap-[5px]">
             <div className="flex items-start justify-between gap-[10px]">
-              <h3 className="text-[18px] font-bold leading-[1.05] tracking-[-0.02em]">{event.title}</h3>
+              <h3 className="text-[18px] font-bold leading-[1.05] tracking-[-0.02em] lg:text-[20px] lg:tracking-[-0.025em]">
+                {event.title}
+              </h3>
               {badge}
             </div>
 

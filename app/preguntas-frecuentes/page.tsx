@@ -6,6 +6,7 @@ import { BottomNav, NavSpacer } from "@/components/bottom-nav";
 import { Icon } from "@/components/icons";
 import { bomboAppLinks } from "@/lib/site";
 import { buildGeneralWhatsappMessage, whatsappUrlOrGroup } from "@/lib/whatsapp";
+import { DesktopHeader } from "@/components/desktop-header";
 
 export const metadata: Metadata = {
   title: "Preguntas frecuentes",
@@ -109,82 +110,106 @@ const faqs: FaqItem[] = [
 export default function FaqPage() {
   const contactUrl = whatsappUrlOrGroup(buildGeneralWhatsappMessage());
 
+  const contacto = (
+    <div className="flex flex-col gap-3 rounded-card border border-marca-edge bg-marca-tint p-[15px] lg:gap-[14px] lg:rounded-block lg:p-[22px]">
+      <div className="flex items-start gap-[11px] lg:flex-col lg:gap-[14px]">
+        <span className="flex-none text-marca-ink">
+          <Icon name="chat" size={20} className="lg:hidden" />
+          <Icon name="chat" size={24} className="hidden lg:block" />
+        </span>
+        <span>
+          <span className="block text-[15px] font-bold leading-[1.2] lg:text-[18px] lg:tracking-[-0.02em]">
+            ¿No estaba tu pregunta?
+          </span>
+          <span className="mt-[6px] block text-[12.5px] leading-[1.5] text-white/[0.72] lg:text-[13.5px] lg:leading-[1.6]">
+            Escribinos por WhatsApp con la fecha y te respondemos.
+          </span>
+        </span>
+      </div>
+      <a
+        href={contactUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="btn-out t150 flex h-12 items-center justify-center gap-2 rounded-full border border-white/40 text-white"
+      >
+        <Icon name="chat" size={16} />
+        <span className="text-[14px] font-bold leading-none">Hablar por WhatsApp</span>
+      </a>
+    </div>
+  );
+
   return (
     <>
-      <main className="flex min-h-screen flex-col pt-2">
-        <TabHeader eyebrow="Ayuda" title="Preguntas frecuentes" description="Compra, links oficiales y contacto." />
+      <DesktopHeader />
+      <main className="app-shell flex min-h-screen flex-col pt-2 lg:pt-0">
+        <div className="col-ayuda gutter-lg lg:pb-[50px] lg:pt-[38px]">
+          {/* Columna de título y contacto. En desktop se separa del acordeón; en mobile es
+              simplemente la cabecera y el contacto queda al final, como estaba. */}
+          <div className="flex flex-col lg:gap-4">
+            <TabHeader eyebrow="Ayuda" title="Preguntas frecuentes" description="Compra, links oficiales y contacto." />
 
-        <div className="flex flex-col gap-[9px] px-[18px]">
-          {faqs.map((item, index) => (
-            <details
-              key={item.question}
-              // La primera abre por defecto: deja ver de qué se trata el acordeón sin obligar
-              // a un toque a ciegas.
-              open={index === 0}
-              // El ítem abierto sube el borde de .10 a .16 y **no cambia de fondo**: mover el
-              // fondo haría saltar la lista entera cada vez que se abre algo.
-              className="group rounded-card border border-white/10 bg-surface p-[14px] open:border-white/[0.16]"
-            >
-              <summary className="flex cursor-pointer list-none items-start justify-between gap-3">
-                <span className="text-[14.5px] font-bold leading-[1.3] text-white">{item.question}</span>
-                <span className="grid h-6 w-6 flex-none place-items-center text-white/50 group-open:text-white/85">
-                  <span className="group-open:hidden">
-                    <Icon name="plus" size={16} />
-                  </span>
-                  <span className="hidden group-open:block">
-                    <Icon name="minus" size={16} />
-                  </span>
-                </span>
-              </summary>
-              <div className="mt-[10px] text-[13px] leading-[1.6] text-white/[0.62]">{item.answer}</div>
-            </details>
-          ))}
-
-          <div className="flex flex-col gap-3 rounded-card border border-marca-edge bg-marca-tint p-[15px]">
-            <div className="flex items-start gap-[11px]">
-              <span className="flex-none text-marca-ink">
-                <Icon name="chat" size={20} />
-              </span>
-              <span>
-                <span className="block text-[15px] font-bold leading-[1.2]">¿No estaba tu pregunta?</span>
-                <span className="mt-[6px] block text-[12.5px] leading-[1.5] text-white/[0.72]">
-                  Escribinos por WhatsApp con la fecha y te respondemos.
-                </span>
-              </span>
-            </div>
-            <a
-              href={contactUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex h-12 items-center justify-center gap-2 rounded-full border border-white/40 text-white"
-            >
-              <Icon name="chat" size={16} />
-              <span className="text-[14px] font-bold leading-none">Hablar por WhatsApp</span>
-            </a>
+            {/* El contacto sube a la columna izquierda solo desde 1280: entre 1024 y 1279 la
+                columna es demasiado angosta y el bloque queda mejor al final del acordeón. */}
+            <div className="mt-[10px] hidden xl:block">{contacto}</div>
           </div>
 
-          {/**
-           * Enlaces al resto del sitio.
-           *
-           * Con el nav inferior de 4 tabs no queda footer, y estas tres páginas se
-           * convertirían en huérfanas: URLs indexadas a las que no llega ningún link interno.
-           * Ayuda es el lugar natural para colgarlas —quien busca "quiénes son" o "cómo me
-           * contacto" ya está acá—, y van en texto chico y blanco tenue para no competir con
-           * el bloque de contacto.
-           */}
-          <nav className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2 pt-2 text-[12px] leading-none text-white/45">
-            <Link href="/quienes-somos" className="underline decoration-white/25 underline-offset-4">
-              Quiénes somos
-            </Link>
-            <span aria-hidden="true">·</span>
-            <Link href="/contacto" className="underline decoration-white/25 underline-offset-4">
-              Contacto
-            </Link>
-            <span aria-hidden="true">·</span>
-            <Link href="/privacidad" className="underline decoration-white/25 underline-offset-4">
-              Privacidad
-            </Link>
-          </nav>
+          <div className="gutter flex flex-col gap-[9px] lg:px-0">
+            {faqs.map((item, index) => (
+              <details
+                key={item.question}
+                // La primera abre por defecto: deja ver de qué se trata el acordeón sin
+                // obligar a un toque a ciegas.
+                open={index === 0}
+                // El ítem abierto sube el borde de .10 a .16 y **no cambia de fondo**: mover
+                // el fondo haría saltar la lista entera cada vez que se abre algo.
+                className="acc-hov t150 group rounded-card border border-white/10 bg-surface p-[14px] open:border-white/[0.16] lg:p-[18px]"
+              >
+                <summary className="flex cursor-pointer list-none items-start justify-between gap-3">
+                  <span className="text-[14.5px] font-bold leading-[1.3] text-white lg:text-[16px]">
+                    {item.question}
+                  </span>
+                  <span className="acc-icon t150 grid h-6 w-6 flex-none place-items-center text-white/50 group-open:text-white/85">
+                    <span className="group-open:hidden">
+                      <Icon name="plus" size={16} />
+                    </span>
+                    <span className="hidden group-open:block">
+                      <Icon name="minus" size={16} />
+                    </span>
+                  </span>
+                </summary>
+                {/* El ancho de línea de las respuestas no pasa de 640px: más largo que eso el
+                    ojo pierde el renglón al volver. */}
+                <div className="mt-[10px] max-w-[640px] text-[13px] leading-[1.6] text-white/[0.62] lg:text-[14px]">
+                  {item.answer}
+                </div>
+              </details>
+            ))}
+
+            <div className="xl:hidden">{contacto}</div>
+
+            {/**
+             * Enlaces al resto del sitio.
+             *
+             * Con el nav de 4 destinos no queda footer, y estas tres páginas se convertirían
+             * en huérfanas: URLs indexadas a las que no llega ningún link interno. Ayuda es el
+             * lugar natural para colgarlas —quien busca "quiénes son" o "cómo me contacto" ya
+             * está acá—, y van en texto chico y blanco tenue para no competir con el bloque
+             * de contacto.
+             */}
+            <nav className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2 pt-2 text-[12px] leading-none text-white/45 lg:justify-start lg:pt-4">
+              <Link href="/quienes-somos" className="t150 underline decoration-white/25 underline-offset-4 hover:text-white">
+                Quiénes somos
+              </Link>
+              <span aria-hidden="true">·</span>
+              <Link href="/contacto" className="t150 underline decoration-white/25 underline-offset-4 hover:text-white">
+                Contacto
+              </Link>
+              <span aria-hidden="true">·</span>
+              <Link href="/privacidad" className="t150 underline decoration-white/25 underline-offset-4 hover:text-white">
+                Privacidad
+              </Link>
+            </nav>
+          </div>
         </div>
 
         <NavSpacer />

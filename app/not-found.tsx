@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BottomNav, NavSpacer } from "@/components/bottom-nav";
 import { Icon } from "@/components/icons";
+import { DesktopHeader } from "@/components/desktop-header";
 
 /**
  * 404 en el sistema Hora Pico. Reusa el patrón del estado vacío: nunca es un callejón, la
@@ -9,6 +10,7 @@ import { Icon } from "@/components/icons";
 export default function NotFound() {
   return (
     <>
+      <DesktopHeader />
       <main className="flex min-h-screen flex-col justify-center px-[18px]">
         <div className="flex flex-col items-center gap-3 rounded-block border border-dashed border-white/20 px-5 py-[26px] text-center">
           <span className="grid h-14 w-14 place-items-center rounded-card bg-surface text-white/35">

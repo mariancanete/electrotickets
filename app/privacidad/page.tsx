@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { ScreenHeader } from "@/components/app-header";
 import { BottomNav, NavSpacer } from "@/components/bottom-nav";
 import { absoluteUrl, siteConfig } from "@/lib/site";
+import { DesktopHeader } from "@/components/desktop-header";
 
 /**
  * El sitio carga Google Analytics 4 y Microsoft Clarity, que dejan cookies y registran
@@ -23,6 +24,7 @@ export const metadata: Metadata = {
 export default function PrivacyPage() {
   return (
     <>
+      <DesktopHeader />
       <main className="flex min-h-screen flex-col pt-2">
         <ScreenHeader title="Privacidad" backHref="/" />
 

@@ -6,6 +6,7 @@ import { BuyCta, SoldOutCta, WhatsappIconButton } from "@/components/cta";
 import { DateCard } from "@/components/date-card";
 import { DetailActions } from "@/components/detail-actions";
 import { Flyer } from "@/components/flyer-image";
+import { GridCard } from "@/components/grid-card";
 import { Icon } from "@/components/icons";
 import { YoutubeFacade } from "@/components/youtube-facade";
 import { formatDatoRange, formatEventLongDate, formatLongDay, formatTime } from "@/lib/dates";
@@ -26,6 +27,7 @@ import {
   whatsappUrlOrGroup
 } from "@/lib/whatsapp";
 import type { EventFaqItem, EventRecord } from "@/types/event";
+import { DesktopHeader } from "@/components/desktop-header";
 
 export const revalidate = 60;
 
@@ -167,171 +169,252 @@ export default async function EventDetailPage({ params }: PageProps) {
     }))
   };
 
-  return (
-    <main className="flex min-h-screen flex-col">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
+  // Bloque de compra. Se renderiza dos veces con la misma información y **nunca las dos a la
+  // vez**: en mobile va en la barra fija de abajo, y en desktop viaja adentro de la columna
+  // sticky del flyer. Como se alternan con `display`, en cada ancho hay exactamente uno en el
+  // árbol de accesibilidad, así que un lector de pantalla tampoco escucha dos CTA.
+  const bloqueCompra = (
+    <>
+      {/* La expectativa va **antes** del CTA, no debajo: descubrir que la compra termina
+          afuera después del clic es donde se pierde la gente. */}
+      <Link
+        href={`/eventos/${event.slug}/comprar`}
+        className="t150 flex items-center justify-center gap-[6px] text-[11.5px] leading-none text-white/50 hover:text-white lg:order-2 lg:mt-1 lg:justify-start lg:text-[12.5px]"
+      >
+        <Icon name="shield" size={13} />
+        Link oficial · precio y lotes actualizados en Bombo
+      </Link>
 
-      <div className="relative h-[300px] flex-none">
-        <Flyer src={event.flyer_url} alt={`Flyer de ${event.title}`} sizes="100vw" priority large />
-        <DetailActions title={event.title} slug={event.slug} />
-      </div>
-
-      <div className="flex-none px-[18px] pt-[18px]">
-        {hasLastTickets || event.genre ? (
-          <div className="flex flex-wrap gap-[7px]">
-            {hasLastTickets ? <UrgencyChip size="md" label="Últimas entradas" /> : null}
-            {event.genre ? <Chip>{event.genre}</Chip> : null}
-          </div>
-        ) : null}
-
-        <h1 className="display mt-[14px] text-[40px] leading-[0.92] tracking-[-0.045em]">{event.title}</h1>
-
-        {/* Fecha en mono chartreuse: es el dato firma del sistema, no un CTA. */}
-        <p className="mt-3 font-mono text-[12px] font-bold uppercase leading-none tracking-[0.05em] text-cta">
-          {formatDatoRange(event.starts_at, event.end_at)}
-        </p>
-      </div>
-
-      <div className="flex flex-none flex-col gap-[9px] px-[18px] pt-4">
-        <InfoRow icon="cal" title={formatLongDay(event.starts_at)} detail={`Puertas ${formatTime(event.starts_at)}`} />
-        <InfoRow
-          icon="pin"
-          title={venueName}
-          detail={formatAddress(event)}
-          action={
-            mapUrl ? (
-              <a
-                href={mapUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex flex-none items-center gap-[6px] rounded-full border border-white/[0.18] px-[13px] py-[9px] text-[12px] font-semibold leading-none"
-              >
-                <Icon name="map" size={14} />
-                Mapa
-              </a>
-            ) : null
-          }
+      <div className="flex gap-[9px] lg:order-1 lg:gap-3">
+        {isSoldOut ? (
+          <SoldOutCta className="flex-1" />
+        ) : (
+          <BuyCta event={event} placement="detalle_barra" className="flex-1" />
+        )}
+        <WhatsappIconButton
+          href={isSoldOut ? waitlistUrl : priceUrl}
+          source={isSoldOut ? "event_waitlist" : "event_price"}
+          eventSlug={event.slug}
+          label={isSoldOut ? "Anotarme en la lista de espera" : "Consultar precio por WhatsApp"}
         />
       </div>
+    </>
+  );
 
-      {lineup.length ? (
-        <section className="flex-none px-[18px] pt-5">
-          <h2 className="text-[18px] font-bold leading-none tracking-[-0.02em]">Lineup</h2>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {lineup.map((artist) => (
-              <span
-                key={artist}
-                className="rounded-full border border-white/[0.12] bg-surface px-4 py-[11px] text-[13px] font-semibold leading-none"
-              >
-                {artist}
-              </span>
-            ))}
-          </div>
-        </section>
-      ) : null}
+  return (
+    <>
+      <DesktopHeader />
+      <main className="app-shell flex min-h-screen flex-col">
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
 
-      {/**
-       * Slot de prueba social.
-       *
-       * Se renderiza **vacío** mientras no haya dato real: no hay reseñas, ni contador de
-       * asistentes, ni "X personas van". Inventarlos en un negocio de RRPP cuesta más de lo
-       * que rinde, así que el bloque directamente no existe en pantalla hasta que exista el
-       * dato que lo respalde. Cuando lo haya, se renderiza acá.
-       */}
-
-      {credentials.officialVenues.length ? (
-        <div className="flex-none px-[18px] pt-[14px]">
-          <InfoBlock icon="shield">
-            Somos RRPP oficial de {formatVenueList(credentials.officialVenues)}. Entrada nominada, sin reventa.
-          </InfoBlock>
-        </div>
-      ) : null}
-
-      {/**
-       * Contenido indexable de la fecha. El PRD no lo especifica en la pantalla, pero se
-       * conserva: es el texto que sostiene el posicionamiento de la URL y las preguntas que
-       * alimentan el `FAQPage` del JSON-LD. Sacarlo sería una decisión de SEO disfrazada de
-       * decisión de diseño.
-       */}
-      <section className="flex-none px-[18px] pt-6">
-        <h2 className="text-[18px] font-bold leading-none tracking-[-0.02em]">Sobre la fecha</h2>
-        <p className="mt-3 text-[13.5px] leading-[1.65] text-white/60">{aboutEvent}</p>
-      </section>
-
-      {embedUrl && videoId ? (
-        <section className="flex-none px-[18px] pt-6">
-          <h2 className="text-[18px] font-bold leading-none tracking-[-0.02em]">Escuchá el sonido</h2>
-          <div className="mt-3 overflow-hidden rounded-block border border-white/10">
-            <YoutubeFacade
-              embedUrl={embedUrl}
-              videoId={videoId}
-              title={`Video de ${event.title}`}
-              eventSlug={event.slug}
-            />
-          </div>
-        </section>
-      ) : null}
-
-      <section className="flex-none px-[18px] pt-6">
-        <h2 className="text-[18px] font-bold leading-none tracking-[-0.02em]">Preguntas frecuentes</h2>
-        <div className="mt-3 flex flex-col gap-2">
-          {faqItems.map((item) => (
-            <details key={item.question} className="rounded-card border border-white/10 bg-surface p-[14px]">
-              <summary className="cursor-pointer text-[14px] font-bold leading-[1.3]">{item.question}</summary>
-              <p className="mt-[10px] text-[13px] leading-[1.6] text-white/[0.62]">{item.answer}</p>
-            </details>
-          ))}
-        </div>
-      </section>
-
-      {finished ? <FinishedEventBlock event={event} sameArtistEvent={sameArtistEvent} /> : null}
-
-      {relatedEvents.length ? (
-        <section className="flex-none px-[18px] pt-6">
-          <h2 className="dato-seccion">Fechas parecidas</h2>
-          <div className="mt-3 flex flex-col gap-3">
-            {relatedEvents.map((related) => (
-              <DateCard key={related.id} event={related} placement="listado_card" />
-            ))}
-          </div>
-        </section>
-      ) : null}
-
-      {/* Reserva el alto de la barra fija para que no tape el último bloque. */}
-      <div aria-hidden="true" style={{ height: "calc(132px + env(safe-area-inset-bottom))" }} />
-
-      {finished ? null : (
-        <div
-          className="fixed inset-x-0 bottom-0 z-40 flex flex-col gap-[9px] border-t border-white/10 bg-ink px-[18px] pt-[13px]"
-          style={{ paddingBottom: "calc(18px + env(safe-area-inset-bottom))" }}
+        {/* A partir de 1024px el botón flotante de volver lo reemplaza el breadcrumb: sobre
+            el flyer no hay dónde apoyarlo y en desktop la ruta se lee mejor que una flecha. */}
+        <nav
+          aria-label="Ruta"
+          className="gutter hidden flex-none items-center gap-[10px] pt-6 text-[12.5px] font-semibold leading-none text-white/50 lg:flex"
         >
-          {/* La expectativa va **antes** del CTA, no debajo: descubrir que la compra termina
-              afuera después del clic es donde se pierde la gente. */}
-          <Link
-            href={`/eventos/${event.slug}/comprar`}
-            className="flex items-center justify-center gap-[6px] text-[11.5px] leading-none text-white/50"
-          >
-            <Icon name="shield" size={13} />
-            Link oficial · precio y lotes actualizados en Bombo
+          <Link href="/eventos" className="t150 flex items-center gap-[10px] hover:text-white">
+            <Icon name="back" size={16} />
+            Agenda
           </Link>
+          <span className="text-white/30">/</span>
+          <span>{formatLongDay(event.starts_at)}</span>
+          <span className="text-white/30">/</span>
+          <span className="truncate text-white">{event.title}</span>
+        </nav>
 
-          <div className="flex gap-[9px]">
-            {isSoldOut ? (
-              <SoldOutCta className="flex-1" />
-            ) : (
-              <BuyCta event={event} placement="detalle_barra" className="flex-1" />
-            )}
-            <WhatsappIconButton
-              href={isSoldOut ? waitlistUrl : priceUrl}
-              source={isSoldOut ? "event_waitlist" : "event_price"}
-              eventSlug={event.slug}
-              label={isSoldOut ? "Anotarme en la lista de espera" : "Consultar precio por WhatsApp"}
-            />
+        <div className="col-detalle gutter-lg lg:pb-[46px] lg:pt-[22px]">
+          {/**
+           * Columna izquierda. En desktop es sticky y lleva el CTA adentro: es el equivalente
+           * de la barra fija de mobile. El detalle puede crecer mucho —descripción larga,
+           * lineup de ocho nombres, video, FAQ— y sin esto el único punto de conversión de la
+           * pantalla se perdería de vista al primer scroll.
+           */}
+          <div className="sticky-col sticky-detalle flex flex-col lg:gap-[14px]">
+            <div className="relative h-[300px] flex-none lg:aspect-4/5 lg:h-auto lg:overflow-hidden lg:rounded-block lg:border lg:border-white/10">
+              <Flyer src={event.flyer_url} alt={`Flyer de ${event.title}`} sizes="(min-width:1024px) 540px, 100vw" priority large />
+              <div className="lg:hidden">
+                <DetailActions title={event.title} slug={event.slug} />
+              </div>
+            </div>
+
+            {/* En desktop Guardar y Compartir dejan de flotar sobre el flyer y pasan a
+                botones delineados con etiqueta. Siguen sin usar chartreuse. */}
+            <div className="hidden lg:block">
+              <DetailActions title={event.title} slug={event.slug} variant="desktop" />
+            </div>
+
+            {finished ? null : <div className="hidden lg:flex lg:flex-col lg:gap-3">{bloqueCompra}</div>}
+          </div>
+
+          <div className="flex flex-col">
+            <div className="gutter flex-none pt-[18px] lg:px-0 lg:pt-0">
+              {hasLastTickets || event.genre ? (
+                <div className="flex flex-wrap gap-[7px] lg:gap-2">
+                  {hasLastTickets ? <UrgencyChip size="md" label="Últimas entradas" /> : null}
+                  {event.genre ? <Chip>{event.genre}</Chip> : null}
+                </div>
+              ) : null}
+
+              <h1 className="display titular-detalle mt-[14px] text-[40px] leading-[0.92] tracking-[-0.045em] lg:mt-[18px]">
+                {event.title}
+              </h1>
+
+              {/* Fecha en mono chartreuse: es el dato firma del sistema, no un CTA. */}
+              <p className="mt-3 font-mono text-[12px] font-bold uppercase leading-none tracking-[0.05em] text-cta lg:mt-5 lg:text-[13px]">
+                {formatDatoRange(event.starts_at, event.end_at)}
+              </p>
+
+              {/* La descripción sube arriba de las filas de dato en desktop, que es donde el
+                  mockup la pone: primero qué es la fiesta, después la logística. */}
+              <p className="mt-5 hidden max-w-[640px] text-[15px] leading-[1.65] text-white/[0.62] lg:block">
+                {aboutEvent}
+              </p>
+            </div>
+
+            <div className="gutter flex flex-none flex-col gap-[9px] pt-4 lg:grid lg:grid-cols-2 lg:gap-3 lg:px-0 lg:pt-[26px]">
+              <InfoRow
+                icon="cal"
+                title={formatLongDay(event.starts_at)}
+                detail={`Puertas ${formatTime(event.starts_at)}`}
+              />
+              <InfoRow
+                icon="pin"
+                title={venueName}
+                detail={formatAddress(event)}
+                action={
+                  mapUrl ? (
+                    <a
+                      href={mapUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn-out t150 inline-flex flex-none items-center gap-[6px] rounded-full border border-white/[0.18] px-[13px] py-[9px] text-[12px] font-semibold leading-none"
+                    >
+                      <Icon name="map" size={14} />
+                      Mapa
+                    </a>
+                  ) : null
+                }
+              />
+            </div>
+
+            {lineup.length ? (
+              <section className="gutter flex-none pt-5 lg:px-0 lg:pt-8">
+                <h2 className="text-[18px] font-bold leading-none tracking-[-0.02em] lg:text-[20px]">Lineup</h2>
+                <div className="mt-3 flex flex-wrap gap-2 lg:mt-[14px] lg:gap-[10px]">
+                  {lineup.map((artist) => (
+                    <span
+                      key={artist}
+                      className="rounded-full border border-white/[0.12] bg-surface px-4 py-[11px] text-[13px] font-semibold leading-none lg:px-[18px] lg:py-[13px] lg:text-[14px]"
+                    >
+                      {artist}
+                    </span>
+                  ))}
+                </div>
+              </section>
+            ) : null}
+
+            {/**
+             * Slot de prueba social.
+             *
+             * Se renderiza **vacío** mientras no haya dato real: no hay reseñas, ni contador
+             * de asistentes, ni "X personas van". Inventarlos en un negocio de RRPP cuesta
+             * más de lo que rinde, así que el bloque directamente no existe en pantalla hasta
+             * que exista el dato que lo respalde. Cuando lo haya, se renderiza acá, ocupando
+             * su columna al lado de la credencial.
+             */}
+
+            {credentials.officialVenues.length ? (
+              <div className="gutter flex-none pt-[14px] lg:px-0 lg:pt-7">
+                <InfoBlock icon="shield">
+                  Somos RRPP oficial de {formatVenueList(credentials.officialVenues)}. Entrada nominada, sin reventa.
+                </InfoBlock>
+              </div>
+            ) : null}
+
+            {/**
+             * Contenido indexable de la fecha. El PRD no lo especifica en la pantalla, pero se
+             * conserva: es el texto que sostiene el posicionamiento de la URL y las preguntas
+             * que alimentan el `FAQPage` del JSON-LD. Sacarlo sería una decisión de SEO
+             * disfrazada de decisión de diseño.
+             */}
+            <section className="gutter flex-none pt-6 lg:hidden">
+              <h2 className="text-[18px] font-bold leading-none tracking-[-0.02em]">Sobre la fecha</h2>
+              <p className="mt-3 text-[13.5px] leading-[1.65] text-white/60">{aboutEvent}</p>
+            </section>
+
+            {embedUrl && videoId ? (
+              <section className="gutter flex-none pt-6 lg:px-0 lg:pt-8">
+                <h2 className="text-[18px] font-bold leading-none tracking-[-0.02em] lg:text-[20px]">
+                  Escuchá el sonido
+                </h2>
+                <div className="mt-3 max-w-[640px] overflow-hidden rounded-block border border-white/10">
+                  <YoutubeFacade
+                    embedUrl={embedUrl}
+                    videoId={videoId}
+                    title={`Video de ${event.title}`}
+                    eventSlug={event.slug}
+                  />
+                </div>
+              </section>
+            ) : null}
+
+            <section className="gutter flex-none pt-6 lg:px-0 lg:pt-8">
+              <h2 className="text-[18px] font-bold leading-none tracking-[-0.02em] lg:text-[20px]">
+                Preguntas frecuentes
+              </h2>
+              <div className="mt-3 flex max-w-[640px] flex-col gap-2">
+                {faqItems.map((item) => (
+                  <details
+                    key={item.question}
+                    className="acc-hov t150 rounded-card border border-white/10 bg-surface p-[14px]"
+                  >
+                    <summary className="cursor-pointer text-[14px] font-bold leading-[1.3]">{item.question}</summary>
+                    <p className="mt-[10px] text-[13px] leading-[1.6] text-white/[0.62]">{item.answer}</p>
+                  </details>
+                ))}
+              </div>
+            </section>
+
+            {finished ? <FinishedEventBlock event={event} sameArtistEvent={sameArtistEvent} /> : null}
+
+            {relatedEvents.length ? (
+              <section className="gutter flex-none pt-6 lg:px-0 lg:pt-9">
+                <h2 className="dato-seccion lg:!text-[11.5px]">Fechas parecidas</h2>
+                <div className="mt-3 flex flex-col gap-3 lg:mt-5 lg:hidden">
+                  {relatedEvents.map((related) => (
+                    <DateCard key={related.id} event={related} placement="listado_card" />
+                  ))}
+                </div>
+                <div className="grilla-cards-con-sidebar mt-5 hidden">
+                  {relatedEvents.map((related) => (
+                    <GridCard key={related.id} event={related} placement="listado_card" />
+                  ))}
+                </div>
+              </section>
+            ) : null}
           </div>
         </div>
-      )}
-    </main>
+
+        {/* Reserva el alto de la barra fija de mobile para que no tape el último bloque.
+            En desktop no hay barra fija, así que no reserva nada. */}
+        <div
+          aria-hidden="true"
+          className="lg:hidden"
+          style={{ height: "calc(132px + env(safe-area-inset-bottom))" }}
+        />
+
+        {finished ? null : (
+          <div
+            className="fixed inset-x-0 bottom-0 z-40 flex flex-col gap-[9px] border-t border-white/10 bg-ink px-[18px] pt-[13px] lg:hidden"
+            style={{ paddingBottom: "calc(18px + env(safe-area-inset-bottom))" }}
+          >
+            {bloqueCompra}
+          </div>
+        )}
+      </main>
+    </>
   );
 }
 

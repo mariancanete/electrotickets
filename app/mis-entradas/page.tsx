@@ -4,6 +4,7 @@ import { MyTicketsScreen } from "@/components/my-tickets-screen";
 import { getDayKey } from "@/lib/dates";
 import { getUpcomingPublishedEvents } from "@/lib/events";
 import { getWeekendDays } from "@/lib/weekend";
+import { DesktopHeader } from "@/components/desktop-header";
 
 export const revalidate = 60;
 
@@ -27,12 +28,13 @@ export default async function MyTicketsPage() {
   const events = await getUpcomingPublishedEvents();
 
   const weekendKeys = new Set(getWeekendDays().map((date) => getDayKey(date.toISOString())));
-  const weekendEvent = events.find((event) => weekendKeys.has(getDayKey(event.starts_at)) && !event.sold_out) ?? null;
+  const weekendEvents = events.filter((event) => weekendKeys.has(getDayKey(event.starts_at)) && !event.sold_out);
 
   return (
     <>
+      <DesktopHeader />
       <main>
-        <MyTicketsScreen events={events} weekendEvent={weekendEvent} />
+        <MyTicketsScreen events={events} weekendEvents={weekendEvents} />
       </main>
       <BottomNav />
     </>

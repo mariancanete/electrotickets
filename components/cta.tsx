@@ -43,10 +43,12 @@ export function BuyCta({
         track("click_buy", { ...eventParams(event), cta_placement: placement });
         saveDate(event.slug, event.starts_at);
       }}
-      className={`flex h-14 items-center justify-center gap-[9px] rounded-full bg-cta text-ink transition-colors active:bg-cta-pressed ${className}`}
+      className={`cta-hov t150 flex h-14 items-center justify-center gap-[9px] rounded-full bg-cta text-ink active:bg-cta-pressed ${className}`}
     >
       <span className="text-[15px] font-bold leading-none tracking-[-0.01em]">{label}</span>
-      <Icon name="out" size={18} />
+      <span className="cta-icon t150 flex">
+        <Icon name="out" size={18} />
+      </span>
     </a>
   );
 }
@@ -77,10 +79,12 @@ export function CardCta({
     <Link
       href={`/eventos/${event.slug}`}
       onClick={() => track("select_date", { ...eventParams(event), cta_placement: placement })}
-      className={`flex h-11 items-center justify-center gap-2 rounded-full bg-cta text-ink transition-colors active:bg-cta-pressed ${className}`}
+      className={`cta-hov t150 flex h-11 items-center justify-center gap-2 rounded-full bg-cta text-ink active:bg-cta-pressed ${className}`}
     >
       <span className="text-[13px] font-bold leading-none">{label}</span>
-      <Icon name="arrow" size={16} />
+      <span className="cta-icon t150 flex">
+        <Icon name="arrow" size={16} />
+      </span>
     </Link>
   );
 }
@@ -99,7 +103,7 @@ export function SoldOutCta({ compact = false, className = "" }: { compact?: bool
   return (
     <span
       aria-disabled="true"
-      className={`flex items-center justify-center rounded-full border border-white/10 bg-surface-alt text-white/[0.34] ${
+      className={`cta-disabled flex items-center justify-center rounded-full border border-white/10 bg-surface-alt text-white/[0.34] ${
         compact ? "h-11 text-[13px]" : "h-14 text-[15px]"
       } font-bold leading-none ${className}`}
     >
@@ -135,7 +139,9 @@ export function WhatsappIconButton({
       rel="noopener noreferrer"
       aria-label={label}
       onClick={() => track("click_whatsapp", { wa_source: source, event_slug: eventSlug })}
-      className={`grid h-14 w-[58px] flex-none place-items-center rounded-full border border-white/[0.18] text-white transition-colors active:bg-white/10 ${className}`}
+      // 58px en mobile (§1.5) y 56 en desktop (§10): a 56 el CTA de la columna del detalle
+      // da los 400px a 1280 y los 470px a 1440 que fija el PRD.
+      className={`btn-out t150 grid h-14 w-[58px] flex-none place-items-center rounded-full border border-white/[0.18] text-white lg:w-14 ${className}`}
     >
       <Icon name="chat" size={21} />
     </a>

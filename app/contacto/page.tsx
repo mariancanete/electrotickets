@@ -5,6 +5,7 @@ import { Icon } from "@/components/icons";
 import { WhatsappLink } from "@/components/whatsapp-link";
 import { siteConfig } from "@/lib/site";
 import { buildGeneralWhatsappMessage, buildVipWhatsappMessage, whatsappUrlOrGroup } from "@/lib/whatsapp";
+import { DesktopHeader } from "@/components/desktop-header";
 
 export const metadata: Metadata = {
   title: "Contacto",
@@ -24,6 +25,7 @@ export default function ContactPage() {
 
   return (
     <>
+      <DesktopHeader />
       <main className="flex min-h-screen flex-col pt-2">
         <ScreenHeader title="Contacto" backHref="/" />
 

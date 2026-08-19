@@ -7,6 +7,7 @@ import { absoluteUrl, siteConfig } from "@/lib/site";
 import { buildAlertsWhatsappMessage, whatsappUrlOrGroup } from "@/lib/whatsapp";
 import { getWeekendDays, groupByDay } from "@/lib/weekend";
 import type { EventRecord } from "@/types/event";
+import { DesktopHeader } from "@/components/desktop-header";
 
 export const revalidate = 60;
 
@@ -50,6 +51,7 @@ export default async function HomePage() {
 
   return (
     <>
+      <DesktopHeader />
       <main>
         <AgendaScreen
           days={days}
