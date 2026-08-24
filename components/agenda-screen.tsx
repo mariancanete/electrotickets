@@ -35,13 +35,13 @@ export function AgendaScreen({
   days,
   eventsByDay,
   emptyRange,
-  nextEvent,
+  nextEvents,
   alertsHref
 }: {
   days: DayTile[];
   eventsByDay: Record<string, EventRecord[]>;
   emptyRange: string;
-  nextEvent: EventRecord | null;
+  nextEvents: EventRecord[];
   alertsHref: string;
 }) {
   // Arranca en el primer día con fechas: abrir en un día vacío desperdicia la pantalla que
@@ -126,7 +126,7 @@ export function AgendaScreen({
           <NavSpacer />
         </div>
       ) : (
-        <EmptyWeekend range={emptyRange} nextEvent={nextEvent} alertsHref={alertsHref} />
+        <EmptyWeekend range={emptyRange} nextEvents={nextEvents} alertsHref={alertsHref} />
       )}
     </div>
   );
@@ -349,9 +349,9 @@ function AgendaRow({ event }: { event: EventRecord }) {
 /**
  * Pantalla 05 — el finde sin fechas.
  *
- * Nunca es un callejón: adelanta la próxima fecha confirmada con su CTA y ofrece la alerta.
- * El único chartreuse de la pantalla es el CTA de esa fecha; "Activar alertas" va delineado
- * porque no lleva a comprar.
+ * Nunca es un callejón: adelanta las próximas fechas confirmadas con su CTA y ofrece la
+ * alerta. El único chartreuse de la pantalla es el CTA de esas fechas; "Activar alertas" va
+ * delineado porque no lleva a comprar.
  *
  * En desktop pasa a dos columnas: el punteado y la próxima fecha a la izquierda, y el bloque
  * de alertas como columna lateral que **nunca se estira a ancho completo**. Es lo que evita
@@ -359,11 +359,11 @@ function AgendaRow({ event }: { event: EventRecord }) {
  */
 function EmptyWeekend({
   range,
-  nextEvent,
+  nextEvents,
   alertsHref
 }: {
   range: string;
-  nextEvent: EventRecord | null;
+  nextEvents: EventRecord[];
   alertsHref: string;
 }) {
   return (
@@ -384,17 +384,27 @@ function EmptyWeekend({
           </p>
         </div>
 
-        {nextEvent ? (
+        {nextEvents.length ? (
           <>
             <p className="dato-seccion flex-none lg:!text-[11.5px]">Lo próximo confirmado</p>
             <div className="flex-none">
-              <div className="lg:hidden">
-                <DateCard event={nextEvent} placement="vacio_proxima" showFlyer={false} railBottom="month" />
+              <div className="flex flex-col gap-3 lg:hidden">
+                {nextEvents.map((event) => (
+                  <DateCard
+                    key={event.id}
+                    event={event}
+                    placement="vacio_proxima"
+                    showFlyer={false}
+                    railBottom="month"
+                  />
+                ))}
               </div>
-              {/* En desktop la próxima fecha usa la card de grilla, en una grilla de 2 que deja
-                  respirar la columna aunque haya una sola fecha. */}
+              {/* En desktop las próximas fechas usan la card de grilla, en una grilla de 2 que
+                  deja respirar la columna aunque haya una sola. */}
               <div className="hidden lg:grid lg:grid-cols-2 lg:gap-6">
-                <GridCard event={nextEvent} placement="vacio_proxima" />
+                {nextEvents.map((event) => (
+                  <GridCard key={event.id} event={event} placement="vacio_proxima" />
+                ))}
               </div>
             </div>
           </>
