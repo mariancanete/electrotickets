@@ -11,6 +11,9 @@ import { DesktopHeader } from "@/components/desktop-header";
 
 export const revalidate = 60;
 
+/** Cuántas fechas adelanta el estado vacío del finde. */
+const PROXIMAS_FECHAS = 5;
+
 const homeTitle = "ElectroTickets · Tickets de electrónica en Argentina";
 const homeImage = absoluteUrl("/og-logo");
 
@@ -45,9 +48,14 @@ export default async function HomePage() {
     eventsByDay[key] = grouped.get(key) ?? [];
   }
 
-  // Para el estado vacío: la próxima fecha confirmada fuera del finde. `getUpcomingPublishedEvents`
-  // ya viene ordenada por `starts_at`, así que la primera que no cae en el finde es la próxima.
-  const nextEvent = events.find((event) => !dayKeys.has(getDayKey(event.starts_at))) ?? null;
+  // Para el estado vacío: las próximas fechas confirmadas fuera del finde.
+  // `getUpcomingPublishedEvents` ya viene ordenada por `starts_at`, así que alcanza con
+  // filtrar las del finde y cortar. Son hasta cinco y no una sola: cuando el finde está
+  // vacío, mostrar únicamente la más cercana esconde el resto de la agenda —si el 11 y el
+  // 12 tienen fecha, ver solo el 11 hace parecer que no hay nada más.
+  const nextEvents = events
+    .filter((event) => !dayKeys.has(getDayKey(event.starts_at)))
+    .slice(0, PROXIMAS_FECHAS);
 
   return (
     <>
@@ -57,7 +65,7 @@ export default async function HomePage() {
           days={days}
           eventsByDay={eventsByDay}
           emptyRange={formatRange(weekendDays[0], weekendDays[2])}
-          nextEvent={nextEvent}
+          nextEvents={nextEvents}
           alertsHref={whatsappUrlOrGroup(buildAlertsWhatsappMessage())}
         />
       </main>
