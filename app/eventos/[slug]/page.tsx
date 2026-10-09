@@ -232,8 +232,8 @@ export default async function EventDetailPage({ params }: PageProps) {
            * pantalla se perdería de vista al primer scroll.
            */}
           <div className="sticky-col sticky-detalle flex flex-col lg:gap-[14px]">
-            <div className="relative h-[300px] flex-none lg:aspect-4/5 lg:h-auto lg:overflow-hidden lg:rounded-block lg:border lg:border-white/10">
-              <Flyer src={event.flyer_url} alt={`Flyer de ${event.title}`} sizes="(min-width:1024px) 540px, 100vw" priority large />
+            <div className="relative h-[300px] flex-none overflow-hidden lg:aspect-4/5 lg:h-auto lg:overflow-hidden lg:rounded-block lg:border lg:border-white/10">
+              <Flyer src={event.flyer_url} alt={`Flyer de ${event.title}`} sizes="(min-width:1024px) 540px, 100vw" priority large mobileFit="contain" />
               <div className="lg:hidden">
                 <DetailActions title={event.title} slug={event.slug} />
               </div>

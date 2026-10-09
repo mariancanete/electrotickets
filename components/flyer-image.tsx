@@ -67,23 +67,58 @@ export function FlyerFallback({ className = "", large = false }: { className?: s
 /**
  * Flyer con su placeholder. Un solo lugar decide qué se dibuja cuando no hay imagen.
  *
- * El recorte es `cover` centrado: si el flyer viene cuadrado o vertical se recorta, nunca se
- * deforma. Deformar la gráfica de una productora es peor que recortarla.
+ * Por defecto el recorte es `cover` centrado: si el flyer viene cuadrado o vertical se
+ * recorta, nunca se deforma. Deformar la gráfica de una productora es peor que recortarla.
+ *
+ * `mobileFit="contain"` muestra el flyer **entero** debajo de 1024px. En mobile las cajas
+ * no son 4:5 —la destacada de la home mide ~354×206 y el detalle 390×300—, así que con
+ * `cover` se perdían arriba y abajo el line-up y los logos, que es justo lo que la gente lee
+ * para decidir. El espacio que sobra a los costados se rellena con el mismo flyer
+ * difuminado (`large`) en vez de dejar bandas vacías: es la misma URL y el mismo `sizes`,
+ * así que el navegador no lo descarga dos veces.
+ *
+ * Desde 1024px vuelve a `cover` y el fondo difuminado desaparece: ahí las cajas ya son 4:5
+ * y el flyer se ve completo, así que desktop queda exactamente como estaba.
  */
 export function Flyer({
   src,
   alt,
   sizes,
   priority = false,
-  large = false
+  large = false,
+  mobileFit = "cover"
 }: {
   src: string | null;
   alt: string;
   sizes: string;
   priority?: boolean;
   large?: boolean;
+  mobileFit?: "cover" | "contain";
 }) {
   if (!src) return <FlyerFallback large={large} />;
 
-  return <FlyerImage src={src} alt={alt} sizes={sizes} priority={priority} className="object-cover object-center" />;
+  if (mobileFit === "cover") {
+    return <FlyerImage src={src} alt={alt} sizes={sizes} priority={priority} className="object-cover object-center" />;
+  }
+
+  return (
+    <>
+      {large ? (
+        <FlyerImage
+          src={src}
+          alt=""
+          sizes={sizes}
+          priority={priority}
+          className="scale-110 object-cover object-center opacity-45 blur-xl lg:hidden"
+        />
+      ) : null}
+      <FlyerImage
+        src={src}
+        alt={alt}
+        sizes={sizes}
+        priority={priority}
+        className="object-contain object-center lg:object-cover"
+      />
+    </>
+  );
 }

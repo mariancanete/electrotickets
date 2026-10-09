@@ -248,9 +248,9 @@ function FeaturedDate({ event }: { event: EventRecord }) {
       <div className="destacada overflow-hidden rounded-block border border-white/10 bg-surface lg:grid lg:items-stretch lg:gap-8 lg:overflow-visible lg:rounded-none lg:border-0 lg:bg-transparent">
         <Link
           href={`/eventos/${event.slug}`}
-          className="relative block h-[206px] lg:aspect-4/5 lg:h-auto lg:self-start lg:overflow-hidden lg:rounded-block lg:border lg:border-white/10"
+          className="relative block h-[206px] overflow-hidden lg:aspect-4/5 lg:h-auto lg:self-start lg:overflow-hidden lg:rounded-block lg:border lg:border-white/10"
         >
-          <Flyer src={event.flyer_url} alt={`Flyer de ${event.title}`} sizes="(min-width:1024px) 460px, 354px" priority large />
+          <Flyer src={event.flyer_url} alt={`Flyer de ${event.title}`} sizes="(min-width:1024px) 460px, 354px" priority large mobileFit="contain" />
           {event.last_tickets && !soldOut ? (
             <span className="absolute left-3 top-3 lg:left-4 lg:top-4">
               <UrgencyChip size="md" label="Últimas entradas" />
