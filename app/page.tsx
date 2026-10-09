@@ -14,6 +14,9 @@ export const revalidate = 60;
 /** Cuántas fechas adelanta el estado vacío del finde. */
 const PROXIMAS_FECHAS = 5;
 
+/** Tope de destacadas en la home. Si hay más, la sección enlaza a `/destacados`. */
+const DESTACADAS_HOME = 6;
+
 const homeTitle = "ElectroTickets · Tickets de electrónica en Argentina";
 const homeImage = absoluteUrl("/og-logo");
 
@@ -57,6 +60,18 @@ export default async function HomePage() {
     .filter((event) => !dayKeys.has(getDayKey(event.starts_at)))
     .slice(0, PROXIMAS_FECHAS);
 
+  // Fechas destacadas fuera del finde. Antes una `featured` solo llegaba a la home cuando
+  // caía dentro del viernes-domingo en curso, así que la fecha más importante del mes
+  // —la que el dueño marcó a mano— no se veía en la home hasta su propia semana y había que
+  // ir a Buscar para encontrarla. Las del finde se excluyen porque ya están arriba, en el
+  // selector de días; con el finde vacío se excluyen también las que ya adelanta
+  // `nextEvents`, para no listar la misma fecha dos veces seguidas.
+  const shownIds = new Set(weekendHasEvents(days) ? [] : nextEvents.map((event) => event.id));
+  const allFeatured = events.filter(
+    (event) => event.featured && !dayKeys.has(getDayKey(event.starts_at)) && !shownIds.has(event.id)
+  );
+  const featuredEvents = allFeatured.slice(0, DESTACADAS_HOME);
+
   return (
     <>
       <DesktopHeader />
@@ -66,10 +81,16 @@ export default async function HomePage() {
           eventsByDay={eventsByDay}
           emptyRange={formatRange(weekendDays[0], weekendDays[2])}
           nextEvents={nextEvents}
+          featuredEvents={featuredEvents}
+          hasMoreFeatured={allFeatured.length > featuredEvents.length}
           alertsHref={whatsappUrlOrGroup(buildAlertsWhatsappMessage())}
         />
       </main>
       <BottomNav />
     </>
   );
+}
+
+function weekendHasEvents(days: DayTile[]) {
+  return days.some((day) => day.count > 0);
 }
