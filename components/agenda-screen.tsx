@@ -36,12 +36,17 @@ export function AgendaScreen({
   eventsByDay,
   emptyRange,
   nextEvents,
+  featuredEvents,
+  hasMoreFeatured,
   alertsHref
 }: {
   days: DayTile[];
   eventsByDay: Record<string, EventRecord[]>;
   emptyRange: string;
   nextEvents: EventRecord[];
+  /** Fechas `featured` que quedan fuera del finde. Ver `app/page.tsx`. */
+  featuredEvents: EventRecord[];
+  hasMoreFeatured: boolean;
   alertsHref: string;
 }) {
   // Arranca en el primer día con fechas: abrir en un día vacío desperdicia la pantalla que
@@ -123,10 +128,17 @@ export function AgendaScreen({
             </>
           ) : null}
 
+          <FeaturedSection events={featuredEvents} hasMore={hasMoreFeatured} />
+
           <NavSpacer />
         </div>
       ) : (
-        <EmptyWeekend range={emptyRange} nextEvents={nextEvents} alertsHref={alertsHref} />
+        <EmptyWeekend
+          range={emptyRange}
+          nextEvents={nextEvents}
+          featured={<FeaturedSection events={featuredEvents} hasMore={hasMoreFeatured} embedded />}
+          alertsHref={alertsHref}
+        />
       )}
     </div>
   );
@@ -236,9 +248,9 @@ function FeaturedDate({ event }: { event: EventRecord }) {
       <div className="destacada overflow-hidden rounded-block border border-white/10 bg-surface lg:grid lg:items-stretch lg:gap-8 lg:overflow-visible lg:rounded-none lg:border-0 lg:bg-transparent">
         <Link
           href={`/eventos/${event.slug}`}
-          className="relative block h-[206px] lg:aspect-4/5 lg:h-auto lg:self-start lg:overflow-hidden lg:rounded-block lg:border lg:border-white/10"
+          className="relative block h-[206px] overflow-hidden lg:aspect-4/5 lg:h-auto lg:self-start lg:overflow-hidden lg:rounded-block lg:border lg:border-white/10"
         >
-          <Flyer src={event.flyer_url} alt={`Flyer de ${event.title}`} sizes="(min-width:1024px) 460px, 354px" priority large />
+          <Flyer src={event.flyer_url} alt={`Flyer de ${event.title}`} sizes="(min-width:1024px) 460px, 354px" priority large mobileFit="contain" />
           {event.last_tickets && !soldOut ? (
             <span className="absolute left-3 top-3 lg:left-4 lg:top-4">
               <UrgencyChip size="md" label="Últimas entradas" />
@@ -360,10 +372,12 @@ function AgendaRow({ event }: { event: EventRecord }) {
 function EmptyWeekend({
   range,
   nextEvents,
+  featured,
   alertsHref
 }: {
   range: string;
   nextEvents: EventRecord[];
+  featured: React.ReactNode;
   alertsHref: string;
 }) {
   return (
@@ -409,6 +423,8 @@ function EmptyWeekend({
             </div>
           </>
         ) : null}
+
+        {featured}
       </div>
 
       <div className="trama flex flex-none flex-col gap-3 rounded-block p-4 lg:p-6">
@@ -439,6 +455,64 @@ function EmptyWeekend({
 
       <NavSpacer />
     </div>
+  );
+}
+
+/**
+ * Fechas destacadas fuera del finde.
+ *
+ * Son las que el dueño marca como `featured` en el admin: las fechas grandes que se venden
+ * con semanas de anticipación. Sin esta sección no aparecían en la home hasta su propio
+ * finde. Además, el link desde la home es el enlace interno más fuerte del sitio, y es lo
+ * que ayuda a que Google rastree y posicione antes esas URLs.
+ *
+ * Usa la misma card que el resto de la agenda. En mobile el riel muestra el mes en lugar de
+ * la hora: a dos o tres semanas, el mes ubica más que el horario.
+ */
+function FeaturedSection({
+  events,
+  hasMore,
+  embedded = false
+}: {
+  events: EventRecord[];
+  hasMore: boolean;
+  /** Dentro del estado vacío ya hay gutter y ritmo vertical: no se agregan de nuevo. */
+  embedded?: boolean;
+}) {
+  if (!events.length) return null;
+
+  return (
+    <section
+      aria-labelledby="destacadas-titulo"
+      className={embedded ? "flex flex-none flex-col" : "gutter flex flex-none flex-col pt-6 lg:pb-[46px]"}
+    >
+      <div className="flex items-center gap-[14px]">
+        <h2 id="destacadas-titulo" className="dato-seccion lg:!text-[11.5px]">
+          Fechas destacadas
+        </h2>
+        <span className="h-px flex-1 bg-white/10" />
+        {hasMore ? (
+          // Blanco y no chartreuse: lleva a un listado, no a comprar.
+          <Link href="/destacados" className="font-mono text-[11px] font-bold uppercase text-white/70 lg:text-[12px]">
+            Ver todas
+          </Link>
+        ) : null}
+      </div>
+
+      <div className="mt-3 flex flex-col gap-3 lg:hidden">
+        {events.map((event) => (
+          <DateCard key={event.id} event={event} placement="home_destacadas" railBottom="month" />
+        ))}
+      </div>
+
+      {/* En el estado vacío la sección vive en la columna izquierda, que es angosta para la
+          grilla de 3–4: ahí va en 2, igual que las próximas fechas. */}
+      <div className={embedded ? "mt-5 hidden lg:grid lg:grid-cols-2 lg:gap-6" : "grilla-cards mt-5 hidden"}>
+        {events.map((event) => (
+          <GridCard key={event.id} event={event} placement="home_destacadas" />
+        ))}
+      </div>
+    </section>
   );
 }
 

@@ -77,6 +77,7 @@ export function DateCard({
                 alt={`Flyer de ${event.title}`}
                 sizes="62px"
                 priority={priority}
+                mobileFit="contain"
               />
             </div>
           ) : null}

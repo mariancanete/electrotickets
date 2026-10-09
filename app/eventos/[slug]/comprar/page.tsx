@@ -100,7 +100,7 @@ export default async function BuyPage({ params }: PageProps) {
             <div className="gutter flex flex-col gap-[14px] lg:gap-6 lg:px-0">
               <div className="flex items-center gap-3 rounded-card border border-white/10 bg-surface p-[14px] lg:gap-4 lg:p-[18px]">
                 <div className="relative h-[56px] w-[46px] flex-none overflow-hidden rounded-[9px] lg:h-[72px] lg:w-[58px] lg:rounded-[10px]">
-                  <Flyer src={event.flyer_url} alt={`Flyer de ${event.title}`} sizes="58px" />
+                  <Flyer src={event.flyer_url} alt={`Flyer de ${event.title}`} sizes="58px" mobileFit="contain" />
                 </div>
                 <div className="min-w-0">
                   <h2 className="truncate text-[16px] font-bold leading-[1.1] tracking-[-0.02em] lg:text-[20px]">

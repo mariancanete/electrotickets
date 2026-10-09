@@ -35,7 +35,9 @@ export type CtaPlacement =
   | "detalle_barra"
   | "compra_barra"
   | "vacio_proxima"
-  | "mis_entradas_card";
+  | "mis_entradas_card"
+  // Sección "Fechas destacadas" de la home: las `featured` que quedan fuera del finde.
+  | "home_destacadas";
 
 /**
  * Los seis placements nuevos se dividen en dos familias, y la diferencia importa para leer
@@ -45,12 +47,13 @@ export type CtaPlacement =
  *   "Comprar en Bombo": navegan a `/go/[slug]` y disparan `click_buy`. Estos son los que
  *   cuentan como intención de compra.
  *
- *   **De card** — `listado_card`, `vacio_proxima`, `mis_entradas_card`. Son los CTA compactos
+ *   **De card** — `listado_card`, `vacio_proxima`, `mis_entradas_card` (y `home_destacadas`,
+ *   que se sumó después con la misma card). Son los CTA compactos
  *   que dicen "Entradas" y abren el **detalle**, no Bombo (§1.2). No pueden disparar
  *   `click_buy` porque no van a `/go/`, así que disparan `select_date`: mide qué superficie
  *   empuja al detalle sin inflar la métrica de compra contando dos veces la misma intención.
  */
-export const CARD_PLACEMENTS = ["listado_card", "vacio_proxima", "mis_entradas_card"] as const;
+export const CARD_PLACEMENTS = ["listado_card", "vacio_proxima", "mis_entradas_card", "home_destacadas"] as const;
 
 /** De dónde salió una consulta de WhatsApp. Se manda como `wa_source` a GA4. */
 export type WhatsappSource =
