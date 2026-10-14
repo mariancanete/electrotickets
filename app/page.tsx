@@ -15,7 +15,7 @@ export const revalidate = 60;
 const PROXIMAS_FECHAS = 5;
 
 /** Tope de destacadas en la home. Si hay más, la sección enlaza a `/destacados`. */
-const DESTACADAS_HOME = 6;
+const DESTACADAS_HOME = 8;
 
 const homeTitle = "ElectroTickets · Tickets de electrónica en Argentina";
 const homeImage = absoluteUrl("/og-logo");
