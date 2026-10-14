@@ -9,7 +9,7 @@ import { Flyer } from "@/components/flyer-image";
 import { GridCard } from "@/components/grid-card";
 import { Icon } from "@/components/icons";
 import { YoutubeFacade } from "@/components/youtube-facade";
-import { formatDatoRange, formatLongDay, formatTime } from "@/lib/dates";
+import { formatDatoRange, formatEventLongDate, formatLongDay, formatTime } from "@/lib/dates";
 import {
   getEventBySlug,
   getRecentPastPublishedEvents,
@@ -118,7 +118,9 @@ export default async function EventDetailPage({ params }: PageProps) {
   const lineup = event.lineup?.filter(Boolean) ?? [];
   const mapUrl = getMapUrl(event);
   const placeName = getEventPrimaryPlace(event);
-  const titleNeedsPlace = shouldAppendPlaceToTitle(event.title, placeName);
+  // Solo fuera de CABA (ver `getDistinctCity`): las fechas porteñas, Mandarine Park
+  // incluida, ya posicionan bien con el h1 de siempre y no se tocan.
+  const titleNeedsPlace = Boolean(getDistinctCity(event)) && shouldAppendPlaceToTitle(event.title, placeName);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -553,27 +555,40 @@ function buildSeoDescription(event: EventRecord, finished: boolean) {
   }
 
   const city = getDistinctCity(event);
-  const cityPart = city ? ` (${city})` : "";
 
-  // La fecha va en la descripción: es lo primero que alguien quiere confirmar en el
-  // resultado de Google, y diferencia dos fechas del mismo artista en venues distintos.
-  return `Comprá entradas para ${event.title}${placeSuffix}${cityPart}, el ${formatSeoDate(event.starts_at)}. Link oficial de Bombo, lineup, ubicación y consulta por mesas VIP desde ElectroTickets.`;
+  // Fuera de CABA la descripción suma ciudad y fecha con año: diferencia "Solomun en Mute"
+  // (Mar del Plata, enero) de cualquier otra fecha del mismo artista. Las porteñas quedan
+  // exactamente como estaban: ya posicionan bien ("solomun mandarine") y no se tocan.
+  if (city) {
+    return `Comprá entradas para ${event.title}${placeSuffix} (${city}), el ${formatSeoDate(event.starts_at)}. Link oficial de Bombo, lineup, ubicación y consulta por mesas VIP desde ElectroTickets.`;
+  }
+
+  return `Comprá entradas para ${event.title}${placeSuffix}. Fecha, lineup, ubicación, links oficiales de Bombo y consulta por mesas VIP desde ElectroTickets.`;
 }
 
 function buildAboutEvent(event: EventRecord) {
   if (event.description?.trim()) return event.description.trim();
 
-  // Texto de respaldo cuando el admin no cargó descripción. Antes era la misma frase para
-  // todas las fechas ("X llega a Y, con una propuesta de Z con X"): repetía el nombre del
-  // artista como lineup, no decía la ciudad ni el año, y dos fechas del mismo artista
-  // quedaban casi idénticas para Google. Ahora usa los datos que distinguen a esta fecha.
-  const label = getEventLabel(event);
   const city = getDistinctCity(event);
+
+  // Fechas porteñas: el texto de respaldo de siempre, sin cambios.
+  if (!city) {
+    const place = getEventPrimaryPlace(event) || "venue a confirmar";
+    const genre = event.genre || "música electrónica";
+    const lineup = event.lineup?.length ? ` con ${event.lineup.join(", ")}` : "";
+
+    return `${event.title} llega a ${place}, con una propuesta de ${genre}${lineup}. En esta página encontrás la fecha, ubicación, lineup y el acceso al link oficial de Bombo para comprar tus entradas.`;
+  }
+
+  // Fuera de CABA el texto de siempre ("X llega a Y, con una propuesta de Z con X") no
+  // decía la ciudad ni el año, y repetía el artista como lineup. Acá usa los datos que
+  // distinguen a la fecha: venue, ciudad, fecha, puertas y la credencial RRPP.
+  const label = getEventLabel(event);
   const venue = event.venue_name?.trim() || "";
   const lineupNames = (event.lineup || []).filter((artist) => artist.trim());
   const hasOtherArtists = lineupNames.some((artist) => normalizeText(artist) !== normalizeText(event.title));
 
-  const when = `${label}${city ? ` (${city})` : ""} es el ${formatSeoDate(event.starts_at)}, con puertas a las ${formatTime(event.starts_at)}${event.genre ? `: una noche de ${event.genre}` : ""}.`;
+  const when = `${label} (${city}) es el ${formatSeoDate(event.starts_at)}, con puertas a las ${formatTime(event.starts_at)}${event.genre ? `: una noche de ${event.genre}` : ""}.`;
   const lineup = hasOtherArtists ? ` Lineup: ${lineupNames.join(", ")}.` : "";
   const official =
     venue && isOfficialVenue(venue)
@@ -585,9 +600,11 @@ function buildAboutEvent(event: EventRecord) {
 
 function buildEventFaq(event: EventRecord, isSoldOut: boolean, finished: boolean): EventFaqItem[] {
   const place = getEventPrimaryPlace(event) || "venue a confirmar";
-  // "SOLOMUN en Mute" en vez de "SOLOMUN": las preguntas son texto indexable, alimentan el
-  // FAQPage del JSON-LD y son las frases que la gente escribe en Google.
-  const label = getEventLabel(event);
+  // Fuera de CABA, "SOLOMUN en Mute" en vez de "SOLOMUN": las preguntas son texto indexable,
+  // alimentan el FAQPage del JSON-LD y son las frases que la gente escribe en Google. Las
+  // fechas porteñas conservan sus preguntas de siempre.
+  const outsideCaba = Boolean(getDistinctCity(event));
+  const label = outsideCaba ? getEventLabel(event) : event.title;
 
   const buyAnswer = finished
     ? `${label} ya finalizó. Podés ver las próximas fechas en la agenda de ElectroTickets o pedir avisos por WhatsApp.`
@@ -602,7 +619,9 @@ function buildEventFaq(event: EventRecord, isSoldOut: boolean, finished: boolean
     },
     {
       question: `¿Cuándo es ${label}?`,
-      answer: `${label} ${finished ? "fue" : "es"} el ${formatSeoDate(event.starts_at)}, a las ${formatTime(event.starts_at)}.`
+      answer: outsideCaba
+        ? `${label} ${finished ? "fue" : "es"} el ${formatSeoDate(event.starts_at)}, a las ${formatTime(event.starts_at)}.`
+        : `${event.title} ${finished ? "fue" : "es"} el ${formatEventLongDate(event.starts_at)}.`
     },
     {
       question: `¿Dónde se realiza ${event.title}?`,
