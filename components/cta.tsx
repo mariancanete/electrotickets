@@ -4,6 +4,8 @@ import Link from "next/link";
 import { Icon } from "@/components/icons";
 import { buildGoUrl, eventParams, track, type CtaPlacement } from "@/lib/analytics";
 import { saveDate } from "@/lib/saved-dates";
+import { siteConfig } from "@/lib/site";
+import { buildWaitlistWhatsappMessage, whatsappUrlOrGroup } from "@/lib/whatsapp";
 import type { EventRecord } from "@/types/event";
 
 type CtaEvent = Pick<
@@ -90,25 +92,40 @@ export function CardCta({
 }
 
 /**
- * Estado agotado — la única variante del CTA sin chartreuse.
+ * Fecha agotada — "Avisame por WhatsApp" en lugar del botón "Agotado".
  *
- * Se renderiza como `<span>` y no como `<button disabled>` porque no hay ninguna acción
- * detrás: es una etiqueta de estado con forma de botón. Un botón deshabilitado invita a
- * tocarlo; esto informa y se termina ahí.
+ * Antes la fecha agotada mostraba un botón deshabilitado: la persona llegaba con ganas de ir
+ * y la pantalla no le ofrecía nada. Ahora el mismo lugar abre un chat con el mensaje armado
+ * ("X figura como Sold Out. ¿Me avisás si se libera alguna entrada o si quedan mesas?"), que
+ * es justo lo que el RRPP puede resolver: reventas que se liberan, mesas, otra fecha.
  *
- * `sold_out` apaga la card y el CTA, y `last_tickets` pinta el chip coral: nunca se muestran
- * los dos juntos, porque una fecha agotada no puede estar además por agotarse.
+ * Va **delineado y nunca chartreuse**: no lleva a Bombo, y el chartreuse significa comprar.
+ * El "agotado" lo dice el sello sobre el flyer (`SoldOutStamp`), no el botón.
  */
-export function SoldOutCta({ compact = false, className = "" }: { compact?: boolean; className?: string }) {
+export function SoldOutWhatsappCta({
+  event,
+  source,
+  compact = false,
+  className = ""
+}: {
+  event: Pick<EventRecord, "slug" | "title">;
+  source: "event_waitlist" | "soldout";
+  compact?: boolean;
+  className?: string;
+}) {
   return (
-    <span
-      aria-disabled="true"
-      className={`cta-disabled flex items-center justify-center rounded-full border border-white/10 bg-surface-alt text-white/[0.34] ${
+    <a
+      href={whatsappUrlOrGroup(buildWaitlistWhatsappMessage(event.title))}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={() => track("click_whatsapp", { wa_source: source, event_slug: event.slug })}
+      className={`btn-out t150 flex items-center justify-center gap-2 rounded-full border border-white/40 font-bold leading-none text-white ${
         compact ? "h-11 text-[13px]" : "h-14 text-[15px]"
-      } font-bold leading-none ${className}`}
+      } ${className}`}
     >
-      Agotado
-    </span>
+      <Icon name="chat" size={compact ? 16 : 19} />
+      Avisame por WhatsApp
+    </a>
   );
 }
 
@@ -144,6 +161,32 @@ export function WhatsappIconButton({
       className={`btn-out t150 grid h-14 w-[58px] flex-none place-items-center rounded-full border border-white/[0.18] text-white lg:w-14 ${className}`}
     >
       <Icon name="chat" size={21} />
+    </a>
+  );
+}
+
+/**
+ * Grupo de difusión de WhatsApp, dentro del bloque de credencial RRPP del detalle.
+ *
+ * Es para quien todavía no compra: si esta fecha no es la suya, que no se vaya sin dejar
+ * una vía para volver. Delineado y en blanco, como todo lo que no lleva a Bombo; dos líneas
+ * porque el pedido completo ("…para enterarte de los próximos eventos") no entra en una
+ * píldora sin cortarse en mobile.
+ */
+export function WhatsappGroupButton({ eventSlug, className = "" }: { eventSlug?: string; className?: string }) {
+  return (
+    <a
+      href={siteConfig.whatsappGroup}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={() => track("click_whatsapp_group", { wa_source: "event_group", event_slug: eventSlug })}
+      className={`btn-out t150 flex min-h-[52px] items-center gap-3 rounded-[14px] border border-white/30 px-[14px] py-[10px] text-white ${className}`}
+    >
+      <Icon name="chat" size={19} className="flex-none" />
+      <span className="flex min-w-0 flex-col gap-[3px]">
+        <span className="text-[13.5px] font-bold leading-[1.2]">Sumate al grupo de WhatsApp</span>
+        <span className="text-[12px] leading-[1.3] text-white/60">Para enterarte de los próximos eventos</span>
+      </span>
     </a>
   );
 }

@@ -5,12 +5,13 @@ import Link from "next/link";
 import { AppHeader } from "@/components/app-header";
 import { NavSpacer } from "@/components/bottom-nav";
 import { Chip, UrgencyChip } from "@/components/chips";
-import { BuyCta, SoldOutCta } from "@/components/cta";
+import { BuyCta, SoldOutWhatsappCta } from "@/components/cta";
 import { DateCard } from "@/components/date-card";
 import { Flyer } from "@/components/flyer-image";
 import { GridCard } from "@/components/grid-card";
 import { WhatsappIconButton } from "@/components/cta";
 import { Icon } from "@/components/icons";
+import { SoldOutStamp } from "@/components/sold-out-stamp";
 import { track } from "@/lib/analytics";
 import { formatDato, getDateRail } from "@/lib/dates";
 import { buildPriceWhatsappMessage, whatsappUrlOrGroup } from "@/lib/whatsapp";
@@ -251,6 +252,7 @@ function FeaturedDate({ event }: { event: EventRecord }) {
           className="relative block h-[206px] overflow-hidden lg:aspect-4/5 lg:h-auto lg:self-start lg:overflow-hidden lg:rounded-block lg:border lg:border-white/10"
         >
           <Flyer src={event.flyer_url} alt={`Flyer de ${event.title}`} sizes="(min-width:1024px) 460px, 354px" priority large mobileFit="contain" />
+          {soldOut ? <SoldOutStamp size="xl" /> : null}
           {event.last_tickets && !soldOut ? (
             <span className="absolute left-3 top-3 lg:left-4 lg:top-4">
               <UrgencyChip size="md" label="Últimas entradas" />
@@ -294,7 +296,9 @@ function FeaturedDate({ event }: { event: EventRecord }) {
           ) : null}
 
           {soldOut ? (
-            <SoldOutCta className="mt-[15px] lg:mt-auto lg:max-w-[520px] lg:pt-7" />
+            <div className="mt-[15px] lg:mt-auto lg:max-w-[520px] lg:pt-7">
+              <SoldOutWhatsappCta event={event} source="soldout" />
+            </div>
           ) : (
             <div className="mt-[15px] flex gap-3 lg:mt-auto lg:max-w-[520px] lg:pt-7">
               <BuyCta event={event} placement="home_destacado" className="!h-[52px] flex-1 lg:!h-14" />

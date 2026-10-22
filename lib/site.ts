@@ -11,7 +11,7 @@ export const siteConfig = {
   instagram: process.env.NEXT_PUBLIC_INSTAGRAM_URL || "https://instagram.com/electrotickets",
   whatsappGroup:
     process.env.NEXT_PUBLIC_WHATSAPP_GROUP_URL ||
-    "https://chat.whatsapp.com/LVWQjAe4r0EAtprDPObqnH?mode=gi_t",
+    "https://chat.whatsapp.com/LVWQjAe4r0EAtprDPObqnH?s=cl&p=a&mlu=4&ilr=4",
   whatsappNumber: process.env.NEXT_PUBLIC_CONTACT_WHATSAPP || "",
   whatsappContactName: process.env.NEXT_PUBLIC_CONTACT_NAME || "ElectroTickets",
   defaultCity: "Buenos Aires"

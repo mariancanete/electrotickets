@@ -67,6 +67,8 @@ export type WhatsappSource =
   | "event_vip"
   | "event_waitlist"
   | "soldout"
+  // Botón del grupo de difusión dentro de la credencial RRPP del detalle.
+  | "event_group"
   | "empty_results"
   | "past_event";
 
