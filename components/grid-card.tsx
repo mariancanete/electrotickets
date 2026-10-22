@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { Chip, UrgencyChip } from "@/components/chips";
-import { CardCta, SoldOutCta } from "@/components/cta";
+import { CardCta, SoldOutWhatsappCta } from "@/components/cta";
 import { Flyer } from "@/components/flyer-image";
 import { Icon } from "@/components/icons";
+import { SoldOutStamp } from "@/components/sold-out-stamp";
 import type { CtaPlacement } from "@/lib/analytics";
 import { getDateRail } from "@/lib/dates";
 import type { EventRecord } from "@/types/event";
@@ -38,14 +39,16 @@ export function GridCard({
 
   return (
     <article
-      className={`card-hov t150 relative flex flex-col overflow-hidden rounded-card border border-white/10 bg-surface ${
-        soldOut ? "opacity-55" : ""
-      }`}
+      // Sin opacidad general en agotada: el sello y el botón de WhatsApp tienen que leerse.
+      className="card-hov t150 relative flex flex-col overflow-hidden rounded-card border border-white/10 bg-surface"
     >
       <div className="relative aspect-4/5 overflow-hidden">
         <div className="card-flyer t150 absolute inset-0">
           <Flyer src={event.flyer_url} alt={`Flyer de ${event.title}`} sizes="(min-width:1440px) 320px, 380px" priority={priority} large />
         </div>
+
+        {/* Fuera del contenedor que hace zoom en hover: el sello queda quieto. */}
+        {soldOut ? <SoldOutStamp /> : null}
 
         {/* El riel de fecha, convertido en chip. Agotada pierde la trama y baja a surface-alt:
             el bloque de marca no se le presta a una fecha que ya no se puede comprar. */}
@@ -95,7 +98,11 @@ export function GridCard({
         ) : null}
 
         <div className="relative z-10 mt-auto pt-[6px]">
-          {soldOut ? <SoldOutCta compact /> : <CardCta event={event} placement={placement} />}
+          {soldOut ? (
+            <SoldOutWhatsappCta event={event} source="soldout" compact />
+          ) : (
+            <CardCta event={event} placement={placement} />
+          )}
         </div>
       </div>
     </article>

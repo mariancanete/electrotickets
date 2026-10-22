@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Chip, InfoBlock, UrgencyChip } from "@/components/chips";
-import { BuyCta, SoldOutCta, WhatsappIconButton } from "@/components/cta";
+import { BuyCta, SoldOutWhatsappCta, WhatsappGroupButton, WhatsappIconButton } from "@/components/cta";
 import { DateCard } from "@/components/date-card";
 import { DetailActions } from "@/components/detail-actions";
 import { Flyer } from "@/components/flyer-image";
 import { GridCard } from "@/components/grid-card";
 import { Icon } from "@/components/icons";
+import { SoldOutStamp } from "@/components/sold-out-stamp";
 import { YoutubeFacade } from "@/components/youtube-facade";
 import { formatDatoRange, formatEventLongDate, formatLongDay, formatTime } from "@/lib/dates";
 import {
@@ -23,7 +24,6 @@ import { normalizeText } from "@/lib/slugify";
 import { getYoutubeEmbedUrl, getYoutubeVideoId } from "@/lib/video";
 import {
   buildPriceWhatsappMessage,
-  buildWaitlistWhatsappMessage,
   whatsappUrlOrGroup
 } from "@/lib/whatsapp";
 import type { EventFaqItem, EventRecord } from "@/types/event";
@@ -106,7 +106,6 @@ export default async function EventDetailPage({ params }: PageProps) {
   const hasLastTickets = Boolean(event.last_tickets) && !isSoldOut && !finished;
 
   const priceUrl = whatsappUrlOrGroup(buildPriceWhatsappMessage(event.title));
-  const waitlistUrl = whatsappUrlOrGroup(buildWaitlistWhatsappMessage(event.title));
 
   const seoDescription = buildSeoDescription(event, finished);
   const aboutEvent = buildAboutEvent(event);
@@ -180,27 +179,39 @@ export default async function EventDetailPage({ params }: PageProps) {
   const bloqueCompra = (
     <>
       {/* La expectativa va **antes** del CTA, no debajo: descubrir que la compra termina
-          afuera después del clic es donde se pierde la gente. */}
-      <Link
-        href={`/eventos/${event.slug}/comprar`}
-        className="t150 flex items-center justify-center gap-[6px] text-[11.5px] leading-none text-white/50 hover:text-white lg:order-2 lg:mt-1 lg:justify-start lg:text-[12.5px]"
-      >
-        <Icon name="shield" size={13} />
-        Link oficial · precio y lotes actualizados en Bombo
-      </Link>
+          afuera después del clic es donde se pierde la gente. Agotada no lleva a Bombo, así
+          que la línea cuenta qué hace el botón de WhatsApp en vez de hablar de precios. */}
+      {isSoldOut ? (
+        <p className="flex items-center justify-center gap-[6px] text-[11.5px] leading-none text-white/50 lg:order-2 lg:mt-1 lg:justify-start lg:text-[12.5px]">
+          <Icon name="chat" size={13} />
+          Agotado en Bombo · te aviso si se libera una entrada
+        </p>
+      ) : (
+        <Link
+          href={`/eventos/${event.slug}/comprar`}
+          className="t150 flex items-center justify-center gap-[6px] text-[11.5px] leading-none text-white/50 hover:text-white lg:order-2 lg:mt-1 lg:justify-start lg:text-[12.5px]"
+        >
+          <Icon name="shield" size={13} />
+          Link oficial · precio y lotes actualizados en Bombo
+        </Link>
+      )}
 
       <div className="flex gap-[9px] lg:order-1 lg:gap-3">
         {isSoldOut ? (
-          <SoldOutCta className="flex-1" />
+          // Un solo botón: el de WhatsApp ya es la acción, y repetirlo como ícono al lado
+          // abriría el mismo chat dos veces.
+          <SoldOutWhatsappCta event={event} source="event_waitlist" className="flex-1" />
         ) : (
-          <BuyCta event={event} placement="detalle_barra" className="flex-1" />
+          <>
+            <BuyCta event={event} placement="detalle_barra" className="flex-1" />
+            <WhatsappIconButton
+              href={priceUrl}
+              source="event_price"
+              eventSlug={event.slug}
+              label="Consultar precio por WhatsApp"
+            />
+          </>
         )}
-        <WhatsappIconButton
-          href={isSoldOut ? waitlistUrl : priceUrl}
-          source={isSoldOut ? "event_waitlist" : "event_price"}
-          eventSlug={event.slug}
-          label={isSoldOut ? "Anotarme en la lista de espera" : "Consultar precio por WhatsApp"}
-        />
       </div>
     </>
   );
@@ -238,6 +249,7 @@ export default async function EventDetailPage({ params }: PageProps) {
           <div className="sticky-col sticky-detalle flex flex-col lg:gap-[14px]">
             <div className="relative h-[300px] flex-none overflow-hidden lg:aspect-4/5 lg:h-auto lg:overflow-hidden lg:rounded-block lg:border lg:border-white/10">
               <Flyer src={event.flyer_url} alt={`Flyer de ${event.title}`} sizes="(min-width:1024px) 540px, 100vw" priority large mobileFit="contain" />
+              {isSoldOut ? <SoldOutStamp size="xl" /> : null}
               <div className="lg:hidden">
                 <DetailActions title={event.title} slug={event.slug} />
               </div>
@@ -341,6 +353,7 @@ export default async function EventDetailPage({ params }: PageProps) {
               <div className="gutter flex-none pt-[14px] lg:px-0 lg:pt-7">
                 <InfoBlock icon="shield">
                   Somos RRPP oficial de {formatVenueList(credentials.officialVenues)}. Entrada nominada, sin reventa.
+                  <WhatsappGroupButton eventSlug={event.slug} className="mt-3" />
                 </InfoBlock>
               </div>
             ) : null}

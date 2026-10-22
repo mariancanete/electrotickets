@@ -1,7 +1,8 @@
 import { Chip, UrgencyChip } from "@/components/chips";
-import { CardCta, SoldOutCta } from "@/components/cta";
+import { CardCta, SoldOutWhatsappCta } from "@/components/cta";
 import { Flyer } from "@/components/flyer-image";
 import { Icon } from "@/components/icons";
+import { SoldOutStamp } from "@/components/sold-out-stamp";
 import type { CtaPlacement } from "@/lib/analytics";
 import { getDateRail } from "@/lib/dates";
 import type { EventRecord } from "@/types/event";
@@ -48,9 +49,9 @@ export function DateCard({
 
   return (
     <article
-      className={`card-hov t150 grid grid-cols-[66px_1fr] overflow-hidden rounded-card border border-white/10 bg-surface lg:grid-cols-[78px_1fr] ${
-        soldOut ? "opacity-55" : ""
-      }`}
+      // Agotada ya no apaga la card entera: con la opacidad bajaban también el sello y el
+      // botón de WhatsApp, que es la única acción que le queda a quien llegó hasta acá.
+      className="card-hov t150 grid grid-cols-[66px_1fr] overflow-hidden rounded-card border border-white/10 bg-surface lg:grid-cols-[78px_1fr]"
     >
       {/* Riel de fecha. Agotada pierde la trama y baja a surface-alt: el bloque de marca no
           se le presta a una fecha que ya no se puede comprar. */}
@@ -79,6 +80,7 @@ export function DateCard({
                 priority={priority}
                 mobileFit="contain"
               />
+              {soldOut ? <SoldOutStamp size="sm" /> : null}
             </div>
           ) : null}
 
@@ -117,7 +119,7 @@ export function DateCard({
         </div>
 
         {action === "none" ? null : soldOut ? (
-          <SoldOutCta compact />
+          <SoldOutWhatsappCta event={event} source="soldout" compact />
         ) : (
           <CardCta event={event} placement={placement} />
         )}
