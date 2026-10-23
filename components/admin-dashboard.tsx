@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { compressFlyer, FLYER_MAX_BYTES, formatBytes } from "@/lib/compress-flyer";
 import { isUpcomingEvent } from "@/lib/event-dates";
 import { parseJsonResponse } from "@/lib/http";
 import type { EventPerformance, EventSaleRecord } from "@/types/analytics";
@@ -101,6 +102,14 @@ export function AdminDashboard({
   const [venueForm, setVenueForm] = useState<VenueFormState>(emptyVenueForm);
   const [newGenre, setNewGenre] = useState("");
   const [flyerFile, setFlyerFile] = useState<File | null>(null);
+  /** Estado de la compresión del flyer: se muestra debajo del campo. */
+  const [flyerBusy, setFlyerBusy] = useState(false);
+  const [flyerNote, setFlyerNote] = useState("");
+  /**
+   * Cambia al guardar para remontar el `<input type="file">`: sin esto seguía mostrando el
+   * nombre del archivo del evento anterior, y parecía que el flyer quedaba cargado.
+   */
+  const [flyerInputKey, setFlyerInputKey] = useState(0);
   const [loading, setLoading] = useState(false);
   const [catalogLoading, setCatalogLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -297,6 +306,50 @@ export function AdminDashboard({
     }
   }
 
+  /**
+   * El flyer se comprime apenas se elige, no al guardar: así se ve el resultado antes de
+   * publicar ("2,4 MB → 280 KB") y, si igual queda pesado, el aviso aparece en el momento.
+   */
+  async function selectFlyer(file: File | null) {
+    if (!file) {
+      setFlyerFile(null);
+      setFlyerNote("");
+      return;
+    }
+
+    setFlyerBusy(true);
+    setFlyerNote("Optimizando el flyer…");
+
+    try {
+      const result = await compressFlyer(file);
+
+      if (result.file.size > FLYER_MAX_BYTES) {
+        setFlyerFile(null);
+        setFlyerNote("El flyer es demasiado pesado. Comprimilo o usá una imagen menor a 2 MB.");
+        return;
+      }
+
+      setFlyerFile(result.file);
+      setFlyerNote(
+        result.compressed
+          ? `Flyer optimizado: ${formatBytes(result.originalBytes)} → ${formatBytes(result.file.size)} (${result.width}×${result.height}px).`
+          : `Flyer listo: ${formatBytes(result.file.size)}.`
+      );
+    } catch {
+      // Si la compresión falla por algo del navegador, se sube el original siempre que entre
+      // en el límite: nunca bloquear la carga de un evento por una optimización.
+      if (file.size > FLYER_MAX_BYTES) {
+        setFlyerFile(null);
+        setFlyerNote("El flyer es demasiado pesado. Comprimilo o usá una imagen menor a 2 MB.");
+      } else {
+        setFlyerFile(file);
+        setFlyerNote(`Flyer listo: ${formatBytes(file.size)}.`);
+      }
+    } finally {
+      setFlyerBusy(false);
+    }
+  }
+
   async function uploadFlyer() {
     if (!flyerFile) return form.flyer_url;
 
@@ -343,6 +396,8 @@ export function AdminDashboard({
 
       setForm(emptyForm);
       setFlyerFile(null);
+      setFlyerNote("");
+      setFlyerInputKey((key) => key + 1);
       setMessage(isEditing ? "Evento actualizado." : "Evento creado.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Ocurrió un error.");
@@ -552,7 +607,8 @@ export function AdminDashboard({
           </Field>
 
           <Field label="Flyer">
-            <input type="file" accept="image/*" onChange={(event) => setFlyerFile(event.target.files?.[0] || null)} className="input" />
+            <input key={flyerInputKey} type="file" accept="image/*" onChange={(event) => selectFlyer(event.target.files?.[0] || null)} className="input" />
+            {flyerNote ? <p className="mt-2 text-xs text-white/62">{flyerNote}</p> : null}
             <input value={form.flyer_url} onChange={(event) => updateField("flyer_url", event.target.value)} className="input mt-2" placeholder="O pegá una URL de imagen" />
           </Field>
 
@@ -583,7 +639,7 @@ export function AdminDashboard({
 
           {message ? <p className="rounded-[12px] bg-white/10 px-4 py-3 text-sm text-white/78">{message}</p> : null}
 
-          <button disabled={loading} className="w-full rounded-full bg-white px-6 py-4 text-sm font-black text-black transition hover:bg-white/85 disabled:opacity-50">
+          <button disabled={loading || flyerBusy} className="w-full rounded-full bg-white px-6 py-4 text-sm font-black text-black transition hover:bg-white/85 disabled:opacity-50">
             {loading ? "Guardando..." : isEditing ? "Guardar cambios" : "Publicar evento"}
           </button>
         </form>

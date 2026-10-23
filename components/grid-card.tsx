@@ -44,7 +44,17 @@ export function GridCard({
     >
       <div className="relative aspect-4/5 overflow-hidden">
         <div className="card-flyer t150 absolute inset-0">
-          <Flyer src={event.flyer_url} alt={`Flyer de ${event.title}`} sizes="(min-width:1440px) 320px, 380px" priority={priority} large />
+          {/* Esta card solo se ve desde 1024px: en mobile está en un contenedor `hidden` y la
+              reemplaza `DateCard`. Igual el navegador descargaba su flyer, y con `380px` a 3x
+              pedía la variante de 1200px: ~3 MB de imágenes invisibles en la agenda mobile.
+              El `1px` final hace que debajo de 1024 pida la variante mínima (~1 KB). */}
+          <Flyer
+            src={event.flyer_url}
+            alt={`Flyer de ${event.title}`}
+            sizes="(min-width:1440px) 320px, (min-width:1024px) 380px, 1px"
+            priority={priority}
+            large
+          />
         </div>
 
         {/* Fuera del contenedor que hace zoom en hover: el sello queda quieto. */}
