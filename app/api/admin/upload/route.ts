@@ -35,6 +35,9 @@ export async function POST(request: Request) {
     const buffer = Buffer.from(await file.arrayBuffer());
     const { error } = await supabase.storage.from(bucket).upload(path, buffer, {
       contentType: file.type,
+      // Cada subida tiene una ruta única (timestamp en el nombre) y nunca se pisa, así que el
+      // archivo es inmutable: un año de caché ayuda a wsrv.nl y a la vista previa de WhatsApp.
+      cacheControl: "31536000",
       upsert: false
     });
 
