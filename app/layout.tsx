@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { JetBrains_Mono, Space_Grotesk } from "next/font/google";
 import Script from "next/script";
+import { preconnect } from "react-dom";
 import "./globals.css";
 import { IconSprite } from "@/components/icons";
 import { absoluteUrl, siteConfig } from "@/lib/site";
@@ -74,6 +75,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const gaId = process.env.NEXT_PUBLIC_GA_ID;
   const clarityId = process.env.NEXT_PUBLIC_CLARITY_ID;
+
+  // Los flyers salen de wsrv.nl (`lib/flyer-loader.ts`): abrir la conexión temprano ahorra
+  // el handshake en la primera imagen, que suele ser el flyer destacado arriba del pliegue.
+  preconnect("https://wsrv.nl");
 
   return (
     <html lang="es-AR" className={`${spaceGrotesk.variable} ${jetbrainsMono.variable}`}>

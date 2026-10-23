@@ -69,7 +69,10 @@ export function DateCard({
         </span>
       </div>
 
-      <div className="flex flex-col gap-[10px] p-[13px] lg:gap-3 lg:px-[18px] lg:py-4">
+      {/* `min-w-0` es lo que hace que el venue largo se recorte con "…". Sin él, la columna
+          `1fr` de la grilla toma el ancho del texto entero ("Rio Electronic Music · Buenos
+          Aires"), se sale de la card y el `overflow-hidden` corta el botón por la derecha. */}
+      <div className="flex min-w-0 flex-col gap-[10px] p-[13px] lg:gap-3 lg:px-[18px] lg:py-4">
         <div className="flex gap-[11px]">
           {showFlyer ? (
             <div className="relative h-[78px] w-[62px] flex-none overflow-hidden rounded-[10px]">
