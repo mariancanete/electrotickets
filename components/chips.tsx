@@ -43,13 +43,33 @@ export function Chip({
   );
 }
 
-/** Solo "Últimas entradas". Nunca convive con el estado agotado. */
-export function UrgencyChip({ size = "sm", label = "Últimas" }: { size?: ChipSize; label?: string }) {
+/**
+ * "Últimas entradas" — la única urgencia real del sitio, y por eso la que más tiene que
+ * verse. Antes era un chip chico que decía solo "Últimas", del mismo tamaño que el de género,
+ * y se perdía. Ahora lleva la llama, el texto completo y un halo coral que lo despega del
+ * flyer y de la card, sin animación: urgencia que se lee, no que molesta.
+ *
+ * Sigue siendo el único uso del coral en el sitio, y nunca convive con el estado agotado.
+ *
+ *   sm  cards (mobile y grilla)
+ *   md  fecha destacada de la home
+ *   lg  detalle del evento
+ */
+const urgencySizes = {
+  sm: { box: "gap-[5px] px-[10px] py-[6px] text-[11.5px]", icon: 13 },
+  md: { box: "gap-[6px] px-[13px] py-2 text-[13px]", icon: 15 },
+  lg: { box: "gap-[7px] px-4 py-[10px] text-[15px]", icon: 18 }
+} as const;
+
+export function UrgencyChip({ size = "sm" }: { size?: keyof typeof urgencySizes }) {
+  const { box, icon } = urgencySizes[size];
+
   return (
     <span
-      className={`inline-flex items-center whitespace-nowrap rounded-full bg-urgencia font-bold leading-none text-ink ${sizes[size]}`}
+      className={`inline-flex items-center whitespace-nowrap rounded-full bg-urgencia font-bold leading-none text-ink shadow-[0_0_0_3px_rgba(255,90,60,0.22),0_6px_18px_rgba(255,90,60,0.35)] ${box}`}
     >
-      {label}
+      <Icon name="flame" size={icon} />
+      Últimas entradas
     </span>
   );
 }

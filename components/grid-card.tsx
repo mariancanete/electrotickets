@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Chip, UrgencyChip } from "@/components/chips";
 import { CardCta, SoldOutWhatsappCta } from "@/components/cta";
-import { Flyer } from "@/components/flyer-image";
+import { FlyerFrame } from "@/components/flyer-image";
 import { Icon } from "@/components/icons";
 import { SoldOutStamp } from "@/components/sold-out-stamp";
 import type { CtaPlacement } from "@/lib/analytics";
@@ -42,22 +42,20 @@ export function GridCard({
       // Sin opacidad general en agotada: el sello y el botón de WhatsApp tienen que leerse.
       className="card-hov t150 relative flex flex-col overflow-hidden rounded-card border border-white/10 bg-surface"
     >
-      <div className="relative aspect-4/5 overflow-hidden">
-        <div className="card-flyer t150 absolute inset-0">
-          {/* Esta card solo se ve desde 1024px: en mobile está en un contenedor `hidden` y la
-              reemplaza `DateCard`. Igual el navegador descargaba su flyer, y con `380px` a 3x
-              pedía la variante de 1200px: ~3 MB de imágenes invisibles en la agenda mobile.
-              El `1px` final hace que debajo de 1024 pida la variante mínima (~1 KB). */}
-          <Flyer
-            src={event.flyer_url}
-            alt={`Flyer de ${event.title}`}
-            sizes="(min-width:1440px) 320px, (min-width:1024px) 380px, 1px"
-            priority={priority}
-            large
-          />
-        </div>
-
-        {/* Fuera del contenedor que hace zoom en hover: el sello queda quieto. */}
+      {/* Recuadro a la medida del flyer, con tope 3:4: los 4:5, 3:4 y cuadrados se ven enteros
+          y llenan el recuadro; solo una story queda con el flyer difuminado a los costados.
+          El zoom de hover va en el envoltorio de la imagen, no en el recuadro: los chips quedan
+          quietos. Debajo de 1024 la card está oculta: el `1px` final de `sizes` hace que el
+          navegador pida la variante mínima (~1 KB) en vez de un flyer de 1200px invisible. */}
+      <FlyerFrame
+        src={event.flyer_url}
+        alt={`Flyer de ${event.title}`}
+        sizes="(min-width:1440px) 320px, (min-width:1024px) 380px, 1px"
+        ratio={event.flyer_ratio}
+        maxRatio={4 / 3}
+        priority={priority}
+        imageClassName="card-flyer t150"
+      >
         {soldOut ? <SoldOutStamp /> : null}
 
         {/* El riel de fecha, convertido en chip. Agotada pierde la trama y baja a surface-alt:
@@ -79,7 +77,7 @@ export function GridCard({
             <UrgencyChip size="sm" />
           </span>
         ) : null}
-      </div>
+      </FlyerFrame>
 
       <div className="flex flex-1 flex-col gap-[9px] p-4">
         <h3 className="text-[20px] font-bold leading-[1.05] tracking-[-0.025em]">

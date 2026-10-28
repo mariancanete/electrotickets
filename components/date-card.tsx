@@ -1,6 +1,6 @@
 import { Chip, UrgencyChip } from "@/components/chips";
 import { CardCta, SoldOutWhatsappCta } from "@/components/cta";
-import { Flyer } from "@/components/flyer-image";
+import { FlyerFrame } from "@/components/flyer-image";
 import { Icon } from "@/components/icons";
 import { SoldOutStamp } from "@/components/sold-out-stamp";
 import type { CtaPlacement } from "@/lib/analytics";
@@ -75,16 +75,19 @@ export function DateCard({
       <div className="flex min-w-0 flex-col gap-[10px] p-[13px] lg:gap-3 lg:px-[18px] lg:py-4">
         <div className="flex gap-[11px]">
           {showFlyer ? (
-            <div className="relative h-[78px] w-[62px] flex-none overflow-hidden rounded-[10px]">
-              <Flyer
-                src={event.flyer_url}
-                alt={`Flyer de ${event.title}`}
-                sizes="62px"
-                priority={priority}
-                mobileFit="contain"
-              />
+            /* Ancho fijo de 62px y alto a la medida del flyer: un cuadrado queda de 62×62 y un
+               4:5 de 62×78, siempre entero. El tope de 1,5 frena a las stories en 93px. */
+            <FlyerFrame
+              src={event.flyer_url}
+              alt={`Flyer de ${event.title}`}
+              sizes="62px"
+              ratio={event.flyer_ratio}
+              maxRatio={1.5}
+              priority={priority}
+              className="w-[62px] flex-none self-start rounded-[10px]"
+            >
               {soldOut ? <SoldOutStamp size="sm" /> : null}
-            </div>
+            </FlyerFrame>
           ) : null}
 
           <div className="flex min-w-0 flex-1 flex-col gap-[5px]">

@@ -4,6 +4,11 @@ export type EventRecord = {
   slug: string;
   description: string | null;
   flyer_url: string | null;
+  /**
+   * Alto / ancho del flyer. **No es una columna**: lo calcula `lib/flyer-meta.ts` al leer los
+   * eventos públicos, para dibujar el recuadro a la medida del flyer. `null` si no se pudo.
+   */
+  flyer_ratio?: number | null;
   lineup: string[] | null;
   venue_name: string | null;
   venue_address: string | null;

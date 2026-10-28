@@ -1,4 +1,5 @@
 import { demoEvents } from "@/lib/demo-events";
+import { withFlyerRatios } from "@/lib/flyer-meta";
 import { isPastEvent, isUpcomingEvent, PAST_EVENT_WINDOW_DAYS } from "@/lib/event-dates";
 import { normalizeText } from "@/lib/slugify";
 import { getSupabaseAdminClient, getSupabasePublicClient, isSupabasePublicConfigured } from "@/lib/supabase";
@@ -21,7 +22,15 @@ export function filterRecentPastEvents<T extends Pick<EventRecord, "starts_at" |
     .sort((a, b) => new Date(b.starts_at).getTime() - new Date(a.starts_at).getTime());
 }
 
+/**
+ * Eventos públicos con la proporción de su flyer (`flyer_ratio`). La lectura cruda queda en
+ * `loadPublishedEvents`; acá solo se completa el dato derivado.
+ */
 export async function getPublishedEvents(): Promise<EventRecord[]> {
+  return withFlyerRatios(await loadPublishedEvents());
+}
+
+async function loadPublishedEvents(): Promise<EventRecord[]> {
   if (!isSupabasePublicConfigured) {
     return demoEvents.filter((event) => event.published).sort(sortEvents);
   }
@@ -55,6 +64,14 @@ export async function getRecentPastPublishedEvents(): Promise<EventRecord[]> {
 }
 
 export async function getEventBySlug(slug: string, includeUnpublished = false): Promise<EventRecord | null> {
+  const event = await loadEventBySlug(slug, includeUnpublished);
+  if (!event) return null;
+
+  const [withRatio] = await withFlyerRatios([event]);
+  return withRatio;
+}
+
+async function loadEventBySlug(slug: string, includeUnpublished: boolean): Promise<EventRecord | null> {
   if (!isSupabasePublicConfigured) {
     return demoEvents.find((event) => event.slug === slug && (includeUnpublished || event.published)) || null;
   }

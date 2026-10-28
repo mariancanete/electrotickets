@@ -64,61 +64,80 @@ export function FlyerFallback({ className = "", large = false }: { className?: s
   return <div aria-hidden="true" className={`h-full w-full ${large ? "rayado-lg" : "rayado"} ${className}`} />;
 }
 
+/** Proporción por defecto (4:5) cuando no se conoce la del flyer. */
+const DEFAULT_RATIO = 1.25;
+/** Un flyer más apaisado que 2:1 no existe en la práctica; el piso evita recuadros finitos. */
+const MIN_RATIO = 0.5;
+
 /**
- * Flyer con su placeholder. Un solo lugar decide qué se dibuja cuando no hay imagen.
+ * Flyer en un recuadro **a su medida**: entero, sin recortar, sin deformar y sin bandas.
  *
- * Por defecto el recorte es `cover` centrado: si el flyer viene cuadrado o vertical se
- * recorta, nunca se deforma. Deformar la gráfica de una productora es peor que recortarla.
+ * Los flyers llegan en proporciones distintas (4:5, 3:4, cuadrados, stories 9:16). Con un
+ * recuadro fijo había que elegir entre cortarlos (cover) o dejarles bandas a los costados
+ * (contain). Acá el recuadro toma la proporción real del flyer (`ratio`, que calcula el
+ * servidor en `lib/flyer-meta.ts`), así que el flyer lo llena exacto.
  *
- * `mobileFit="contain"` muestra el flyer **entero** debajo de 1024px. En mobile las cajas
- * no son 4:5 —la destacada de la home mide ~354×206 y el detalle 390×300—, así que con
- * `cover` se perdían arriba y abajo el line-up y los logos, que es justo lo que la gente lee
- * para decidir. El espacio que sobra a los costados se rellena con el mismo flyer
- * difuminado (`large`) en vez de dejar bandas vacías: es la misma URL y el mismo `sizes`,
- * así que el navegador no lo descarga dos veces.
+ * El único límite es el alto: una story 9:16 a ancho completo estiraría la card o empujaría
+ * el contenido. Por eso hay un tope (`maxRatio` en mobile, `maxRatioDesktop` desde 1024px).
+ * Solo si el flyer lo supera —o si no se conoce su proporción— queda margen a los costados,
+ * y ese margen se rellena con el mismo flyer difuminado: misma URL y mismo `sizes`, así que
+ * no es una segunda descarga.
  *
- * Desde 1024px vuelve a `cover` y el fondo difuminado desaparece: ahí las cajas ya son 4:5
- * y el flyer se ve completo, así que desktop queda exactamente como estaba.
+ * `imageClassName` envuelve las imágenes (para el zoom de hover de la card de grilla) sin
+ * mover los `children`, que se dibujan encima: sellos, chips, controles.
  */
-export function Flyer({
+export function FlyerFrame({
   src,
   alt,
   sizes,
+  ratio,
+  maxRatio = 4 / 3,
+  maxRatioDesktop,
   priority = false,
-  large = false,
-  mobileFit = "cover"
+  className = "",
+  imageClassName = "",
+  children
 }: {
   src: string | null;
   alt: string;
   sizes: string;
+  ratio?: number | null;
+  maxRatio?: number;
+  maxRatioDesktop?: number;
   priority?: boolean;
-  large?: boolean;
-  mobileFit?: "cover" | "contain";
+  className?: string;
+  imageClassName?: string;
+  children?: React.ReactNode;
 }) {
-  if (!src) return <FlyerFallback large={large} />;
-
-  if (mobileFit === "cover") {
-    return <FlyerImage src={src} alt={alt} sizes={sizes} priority={priority} className="object-cover object-center" />;
-  }
+  const natural = ratio && ratio > 0 ? ratio : null;
+  const fit = (cap: number) => Math.min(Math.max(natural ?? DEFAULT_RATIO, MIN_RATIO), cap);
+  const mobile = fit(maxRatio);
+  const desktop = fit(maxRatioDesktop ?? maxRatio);
+  const needsBackdrop =
+    natural === null || Math.abs(natural - mobile) > 0.01 || Math.abs(natural - desktop) > 0.01;
 
   return (
-    <>
-      {large ? (
-        <FlyerImage
-          src={src}
-          alt=""
-          sizes={sizes}
-          priority={priority}
-          className="scale-110 object-cover object-center opacity-45 blur-xl lg:hidden"
-        />
-      ) : null}
-      <FlyerImage
-        src={src}
-        alt={alt}
-        sizes={sizes}
-        priority={priority}
-        className="object-contain object-center lg:object-cover"
-      />
-    </>
+    <div
+      className={`flyer-frame relative overflow-hidden ${className}`}
+      style={{ "--fr-m": mobile, "--fr-d": desktop } as React.CSSProperties}
+    >
+      {src ? (
+        <div className={`absolute inset-0 ${imageClassName}`}>
+          {needsBackdrop ? (
+            <FlyerImage
+              src={src}
+              alt=""
+              sizes={sizes}
+              priority={priority}
+              className="scale-110 object-cover object-center opacity-45 blur-xl"
+            />
+          ) : null}
+          <FlyerImage src={src} alt={alt} sizes={sizes} priority={priority} className="object-contain object-center" />
+        </div>
+      ) : (
+        <FlyerFallback large />
+      )}
+      {children}
+    </div>
   );
 }
