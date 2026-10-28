@@ -7,7 +7,7 @@ import { NavSpacer } from "@/components/bottom-nav";
 import { Chip, UrgencyChip } from "@/components/chips";
 import { BuyCta, SoldOutWhatsappCta } from "@/components/cta";
 import { DateCard } from "@/components/date-card";
-import { Flyer } from "@/components/flyer-image";
+import { FlyerFrame } from "@/components/flyer-image";
 import { GridCard } from "@/components/grid-card";
 import { WhatsappIconButton } from "@/components/cta";
 import { Icon } from "@/components/icons";
@@ -235,48 +235,81 @@ function DaySelector({
  * Fecha destacada.
  *
  * Es el único CTA primario de la pantalla y tiene que quedar visible sin scroll en los dos
- * anchos de referencia: **390×844 en mobile y 1280×800 en desktop**. En mobile el alto del
- * flyer está calzado contra ese presupuesto; en desktop la fecha pasa a dos columnas, que es
- * lo que permite que el flyer crezca a 400px sin empujar el botón abajo del pliegue.
+ * anchos de referencia: **390×844 en mobile y 1280×800 en desktop**. Por eso en mobile el
+ * flyer va al costado de los datos y no a lo ancho; en desktop la fecha pasa a dos columnas,
+ * que es lo que permite que el flyer crezca a 400px sin empujar el botón abajo del pliegue.
  */
 function FeaturedDate({ event }: { event: EventRecord }) {
   const lineup = event.lineup?.filter(Boolean) ?? [];
   const venue = [event.venue_name, event.city].filter(Boolean).join(" · ");
   const soldOut = Boolean(event.sold_out);
+  const lastTickets = Boolean(event.last_tickets) && !soldOut;
 
+  /**
+   * Grilla de tres piezas: flyer, datos y CTA.
+   *
+   * - **Mobile**: flyer de 128px a la izquierda, a su medida y entero, con los datos al lado;
+   *   el CTA va debajo a todo el ancho. Antes el flyer iba a lo ancho en una caja de ~354×206
+   *   y había que elegir entre cortarlo o dejarle bandas; a lo ancho y a su medida (4:5 son
+   *   442px de alto) empujaba el botón de compra abajo del pliegue.
+   * - **Desktop** (`.destacada` fija las columnas): flyer a la izquierda ocupando las dos
+   *   filas; datos arriba y CTA abajo a la derecha, alineado al pie del flyer como antes.
+   */
   return (
     <div className="gutter flex-none pt-[18px] lg:pt-8">
-      <div className="destacada overflow-hidden rounded-block border border-white/10 bg-surface lg:grid lg:items-stretch lg:gap-8 lg:overflow-visible lg:rounded-none lg:border-0 lg:bg-transparent">
-        <Link
-          href={`/eventos/${event.slug}`}
-          className="relative block h-[206px] overflow-hidden lg:aspect-4/5 lg:h-auto lg:self-start lg:overflow-hidden lg:rounded-block lg:border lg:border-white/10"
-        >
-          <Flyer src={event.flyer_url} alt={`Flyer de ${event.title}`} sizes="(min-width:1024px) 460px, 354px" priority large mobileFit="contain" />
-          {soldOut ? <SoldOutStamp size="xl" /> : null}
-          {event.last_tickets && !soldOut ? (
-            <span className="absolute left-3 top-3 lg:left-4 lg:top-4">
-              <UrgencyChip size="md" label="Últimas entradas" />
-            </span>
-          ) : null}
+      <div className="destacada grid grid-cols-[128px_minmax(0,1fr)] gap-x-3 gap-y-[14px] overflow-hidden rounded-block border border-white/10 bg-surface p-3 lg:grid-rows-[auto_1fr] lg:gap-x-8 lg:gap-y-0 lg:overflow-visible lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0">
+        <Link href={`/eventos/${event.slug}`} className="block self-start lg:row-span-2">
+          <FlyerFrame
+            src={event.flyer_url}
+            alt={`Flyer de ${event.title}`}
+            sizes="(min-width:1440px) 460px, (min-width:1024px) 400px, 128px"
+            ratio={event.flyer_ratio}
+            maxRatio={1.5}
+            // En desktop el CTA va alineado al pie del flyer: con tope 4:5 nunca baja más
+            // que antes, y sigue arriba del pliegue a 1280×800.
+            maxRatioDesktop={1.25}
+            priority
+            className="rounded-[12px] lg:rounded-block lg:border lg:border-white/10"
+          >
+            {soldOut ? (
+              <>
+                {/* A 128px un sello no se lee: en mobile va la banda al pie. */}
+                <div className="lg:hidden">
+                  <SoldOutStamp size="sm" />
+                </div>
+                <div className="hidden lg:block">
+                  <SoldOutStamp size="xl" />
+                </div>
+              </>
+            ) : null}
+          </FlyerFrame>
         </Link>
 
-        <div className="flex flex-col p-4 lg:p-0 lg:py-[6px]">
+        <div className="flex min-w-0 flex-col lg:col-start-2 lg:row-start-1 lg:py-[6px]">
+          {/* Últimas entradas va arriba de todo, fuera del flyer: no tapa la gráfica y es lo
+              primero que se lee de la fecha. */}
+          {lastTickets ? (
+            <span className="mb-[10px] self-start lg:mb-[18px]">
+              <UrgencyChip size="md" />
+            </span>
+          ) : null}
+
           {/* La fecha en mono chartreuse es el dato firma del sistema tipográfico. */}
           <p className="font-mono text-[12px] font-bold uppercase leading-none tracking-[0.05em] text-cta lg:text-[12.5px]">
             {formatDato(event.starts_at)}
           </p>
-          <h2 className="display mt-[9px] text-[27px] leading-[0.98] tracking-[-0.035em] lg:mt-4 lg:text-[52px] lg:leading-[0.94]">
+          <h2 className="display mt-2 text-[24px] leading-[0.98] tracking-[-0.035em] lg:mt-4 lg:text-[52px] lg:leading-[0.94]">
             {event.title}
           </h2>
           {venue ? (
-            <p className="mt-[9px] flex items-center gap-[6px] text-[13px] leading-none text-white/60 lg:mt-[18px] lg:gap-2 lg:text-[15px]">
-              <Icon name="pin" size={14} className="lg:hidden" />
-              <Icon name="pin" size={16} className="hidden lg:block" />
-              <span className="truncate">{venue}</span>
+            <p className="mt-2 flex items-center gap-[6px] text-[12.5px] leading-[1.2] text-white/60 lg:mt-[18px] lg:gap-2 lg:text-[15px]">
+              <Icon name="pin" size={13} className="flex-none lg:hidden" />
+              <Icon name="pin" size={16} className="hidden flex-none lg:block" />
+              <span className="line-clamp-2 lg:truncate">{venue}</span>
             </p>
           ) : null}
           {lineup.length ? (
-            <p className="mt-[6px] line-clamp-2 text-[12.5px] leading-[1.4] text-white/45 lg:hidden">
+            <p className="mt-[6px] line-clamp-2 text-[12px] leading-[1.4] text-white/45 lg:hidden">
               {lineup.join(" · ")}
             </p>
           ) : null}
@@ -294,13 +327,15 @@ function FeaturedDate({ event }: { event: EventRecord }) {
               </Chip>
             </div>
           ) : null}
+        </div>
 
+        <div className="col-span-2 lg:col-span-1 lg:col-start-2 lg:row-start-2 lg:self-end lg:pt-7">
           {soldOut ? (
-            <div className="mt-[15px] lg:mt-auto lg:max-w-[520px] lg:pt-7">
+            <div className="lg:max-w-[520px]">
               <SoldOutWhatsappCta event={event} source="soldout" />
             </div>
           ) : (
-            <div className="mt-[15px] flex gap-3 lg:mt-auto lg:max-w-[520px] lg:pt-7">
+            <div className="flex gap-3 lg:max-w-[520px]">
               <BuyCta event={event} placement="home_destacado" className="!h-[52px] flex-1 lg:!h-14" />
               <WhatsappIconButton
                 href={whatsappUrlOrGroup(buildPriceWhatsappMessage(event.title))}
@@ -346,6 +381,13 @@ function AgendaRow({ event }: { event: EventRecord }) {
         {venue ? <span className="mt-[5px] block truncate text-[12px] leading-none text-white/55">{venue}</span> : null}
         {lineup.length ? (
           <span className="mt-1 block truncate text-[11.5px] leading-none text-white/40">{lineup.join(" · ")}</span>
+        ) : null}
+        {/* La fila no tenía ninguna señal de urgencia: una fecha por agotarse se veía igual
+            que cualquier otra. */}
+        {event.last_tickets && !event.sold_out ? (
+          <span className="mt-[9px] flex">
+            <UrgencyChip size="sm" />
+          </span>
         ) : null}
       </span>
 

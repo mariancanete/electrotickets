@@ -5,7 +5,7 @@ import { Chip, InfoBlock, UrgencyChip } from "@/components/chips";
 import { BuyCta, SoldOutWhatsappCta, WhatsappGroupButton, WhatsappIconButton } from "@/components/cta";
 import { DateCard } from "@/components/date-card";
 import { DetailActions } from "@/components/detail-actions";
-import { Flyer } from "@/components/flyer-image";
+import { FlyerFrame } from "@/components/flyer-image";
 import { GridCard } from "@/components/grid-card";
 import { Icon } from "@/components/icons";
 import { SoldOutStamp } from "@/components/sold-out-stamp";
@@ -186,6 +186,19 @@ export default async function EventDetailPage({ params }: PageProps) {
           <Icon name="chat" size={13} />
           Agotado en Bombo · te aviso si se libera una entrada
         </p>
+      ) : hasLastTickets ? (
+        // Últimas entradas: la urgencia se repite justo arriba del botón, que es donde se
+        // decide. La expectativa de que se paga en Bombo sigue en la misma línea.
+        <Link
+          href={`/eventos/${event.slug}/comprar`}
+          className="t150 flex items-center justify-center gap-[6px] text-[12px] leading-none text-white/55 hover:text-white lg:order-2 lg:mt-1 lg:justify-start lg:text-[13px]"
+        >
+          <span className="flex items-center gap-[5px] font-bold text-urgencia">
+            <Icon name="flame" size={15} />
+            Últimas entradas
+          </span>
+          · link oficial de Bombo
+        </Link>
       ) : (
         <Link
           href={`/eventos/${event.slug}/comprar`}
@@ -247,13 +260,25 @@ export default async function EventDetailPage({ params }: PageProps) {
            * pantalla se perdería de vista al primer scroll.
            */}
           <div className="sticky-col sticky-detalle flex flex-col lg:gap-[14px]">
-            <div className="relative h-[300px] flex-none overflow-hidden lg:aspect-4/5 lg:h-auto lg:overflow-hidden lg:rounded-block lg:border lg:border-white/10">
-              <Flyer src={event.flyer_url} alt={`Flyer de ${event.title}`} sizes="(min-width:1024px) 540px, 100vw" priority large mobileFit="contain" />
+            {/* El flyer a su medida y entero, en mobile y en desktop. En mobile va a ancho
+                completo con tope 2:3: una story no empuja el título debajo de la barra de
+                compra. En desktop el tope es 4:5, el alto que ya tenía la columna: un flyer
+                más alto bajaría el CTA de la columna sticky abajo del pliegue. */}
+            <FlyerFrame
+              src={event.flyer_url}
+              alt={`Flyer de ${event.title}`}
+              sizes="(min-width:1024px) 540px, 100vw"
+              ratio={event.flyer_ratio}
+              maxRatio={1.5}
+              maxRatioDesktop={1.25}
+              priority
+              className="flex-none lg:rounded-block lg:border lg:border-white/10"
+            >
               {isSoldOut ? <SoldOutStamp size="xl" /> : null}
               <div className="lg:hidden">
                 <DetailActions title={event.title} slug={event.slug} />
               </div>
-            </div>
+            </FlyerFrame>
 
             {/* En desktop Guardar y Compartir dejan de flotar sobre el flyer y pasan a
                 botones delineados con etiqueta. Siguen sin usar chartreuse. */}
@@ -268,7 +293,7 @@ export default async function EventDetailPage({ params }: PageProps) {
             <div className="gutter flex-none pt-[18px] lg:px-0 lg:pt-0">
               {hasLastTickets || event.genre ? (
                 <div className="flex flex-wrap gap-[7px] lg:gap-2">
-                  {hasLastTickets ? <UrgencyChip size="md" label="Últimas entradas" /> : null}
+                  {hasLastTickets ? <UrgencyChip size="lg" /> : null}
                   {event.genre ? <Chip>{event.genre}</Chip> : null}
                 </div>
               ) : null}

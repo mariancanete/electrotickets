@@ -641,6 +641,23 @@ select {
   }
 }
 
+/**
+ * Recuadro del flyer a su medida (`FlyerFrame`).
+ *
+ * La proporción la calcula el servidor (`flyer_ratio`, alto/ancho) y llega por variable, con
+ * un tope distinto en mobile (`--fr-m`) y en desktop (`--fr-d`). Así el recuadro se dibuja
+ * con la medida exacta del flyer desde el HTML: se ve entero, sin bandas y sin saltos.
+ */
+.flyer-frame {
+  aspect-ratio: 1 / var(--fr-m, 1.25);
+}
+
+@media (min-width: 1024px) {
+  .flyer-frame {
+    aspect-ratio: 1 / var(--fr-d, 1.25);
+  }
+}
+
 /** Agotado no responde a hover ni recibe foco: no hay ninguna acción detrás. */
 .cta-disabled {
   pointer-events: none;
@@ -676,8 +693,9 @@ select {
  * sticky y la columna scrollea con la página. Antes recortar el CTA, preferimos perder el
  * pegado.
  *
- * Los umbrales salen del alto real de la columna: flyer 4:5 sobre 470px son 587px, más los
- * botones, el CTA y la línea de link oficial; a 1440 el flyer es de 540px y la columna crece.
+ * Los umbrales salen del alto real de la columna: el flyer va a su medida pero con tope
+ * 4:5 en desktop (`FlyerFrame`), así que sobre 470px mide como mucho 587px, más los botones,
+ * el CTA y la línea de link oficial; a 1440 el flyer es de 540px y la columna crece.
  */
 @media (min-width: 1024px) and (max-height: 859.98px) {
   .sticky-detalle {

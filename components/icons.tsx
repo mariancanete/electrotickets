@@ -39,7 +39,8 @@ export type IconName =
   | "arrow"
   | "back"
   | "x"
-  | "out";
+  | "out"
+  | "flame";
 
 /**
  * Sprite SVG. Va una sola vez, al principio del `<body>`.
@@ -170,6 +171,15 @@ export function IconSprite() {
         <symbol id="i-out" viewBox="0 0 24 24">
           <path fill="currentColor" d="M13 2.6h8.4V11h-2.2V6.4l-8.1 8.1-1.6-1.6 8.1-8.1H13V2.6Z" />
           <path fill="currentColor" d="M3.4 5.6h7v2.2H5.6v10.6h10.6V13.6h2.2v7.8H3.4V5.6Z" />
+        </symbol>
+        {/* Llama de "Últimas entradas": contorno lleno con la lengua interior calada, para que
+            se lea como fuego también a 13px sobre el coral. */}
+        <symbol id="i-flame" viewBox="0 0 24 24">
+          <path
+            fill="currentColor"
+            fillRule="evenodd"
+            d="M12.6 1.6c.4 3.1-1 5.1-2.6 6.9C8.4 10.3 6.6 12.2 6.6 15.2c0 3.8 2.6 6.9 5.9 7 3.4.1 6-2.9 6-6.7 0-2.6-1.2-4.6-2.8-6.2-.2 1.5-.9 2.6-2.1 3.2.4-4.3-.5-8-1-10.9Zm-.4 19.1c-1.7 0-3-1.3-3-3.1 0-1.6 1-2.7 2-3.7.5 1 1.3 1.6 2.1 1.8.1-.8.5-1.5 1-2 .6.8.9 1.7.9 2.7 0 2.4-1.3 4.3-3 4.3Z"
+          />
         </symbol>
         <symbol id="i-mark" viewBox="0 0 64 64">
           <path
