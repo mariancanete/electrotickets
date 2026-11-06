@@ -562,7 +562,24 @@ Incluye el panel de Conversión con filtro Vigentes/Finalizados/Todos.
 
 - **Mandarine Park no se toca en SEO.** Las mejoras de título/h1/descripción/FAQ del detalle
   aplican solo a fechas con ciudad fuera de CABA (`getDistinctCity` en
-  `app/eventos/[slug]/page.tsx`). Para las porteñas el HTML tiene que quedar idéntico.
+  `app/eventos/[slug]/page.tsx`). Para las porteñas **vigentes** el HTML tiene que quedar
+  idéntico. Excepción (PR #38): las **finalizadas con el mismo artista de nuevo en agenda**,
+  de cualquier ciudad (ver abajo).
+- **SEO de Massano B2B Kevin de Vries (PR #38).** "kevin de vries entradas" traía primero la
+  finalizada de Mandarine: su FAQ decía literal "¿Dónde comprar entradas para KEVIN DE VRIES?"
+  y respondía "ya finalizó", y el link a la fecha nueva estaba al pie, debajo del FAQ.
+  - **Finalizada + mismo artista en agenda** (`findSameArtistEvent`): título "… | Finalizado ·
+    Nueva fecha en Mute", descripción y "Sobre la fecha" que nombran la fecha nueva, FAQ que
+    deriva a ella y aviso ultramar (`NextDateBanner`, nunca chartreuse: lleva al detalle, no
+    a Bombo) **arriba**, debajo de la fecha. Sin fecha nueva, la finalizada queda como antes.
+  - **Placeholders fuera:** "TBA", "TBC", "a confirmar"… no cuentan como artista. Antes una
+    finalizada con "TBA" mostraba "Próxima fecha de TBA" y mandaba a cualquier fecha con TBA.
+  - **Fuera de CABA, vigentes:** título corto "X en Mute, Mar del Plata | Entradas" (pasaba
+    los 80 caracteres y Google lo cortaba antes de "entradas"); h1 "en Mute, Mar del Plata";
+    con 2+ artistas en el título, una pregunta por artista ("¿Cuándo toca MASSANO en Mar del
+    Plata?"), que es como se busca un b2b.
+  - El JSON-LD `MusicEvent` no cambia de forma; solo su `description`, que siempre salió de
+    `buildSeoDescription`.
 - **Agotada nunca queda sin acción:** WhatsApp de lista de espera, delineado. El "agotado" lo
   dice el sello del flyer, no el botón.
 - **Los flyers no pasan por el optimizador de Vercel** (cupo agotado → 402). Van por wsrv.
