@@ -1,7 +1,13 @@
 # Contexto de diseño — ElectroTickets
 
 Documento de traspaso para retomar el trabajo visual sin releer todo el historial.
-Última actualización: agosto 2026 (**rediseño Hora Pico — 9 pantallas mobile + desktop**).
+Última actualización: noviembre 2026 (**PR #30 a #36: conversión, SEO de Mute, agotadas,
+flyers en wsrv y a su medida, compresión en el panel**). Lo más reciente está en §2.7 y en
+los pendientes de §6.
+
+> **Si arrancás una sesión nueva, leé en este orden:** `AGENTS.md` (reglas), este archivo
+> (qué hay y por qué), y recién después `HANDOFF_REDISENO.md`, que es una **propuesta** de
+> rediseño de octubre que se implementó solo en parte (ver §6).
 
 > El sistema visual vigente es **Hora Pico** (§2.5). Reemplaza al sistema violeta + cyan con
 > Archivo + DM Mono que describen los PR #22 a #26. Todo lo anterior a §2.5 queda como
@@ -396,6 +402,36 @@ los demás. `getDayKeyIso` usa la misma corrección de noche que `getDayKey`.
 y la 08 es Buscar; en la §10 la 03 es Buscar y la 04 es Detalle). Las rutas son las mismas y no
 cambian: conviene nombrarlas por ruta.
 
+### Oct–nov 2026 — PR #30 a #36 (sistema vigente: Hora Pico + estos cambios)
+
+Todo se hizo sobre Hora Pico, sin cambiar tokens ni tipografías. `HANDOFF_REDISENO.md` y el
+lienzo de Claude Design (https://claude.ai/artifact/MaFd2gwbZvwaoXs77bCcaJ, privado) son
+la propuesta "Camino corto" de esa misma conversación: **no** se implementó entera (§6).
+
+| PR | Qué cambió |
+|---|---|
+| #30 | Sección **"Fechas destacadas"** en la home: las `featured` fuera del finde (placement `home_destacadas`). **Flyer completo en mobile** (contain + fondo difuminado; luego lo reemplazó #36). Se commiteó `HANDOFF_REDISENO.md` |
+| #31 + #32 | **SEO de la fecha de Mute** (`/eventos/solomun-2027-01-02`): h1 con el venue, título con la ciudad, descripción con fecha y año, "Sobre la fecha" y FAQ con "SOLOMUN en Mute". El #31 lo aplicó a todos los eventos y cambió la página de Mandarine Park, que **no había que tocar** ("solomun mandarine" sale 2.ª); el #32 lo restringe a **fechas fuera de CABA** (`getDistinctCity`): las porteñas quedan idénticas a antes del #31 (verificado comparando el HTML del build). #32 también sube el tope de destacadas a **8** |
+| #33 | **Agotadas:** el botón "Agotado" pasa a **"Avisame por WhatsApp"** (`SoldOutWhatsappCta`, delineado, nunca chartreuse; abre `wa.me` con `buildWaitlistWhatsappMessage`). **Sello "AGOTADO / SOLD OUT"** sobre el flyer (`SoldOutStamp`: tinta y blanco, ni coral ni chartreuse; banda al pie en miniaturas). Las cards agotadas dejan de bajar la opacidad entera. Botón **"Sumate al grupo de WhatsApp"** dentro de la credencial RRPP del detalle (`WhatsappGroupButton`, `wa_source: event_group`) |
+| #34 | **Flyers rotos:** se agotó el cupo de transformaciones de Vercel (4,9K/5K) y `/_next/image` devolvía **402**. Ahora `next/image` usa un loader propio (`lib/flyer-loader.ts`) que pide los flyers a **wsrv.nl** (WebP, sin agrandar, Cloudflare cachea un año); menos anchos (`deviceSizes`/`imageSizes` en `next.config.ts`); preconnect en el layout. **Card con venue largo** (DISCIP, SOLOMUN NYE) se salía de la card: `min-w-0` en la columna de `DateCard` |
+| #35 | **El panel comprime el flyer** en el navegador antes de subirlo (`lib/compress-flyer.ts`: máx. 1200×1600, JPEG 0,85 —es el `og:image` de WhatsApp—). Valida 2 MB **antes** de subir con el mensaje de AGENTS.md; muestra "Flyer optimizado: 3,1 MB → 134 KB". Upload con `cacheControl` de un año. `GridCard` (solo desktop) dejaba bajar flyers de 1200px ocultos en mobile: `sizes` con `1px` final |
+| #36 | **Flyers enteros a su medida** en mobile y desktop: `FlyerFrame` dibuja el recuadro con la proporción real del flyer (`flyer_ratio`, ver abajo), sin recortar ni deformar ni bandas. **"Últimas entradas" más visible:** llama nueva en el sprite, texto completo, halo coral, tres tamaños; también en la fila compacta de la home y en la línea sobre el CTA del detalle |
+
+**Proporción del flyer (`flyer_ratio`).** No es columna: `lib/flyer-meta.ts` la pide a wsrv
+(`output=json`, caché de datos de Next, timeout 1,5 s) y `lib/events.ts` la agrega en
+`getPublishedEvents` y `getEventBySlug`. Si falla, `null` → recuadro 4:5 con el flyer entero.
+En vivo había 4 cuadrados, 3 stories 9:16, 3 de 3:4 y 6 de 4:5.
+
+**Topes de `FlyerFrame` (alto/ancho máximo).** Card mobile 62px de ancho, hasta 1,5 · grilla
+desktop 4/3 · detalle mobile ancho completo, hasta 1,5 · **detalle y destacada desktop 1,25**
+(el alto que ya tenían: con 4/3 el CTA del detalle bajaba a 990px en 1440×900; los umbrales
+del sticky siguen en 859.98/949.98). Por encima del tope queda margen relleno con el mismo
+flyer difuminado (misma URL, sin segunda descarga).
+
+**Destacada mobile de la home.** Flyer de 128px al costado de los datos y CTA debajo a todo
+el ancho. A lo ancho y a su medida el flyer empujaba "Comprar en Bombo" abajo del pliegue;
+así queda a ~590px en 390×844.
+
 ---
 
 ## 3. Componentes principales de UI
@@ -406,20 +442,23 @@ cambian: conviene nombrarlas por ruta.
 |---|---|
 | `app/globals.css` | **Fuente de verdad del sistema visual.** Tokens de Hora Pico, `@theme`, `.trama`, `.rayado`, `.dato`, `.display`, foco, reduced-motion |
 | `app/layout.tsx` | Carga de fuentes (`next/font`), sprite de íconos, GA4 y Clarity |
-| `components/icons.tsx` | **Set de 23 glifos** + isotipo `Mark`. `IconSprite` va una vez en el layout |
+| `components/icons.tsx` | **Set de 24 glifos** (se sumó `flame`) + isotipo `Mark`. `IconSprite` va una vez en el layout |
 | `components/date-card.tsx` | **La card de fecha.** Se reusa en 02, 05, 06, 07 y 08. No hay card especial de búsqueda |
-| `components/cta.tsx` | `BuyCta` (56px, va a `/go/`), `CardCta` (44px, abre el detalle), `SoldOutCta`, `WhatsappIconButton` |
+| `components/cta.tsx` | `BuyCta` (56px, va a `/go/`), `CardCta` (44px, abre el detalle), `SoldOutWhatsappCta` (agotada → WhatsApp; reemplazó a `SoldOutCta`), `WhatsappIconButton`, `WhatsappGroupButton` |
 | `components/bottom-nav.tsx` | Nav de 4 tabs + `NavSpacer`, que reserva su alto al final de cada pantalla |
 | `components/app-header.tsx` | `AppHeader` (marca ultramar con trama), `ScreenHeader`, `TabHeader`, `Wordmark` |
-| `components/chips.tsx` | `Chip`, `UrgencyChip`, `CredentialChip`, `InfoBlock` |
-| `components/flyer-image.tsx` | `Flyer` (imagen o placeholder rayado) + `next/image` sin optimizar si el host no está permitido |
+| `components/chips.tsx` | `Chip`, `UrgencyChip` (llama + "Últimas entradas", tamaños sm/md/lg), `CredentialChip`, `InfoBlock` |
+| `components/flyer-image.tsx` | **`FlyerFrame`** (recuadro a la medida del flyer), `FlyerImage`, `FlyerFallback`. `Flyer` ya no existe |
+| `components/sold-out-stamp.tsx` | Sello de agotada sobre el flyer (`sm` banda, `lg`, `xl`) |
+| `lib/flyer-loader.ts` | Loader de `next/image`: flyers por **wsrv.nl**, no por Vercel. Para volver a Vercel: sacar `loader` y `loaderFile` de `next.config.ts` |
+| `lib/flyer-meta.ts` | `withFlyerRatios`: agrega `flyer_ratio` a los eventos públicos |
+| `lib/compress-flyer.ts` | Compresión del flyer en el navegador (panel) |
 | `lib/saved-dates.ts` | Mis entradas en `localStorage`. Sin cuenta, sin cookie, sin dato personal |
 | `lib/filters.ts` | Filtros de 02 y 08. Todos viven en la URL |
 | `lib/weekend.ts` | Criterio de finde (viernes-sábado-domingo) en horario argentino |
 
-> **`EventRow`, `EventCard` y `SectionHeading` quedaron sin uso** en el rediseño. No se
-> borraron todavía porque el admin y las páginas de confianza podrían necesitarlos; si el
-> próximo pase confirma que no, se eliminan.
+> **`EventRow`, `EventCard` y `SectionHeading` ya no existen.** La card de listas es
+> `DateCard` (mobile) y `GridCard` (desktop, oculta debajo de 1024px).
 
 ### Páginas
 
@@ -448,13 +487,13 @@ cambian: conviene nombrarlas por ruta.
 
 ### Captura y conversión
 
-`components/whatsapp-alerts.tsx` exporta `WhatsappAlerts` y `VipTables`.
-`components/buy-button.tsx` y `components/whatsapp-link.tsx` son los CTA instrumentados.
+Los CTA instrumentados son `BuyCta`, `SoldOutWhatsappCta`, `WhatsappIconButton`,
+`WhatsappGroupButton` (`components/cta.tsx`) y `WhatsappLink` (`components/whatsapp-link.tsx`).
 
-`lib/credentials.ts` centraliza la prueba social. Está **vacío a propósito** y lo que está
-vacío no renderiza. Es el único lugar donde cargar venues donde sos RRPP oficial, año de
-inicio o tamaño de la comunidad. **No completar nada que no se pueda sostener con un dato
-real.**
+`lib/credentials.ts` centraliza la credencial: `officialVenues` tiene **Mute, Mandarine,
+Crobar, Rio y The Bow** (dato del dueño; ver "Rio"/"Río" en §6). `sinceYear` y
+`communitySize` siguen vacíos y no renderizan. **No completar nada que no se pueda sostener
+con un dato real.**
 
 ### Admin
 
@@ -519,6 +558,19 @@ Incluye el panel de Conversión con filtro Vigentes/Finalizados/Todos.
 - **Mobile no se degrada.** Es de donde entra la mayoría. Cualquier cambio de layout va en
   variantes `sm:` y superiores salvo que el objetivo sea justamente mejorar mobile.
 
+### Decisiones de oct–nov 2026
+
+- **Mandarine Park no se toca en SEO.** Las mejoras de título/h1/descripción/FAQ del detalle
+  aplican solo a fechas con ciudad fuera de CABA (`getDistinctCity` en
+  `app/eventos/[slug]/page.tsx`). Para las porteñas el HTML tiene que quedar idéntico.
+- **Agotada nunca queda sin acción:** WhatsApp de lista de espera, delineado. El "agotado" lo
+  dice el sello del flyer, no el botón.
+- **Los flyers no pasan por el optimizador de Vercel** (cupo agotado → 402). Van por wsrv.
+  Ningún visitante descarga nada directo de Supabase; solo el `og:image` y el panel.
+- **El flyer nunca se recorta ni se deforma.** Si no entra a su medida por el tope, se
+  completa con el mismo flyer difuminado.
+- **"Últimas entradas" sin animación:** urgencia que se lee, no que molesta.
+
 ### Descartado a propósito de la referencia visual
 
 Banderas de país (el sitio es solo Argentina), fila de estadísticas (requeriría inventar
@@ -529,21 +581,65 @@ fondo (se vuelven cursi y no aportan información).
 
 ## 5. Cómo verificar un cambio visual
 
-El entorno de trabajo **no puede alcanzar Vercel ni las imágenes de Supabase**, así que la
-verificación local se hace sobre el build de producción con Chromium:
+La verificación se hace sobre el build de producción con Chromium
+(`playwright-core` con `executablePath: "/opt/pw-browsers/chromium"`):
 
 ```bash
+npm ci                     # en un contenedor nuevo no hay node_modules
 npm run build && npm run start
-# y con playwright-core apuntando a /opt/pw-browsers
 ```
 
-Medir siempre a **390px** (mobile) y 1358px (desktop). Lo que conviene chequear:
+**Trampas que costaron tiempo (nov 2026):**
+
+- **Cerrar el servidor:** `pkill -x next-server` **no** lo mata (el proceso se llama
+  `next-server (v16…`) y queda sirviendo el build viejo; `pkill -f next-server` mata también
+  la shell. Usar `pkill -f "^next-server"`.
+- **ISR:** un servidor levantado regenera páginas en segundo plano y "ensucia" las
+  comparaciones. Para comparar antes/después, leer el HTML del build
+  (`.next/server/app/eventos/<slug>.html`) sin levantar servidor.
+- **Flyers reales en local:** setear `NEXT_PUBLIC_SUPABASE_URL` en el build (sin la anon
+  key los datos siguen siendo los demo) y poner URLs reales de flyers en `lib/demo-events.ts`
+  de forma temporal. Para `flyer_ratio` el build necesita red (wsrv).
+- **Red desde el navegador de prueba:** Chromium no confía en el CA del proxy. Interceptar
+  con `page.route("**/*", r => r.fulfill({ response: await r.fetch() }))` y correr node con
+  `NODE_EXTRA_CA_CERTS=/root/.ccr/ca-bundle.crt NODE_USE_ENV_PROXY=1`. Nunca desactivar TLS.
+- **Contar pedidos por dominio:** las URLs de wsrv llevan la de Supabase como parámetro.
+
+Medir siempre a **390×844** (mobile, idealmente 3x) y **1440×900** (desktop). Lo que conviene chequear:
 
 - Que ningún título se corte (`scrollWidth > clientWidth`).
 - Que las filas de una misma lista midan igual.
 - Que no haya scroll horizontal.
 - Que ningún target interactivo baje de 24px.
+- Que el CTA de compra quede arriba del pliegue (home mobile ~590px, desktop <800px).
+- Que en `/eventos` mobile la columna de contenido de cada `DateCard` mida igual (286px).
 
 Los eventos de `lib/demo-events.ts` tienen fechas fijas de 2026 y **ya son pasadas**, así que
 la home renderiza vacía con el fallback. Para verificar visualmente hay que adelantar esas
 fechas de forma temporal y revertir el archivo después.
+
+---
+
+## 6. Pendientes y estado (noviembre 2026)
+
+**Del dueño (no son código):**
+
+- `NEXT_PUBLIC_WHATSAPP_GROUP_URL` en Vercel tiene el link viejo del grupo (`?mode=gi_t`);
+  es el mismo grupo. Si se quiere el link nuevo, cambiar la variable y redeployar.
+- **"Rio" o "Río"** en `lib/credentials.ts`: el dueño escribió "Río". Confirmar antes de
+  cambiarlo (es una afirmación pública).
+- Search Console: pedir reindexación de las URLs que cambian (en su momento, la de Mute).
+- Mirar Supabase → Usage → Egress: con wsrv tendría que haber bajado.
+- Los flyers subidos antes del #35 no se recomprimieron (se sirven livianos por wsrv igual).
+- Nombre para el bloque de RRPP (`NEXT_PUBLIC_CONTACT_NAME`) y textos de venue, si se
+  implementan las páginas de venue.
+
+**De `HANDOFF_REDISENO.md` (propuesta "Camino corto"):**
+
+- **Hecho, aunque distinto a la propuesta:** destacadas fuera del finde en la home; flyer
+  entero (con `FlyerFrame`, no con el fondo difuminado fijo); "Últimas entradas" visible;
+  agotada con WhatsApp; grupo de WhatsApp en el detalle; compresión en el panel.
+- **No hecho:** tipografía Bebas Neue + DM Mono + DM Sans; CTA de tarjeta directo a Bombo
+  (las cards siguen con "Entradas" → detalle); corazón "Guardar" funcional; calendario
+  mensual en `/eventos`; páginas `/venues/[slug]`; "Cómo comprar" plegable; ley de color sin
+  excepciones; placements nuevos de esa propuesta.
