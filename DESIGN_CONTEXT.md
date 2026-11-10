@@ -560,11 +560,11 @@ Incluye el panel de Conversión con filtro Vigentes/Finalizados/Todos.
 
 ### Decisiones de oct–nov 2026
 
-- **Mandarine Park no se toca en SEO.** Las mejoras de título/h1/descripción/FAQ del detalle
-  aplican solo a fechas con ciudad fuera de CABA (`getDistinctCity` en
-  `app/eventos/[slug]/page.tsx`). Para las porteñas **vigentes** el HTML tiene que quedar
-  idéntico. Excepción (PR #38): las **finalizadas con el mismo artista de nuevo en agenda**,
-  de cualquier ciudad (ver abajo).
+- ~~Mandarine Park no se toca en SEO.~~ **Reemplazada en el PR #39** por decisión del dueño
+  ("la prioridad es que entre más gente"), con los datos de Search Console de octubre 2026:
+  el 38 % de las impresiones tenía "argentina" y el 23 % "buenos aires", y ningún título de
+  una fecha porteña nombraba la ciudad ni el país. "solomun buenos aires" (3.028
+  impresiones) estaba en posición 6,8 con 1 % de CTR. Ver "SEO por intención" abajo.
 - **SEO de Massano B2B Kevin de Vries (PR #38).** "kevin de vries entradas" traía primero la
   finalizada de Mandarine: su FAQ decía literal "¿Dónde comprar entradas para KEVIN DE VRIES?"
   y respondía "ya finalizó", y el link a la fecha nueva estaba al pie, debajo del FAQ.
@@ -580,6 +580,27 @@ Incluye el panel de Conversión con filtro Vigentes/Finalizados/Todos.
     Plata?"), que es como se busca un b2b.
   - El JSON-LD `MusicEvent` no cambia de forma; solo su `description`, que siempre salió de
     `buildSeoDescription`.
+- **SEO por intención (PR #39).** Una misma fecha tiene que salir para varias búsquedas, y
+  cada tipo de búsqueda tiene su página:
+  - **Detalle de evento** (`/eventos/[slug]`) — "[artista] [venue]", "[artista] [ciudad]",
+    "[artista] [fecha]". Título `SOLOMUN en Mandarine Park, Buenos Aires 2026 | Entradas`
+    para **todas** las fechas; h1 con "en Mandarine Park, Buenos Aires"; descripción con
+    "(Buenos Aires, Argentina)"; FAQ "¿Cuándo toca X en Argentina?" por cada artista del
+    título, con todas sus fechas vigentes. "CABA" se muestra "Buenos Aires" (`getEventCity`).
+  - **Página de artista** (`/artistas/[slug]`, nueva) — "[artista] argentina", "[artista]
+    argentina 2026", "[artista] entradas". Título `SOLOMUN en Argentina 2026 y 2027: fechas y
+    entradas`. Lista fechas vigentes (`DateCard`/`GridCard`, placement `artista_card`) y hasta
+    6 anteriores. **Es una URL que no vence**: el posicionamiento se acumula entre fechas en
+    vez de arrancar de cero con cada slug nuevo. Sin fechas vigentes no da 404: muestra el
+    grupo de WhatsApp (`wa_source: artist_page`). Sale del `lineup`, no hay tabla de artistas.
+    Cada chip del lineup del detalle enlaza acá, y la finalizada suma "Todas las fechas de X".
+  - Los helpers de texto viven en `lib/event-seo.ts`; la consulta de artistas en
+    `lib/artists.ts`. Placeholders ("TBA", "a confirmar"…) nunca generan página ni link.
+- **`/go/` fuera de Google (PR #39).** Search Console tenía `/go/...` indexadas (311
+  impresiones) y la ruta registraba en `event_clicks` cada pasada de un crawler. Ahora
+  responde con `X-Robots-Tag: noindex, nofollow`, a los bots los redirige sin registrar nada
+  (`isBot` en `app/go/[slug]/route.ts`) y `BuyCta` lleva `rel="nofollow"`. **Los clics de
+  `event_clicks` pueden bajar desde este PR: es la limpieza, no una caída de ventas.**
 - **Agotada nunca queda sin acción:** WhatsApp de lista de espera, delineado. El "agotado" lo
   dice el sello del flyer, no el botón.
 - **Los flyers no pasan por el optimizador de Vercel** (cupo agotado → 402). Van por wsrv.

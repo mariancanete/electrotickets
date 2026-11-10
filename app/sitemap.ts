@@ -1,13 +1,15 @@
 import type { MetadataRoute } from "next";
+import { getUpcomingArtists } from "@/lib/artists";
 import { getRecentPastPublishedEvents, getUpcomingPublishedEvents } from "@/lib/events";
 import { siteConfig } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [upcomingEvents, pastEvents] = await Promise.all([
+  const [upcomingEvents, pastEvents, artists] = await Promise.all([
     getUpcomingPublishedEvents(),
-    getRecentPastPublishedEvents()
+    getRecentPastPublishedEvents(),
+    getUpcomingArtists()
   ]);
 
   const baseRoutes: MetadataRoute.Sitemap = [
@@ -32,6 +34,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(event.updated_at || event.created_at || event.starts_at),
       changeFrequency: "weekly" as const,
       priority: event.featured ? 0.85 : 0.75
+    })),
+    // Artistas con fechas vigentes. Sus páginas no vencen: el posicionamiento se acumula de
+    // una fecha a la siguiente, así que pesan tanto como una fecha destacada.
+    ...artists.map((artist) => ({
+      url: `${siteConfig.url}/artistas/${artist.slug}`,
+      lastModified: new Date(artist.lastModified),
+      changeFrequency: "weekly" as const,
+      priority: 0.85
     })),
     // Las fechas ya realizadas siguen en el sitemap con prioridad baja: conservan
     // posicionamiento y backlinks, y ahora sus páginas derivan a la agenda vigente en vez

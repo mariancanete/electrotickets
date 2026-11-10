@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Fragment } from "react";
 import { notFound } from "next/navigation";
 import { Chip, InfoBlock, UrgencyChip } from "@/components/chips";
 import { BuyCta, SoldOutWhatsappCta, WhatsappGroupButton, WhatsappIconButton } from "@/components/cta";
@@ -10,7 +11,22 @@ import { GridCard } from "@/components/grid-card";
 import { Icon } from "@/components/icons";
 import { SoldOutStamp } from "@/components/sold-out-stamp";
 import { YoutubeFacade } from "@/components/youtube-facade";
-import { formatDatoRange, formatEventLongDate, formatLongDay, formatTime } from "@/lib/dates";
+import { getArtistUpcomingEvents } from "@/lib/artists";
+import { formatDatoRange, formatLongDay, formatTime } from "@/lib/dates";
+import {
+  artistPath,
+  formatSeoDate,
+  formatShortSeoDate,
+  getEventArtists,
+  getEventCity,
+  getEventLabel,
+  getEventPrimaryPlace,
+  getEventYear,
+  getHeadliners,
+  isRealArtist,
+  joinList,
+  shouldAppendPlaceToTitle
+} from "@/lib/event-seo";
 import {
   getEventBySlug,
   getRecentPastPublishedEvents,
@@ -109,8 +125,8 @@ export default async function EventDetailPage({ params }: PageProps) {
   const priceUrl = whatsappUrlOrGroup(buildPriceWhatsappMessage(event.title));
 
   const seoDescription = buildSeoDescription(event, finished, sameArtistEvent);
-  const aboutEvent = buildAboutEvent(event, sameArtistEvent);
-  const faqItems = buildEventFaq(event, isSoldOut, finished, sameArtistEvent);
+  const aboutEvent = buildAboutEvent(event, sameArtistEvent, finished);
+  const faqItems = buildEventFaq(event, isSoldOut, finished, sameArtistEvent, upcomingEvents);
   const eventUrl = absoluteUrl(`/eventos/${event.slug}`);
   const goUrl = absoluteUrl(`/go/${event.slug}`);
   const eventImage = absoluteUrl(event.flyer_url || "/og-logo");
@@ -118,10 +134,13 @@ export default async function EventDetailPage({ params }: PageProps) {
   const lineup = event.lineup?.filter(Boolean) ?? [];
   const mapUrl = getMapUrl(event);
   const placeName = getEventPrimaryPlace(event);
-  // Solo fuera de CABA (ver `getDistinctCity`): las fechas porteñas, Mandarine Park
-  // incluida, ya posicionan bien con el h1 de siempre y no se tocan.
-  const distinctCity = getDistinctCity(event);
-  const titleNeedsPlace = Boolean(distinctCity) && shouldAppendPlaceToTitle(event.title, placeName);
+  // Debajo del título, "en Mandarine Park, Buenos Aires": el h1 decía solo "SOLOMUN" y no
+  // nombraba nunca el lugar ni la ciudad, que son justo las palabras con las que se busca.
+  // Cada parte se corta entera: "EN MANDARINE PARK, / BUENOS AIRES" y nunca "EN MANDARINE /
+  // PARK, BUENOS AIRES".
+  const placeLine = [shouldAppendPlaceToTitle(event.title, placeName) ? `en ${placeName}` : "", getEventCity(event)].filter(
+    Boolean
+  );
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -300,14 +319,22 @@ export default async function EventDetailPage({ params }: PageProps) {
                 </div>
               ) : null}
 
-              {/* El venue va dentro del h1 cuando el título no lo nombra. Antes el h1 decía solo
-                  "SOLOMUN" en las dos fechas de Solomun: el encabezado principal no nombraba nunca
-                  el lugar, que es justo la palabra con la que se busca ("solomun mute"). */}
+              {/* El venue y la ciudad van dentro del h1. Antes el h1 decía solo "SOLOMUN": el
+                  encabezado principal no nombraba nunca el lugar, que es justo la palabra con la
+                  que se busca ("solomun mute", "solomun buenos aires"). */}
               <h1 className="display titular-detalle mt-[14px] text-[40px] leading-[0.92] tracking-[-0.045em] lg:mt-[18px]">
                 {event.title}
-                {titleNeedsPlace ? (
+                {placeLine.length ? (
                   <span className="mt-2 block text-[24px] leading-none tracking-[-0.02em] text-white/70 lg:mt-3 lg:text-[34px]">
-                    en {placeName}, {distinctCity}
+                    {placeLine.map((part, index) => (
+                      <Fragment key={part}>
+                        {index ? " " : null}
+                        <span className="whitespace-nowrap">
+                          {part}
+                          {index < placeLine.length - 1 ? "," : ""}
+                        </span>
+                      </Fragment>
+                    ))}
                   </span>
                 ) : null}
               </h1>
@@ -360,14 +387,26 @@ export default async function EventDetailPage({ params }: PageProps) {
               <section className="gutter flex-none pt-5 lg:px-0 lg:pt-8">
                 <h2 className="text-[18px] font-bold leading-none tracking-[-0.02em] lg:text-[20px]">Lineup</h2>
                 <div className="mt-3 flex flex-wrap gap-2 lg:mt-[14px] lg:gap-[10px]">
-                  {lineup.map((artist) => (
-                    <span
-                      key={artist}
-                      className="rounded-full border border-white/[0.12] bg-surface px-4 py-[11px] text-[13px] font-semibold leading-none lg:px-[18px] lg:py-[13px] lg:text-[14px]"
-                    >
-                      {artist}
-                    </span>
-                  ))}
+                  {/* Cada artista enlaza a su página: es el camino interno que le pasa peso a
+                      `/artistas/[slug]` y la URL que no cambia de una fecha a la siguiente. */}
+                  {lineup.map((artist) =>
+                    isRealArtist(artist) ? (
+                      <Link
+                        key={artist}
+                        href={artistPath(artist)}
+                        className="btn-out t150 rounded-full border border-white/[0.12] bg-surface px-4 py-[11px] text-[13px] font-semibold leading-none lg:px-[18px] lg:py-[13px] lg:text-[14px]"
+                      >
+                        {artist}
+                      </Link>
+                    ) : (
+                      <span
+                        key={artist}
+                        className="rounded-full border border-white/[0.12] bg-surface px-4 py-[11px] text-[13px] font-semibold leading-none lg:px-[18px] lg:py-[13px] lg:text-[14px]"
+                      >
+                        {artist}
+                      </span>
+                    )
+                  )}
                 </div>
               </section>
             ) : null}
@@ -508,7 +547,7 @@ function InfoRow({
  */
 function NextDateBanner({ event, nextDate }: { event: EventRecord; nextDate: EventRecord }) {
   const artist = sharedArtistName(event, nextDate) || nextDate.title;
-  const city = getDistinctCity(nextDate);
+  const city = getEventCity(nextDate);
 
   return (
     <Link
@@ -555,6 +594,17 @@ function FinishedEventBlock({
           >
             Ver próximos eventos
           </Link>
+          {/* La página del artista junta todas sus fechas y no vence: es el destino que más
+              conviene alimentar desde una URL que ya posiciona y que ya no vende. */}
+          {getHeadliners(event).slice(0, 1).map((artist) => (
+            <Link
+              key={artist}
+              href={artistPath(artist)}
+              className="flex h-12 items-center justify-center rounded-full border border-white/40 text-[14px] font-bold text-white"
+            >
+              Todas las fechas de {artist}
+            </Link>
+          ))}
           {sameArtistEvent ? (
             <Link
               href={`/eventos/${sameArtistEvent.slug}`}
@@ -599,105 +649,80 @@ function formatVenueList(venues: string[]) {
   return `${venues.slice(0, -1).join(", ")} y ${venues[venues.length - 1]}`;
 }
 
-/**
- * Nombres de lineup que no son artistas. "TBA" estaba en el lineup de Kevin de Vries en
- * Mandarine: sin este filtro, cualquier fecha futura con "TBA" contaba como "el mismo
- * artista", y ahora eso decide el título y el aviso de la página finalizada.
- */
-const PLACEHOLDER_ARTISTS = new Set(["tba", "tbc", "tbd", "a confirmar", "invitados", "invitado sorpresa", "special guest"]);
-
-function lineupArtistKeys(event: EventRecord) {
-  return new Set(
-    (event.lineup || []).map(normalizeText).filter((artist) => artist && !PLACEHOLDER_ARTISTS.has(artist))
-  );
-}
-
 function findSameArtistEvent(event: EventRecord, candidates: EventRecord[]) {
-  const artists = lineupArtistKeys(event);
+  const artists = new Set(getEventArtists(event).map(normalizeText));
   if (!artists.size) return null;
 
   return (
     candidates.find(
       (candidate) =>
-        candidate.id !== event.id &&
-        (candidate.lineup || []).some((artist) => artists.has(normalizeText(artist)))
+        candidate.id !== event.id && getEventArtists(candidate).some((artist) => artists.has(normalizeText(artist)))
     ) || null
   );
 }
 
 function sharedArtistName(event: EventRecord, candidate: EventRecord) {
-  const artists = lineupArtistKeys(event);
-  return (candidate.lineup || []).find((artist) => artists.has(normalizeText(artist))) || null;
+  const artists = new Set(getEventArtists(event).map(normalizeText));
+  return getEventArtists(candidate).find((artist) => artists.has(normalizeText(artist))) || null;
+}
+
+/** "SOLOMUN en Mandarine Park, Buenos Aires". */
+function getLabelWithCity(event: EventRecord) {
+  const city = getEventCity(event);
+  return `${getEventLabel(event)}${city ? `, ${city}` : ""}`;
+}
+
+/** El año, salvo que el título ya lo diga ("Afterlife 2026"). */
+function getTitleYear(event: EventRecord) {
+  const year = getEventYear(event.starts_at);
+  return event.title.includes(year) ? "" : ` ${year}`;
 }
 
 /**
- * Artistas del lineup que el título nombra: "MASSANO B2B KEVIN DE VRIES" → MASSANO y KEVIN
- * DE VRIES (EMILIANO DEMARCO no). Son los nombres con los que se busca la fecha.
+ * Título del resultado de Google: artista, venue, ciudad y año adelante, que es como se
+ * busca ("solomun mandarine park 2026", "solomun buenos aires"). El nombre del sitio no va:
+ * Google ya lo muestra arriba del resultado y empujaba "entradas" fuera de lo visible.
  */
-function getHeadliners(event: EventRecord) {
-  const title = normalizeText(event.title);
-  return (event.lineup || [])
-    .map((artist) => artist.trim())
-    .filter((artist) => {
-      const key = normalizeText(artist);
-      return key && !PLACEHOLDER_ARTISTS.has(key) && title.includes(key);
-    });
-}
-
 function buildSeoTitle(event: EventRecord, finished: boolean, nextDate: EventRecord | null) {
-  const place = getEventPrimaryPlace(event);
-  const city = getDistinctCity(event);
-  const titleWithPlace = shouldAppendPlaceToTitle(event.title, place)
-    ? `${event.title} en ${place}${city ? `, ${city}` : ""}`
-    : event.title;
+  const base = getLabelWithCity(event);
 
   if (finished) {
-    // Con el mismo artista de nuevo en agenda, el resultado de Google lo anuncia: quien
-    // busca "kevin de vries entradas" y ve "Evento finalizado" no hace clic.
+    // Con el mismo artista de nuevo en agenda, el resultado lo anuncia: quien busca "kevin
+    // de vries entradas" y ve "Evento finalizado" no hace clic.
     if (nextDate) {
+      const place = getEventPrimaryPlace(event);
       const nextPlace = getEventPrimaryPlace(nextDate);
       const where =
         nextPlace && normalizeText(nextPlace) !== normalizeText(place)
           ? `en ${nextPlace}`
-          : `el ${formatLongDay(nextDate.starts_at).toLowerCase()}`;
-      return `${titleWithPlace} | Finalizado · Nueva fecha ${where}`;
+          : `el ${formatShortSeoDate(nextDate.starts_at)}`;
+      return `${base} | Finalizado · Nueva fecha ${where}`;
     }
-    return `${titleWithPlace} | Evento finalizado · ${siteConfig.name}`;
+    return `${base}${getTitleYear(event)} | Evento finalizado`;
   }
 
-  // Fuera de CABA el título con ciudad ya pasaba los 80 caracteres y Google lo cortaba a
-  // la mitad, justo antes de "entradas", que es la palabra de la búsqueda. El nombre del
-  // sitio Google ya lo muestra arriba del resultado.
-  if (city) return `${titleWithPlace} | Entradas`;
-
-  return `${titleWithPlace} | Comprar entradas · ${siteConfig.name}`;
+  return `${base}${getTitleYear(event)} | Entradas`;
 }
 
 function buildSeoDescription(event: EventRecord, finished: boolean, nextDate: EventRecord | null = null) {
-  const place = getEventPrimaryPlace(event);
-  const placeSuffix = place ? ` en ${place}` : "";
+  const label = getEventLabel(event);
+  const city = getEventCity(event);
+  const where = city ? `${city}, Argentina` : "Argentina";
 
   if (finished) {
     if (nextDate) {
-      const nextCity = getDistinctCity(nextDate);
-      return `${event.title}${placeSuffix} ya finalizó. Próxima fecha: ${getEventLabel(nextDate)}${nextCity ? ` (${nextCity})` : ""}, el ${formatSeoDate(nextDate.starts_at)}. Entradas con link oficial de Bombo en ElectroTickets.`;
+      const nextCity = getEventCity(nextDate);
+      return `${label} ya finalizó. Próxima fecha: ${getEventLabel(nextDate)}${nextCity ? ` (${nextCity})` : ""}, el ${formatSeoDate(nextDate.starts_at)}. Entradas con link oficial de Bombo en ElectroTickets.`;
     }
-    return `${event.title}${placeSuffix} ya finalizó. Mirá las próximas fechas de electrónica, eventos similares y recibí avisos por WhatsApp desde ElectroTickets.`;
+    return `${label} (${where}) fue el ${formatSeoDate(event.starts_at)}. Mirá las próximas fechas de electrónica en Argentina y recibí avisos por WhatsApp desde ElectroTickets.`;
   }
 
-  const city = getDistinctCity(event);
-
-  // Fuera de CABA la descripción suma ciudad y fecha con año: diferencia "Solomun en Mute"
-  // (Mar del Plata, enero) de cualquier otra fecha del mismo artista. Las porteñas quedan
-  // exactamente como estaban: ya posicionan bien ("solomun mandarine") y no se tocan.
-  if (city) {
-    return `Comprá entradas para ${event.title}${placeSuffix} (${city}), el ${formatSeoDate(event.starts_at)}. Link oficial de Bombo, lineup, ubicación y consulta por mesas VIP desde ElectroTickets.`;
-  }
-
-  return `Comprá entradas para ${event.title}${placeSuffix}. Fecha, lineup, ubicación, links oficiales de Bombo y consulta por mesas VIP desde ElectroTickets.`;
+  // "Argentina" y la ciudad van en la descripción: Google las resalta cuando coinciden con
+  // la búsqueda, y son las dos palabras que más se repiten en las consultas.
+  return `Entradas para ${label} (${where}), el ${formatSeoDate(event.starts_at)} a las ${formatTime(event.starts_at)}. Link oficial de Bombo, lineup, ubicación y consulta por mesas VIP en ElectroTickets.`;
 }
 
-function buildAboutEvent(event: EventRecord, nextDate: EventRecord | null = null) {
+function buildAboutEvent(event: EventRecord, nextDate: EventRecord | null, finished: boolean) {
   if (event.description?.trim()) return event.description.trim();
 
   // Finalizada con fecha nueva del mismo artista: el texto de respaldo hablaba en presente
@@ -705,32 +730,24 @@ function buildAboutEvent(event: EventRecord, nextDate: EventRecord | null = null
   if (nextDate) {
     const place = getEventPrimaryPlace(event) || "el venue";
     const artist = sharedArtistName(event, nextDate) || event.title;
-    const nextCity = getDistinctCity(nextDate);
+    const nextCity = getEventCity(nextDate);
 
     return `${event.title} fue en ${place} el ${formatSeoDate(event.starts_at)}${event.genre ? `, una noche de ${event.genre}` : ""}. La próxima fecha de ${artist} es ${getEventLabel(nextDate)}${nextCity ? ` (${nextCity})` : ""}, el ${formatSeoDate(nextDate.starts_at)}: las entradas están en su página, con el link oficial de Bombo.`;
   }
 
-  const city = getDistinctCity(event);
-
-  // Fechas porteñas: el texto de respaldo de siempre, sin cambios.
-  if (!city) {
-    const place = getEventPrimaryPlace(event) || "venue a confirmar";
-    const genre = event.genre || "música electrónica";
-    const lineup = event.lineup?.length ? ` con ${event.lineup.join(", ")}` : "";
-
-    return `${event.title} llega a ${place}, con una propuesta de ${genre}${lineup}. En esta página encontrás la fecha, ubicación, lineup y el acceso al link oficial de Bombo para comprar tus entradas.`;
-  }
-
-  // Fuera de CABA el texto de siempre ("X llega a Y, con una propuesta de Z con X") no
-  // decía la ciudad ni el año, y repetía el artista como lineup. Acá usa los datos que
-  // distinguen a la fecha: venue, ciudad, fecha, puertas y la credencial RRPP.
+  // Texto que nombra lo que distingue a la fecha: venue, ciudad, país, fecha con año, puertas
+  // y la credencial RRPP. El de antes ("X llega a Y, con una propuesta de Z con X") no decía
+  // ni la ciudad ni el año y repetía el artista como lineup.
   const label = getEventLabel(event);
+  const city = getEventCity(event);
   const venue = event.venue_name?.trim() || "";
-  const lineupNames = (event.lineup || []).filter((artist) => artist.trim());
+  const lineupNames = getEventArtists(event);
   const hasOtherArtists = lineupNames.some((artist) => normalizeText(artist) !== normalizeText(event.title));
 
-  const when = `${label} (${city}) es el ${formatSeoDate(event.starts_at)}, con puertas a las ${formatTime(event.starts_at)}${event.genre ? `: una noche de ${event.genre}` : ""}.`;
+  const when = `${label} (${city ? `${city}, ` : ""}Argentina) ${finished ? "fue" : "es"} el ${formatSeoDate(event.starts_at)}, con puertas a las ${formatTime(event.starts_at)}${event.genre ? `: una noche de ${event.genre}` : ""}.`;
   const lineup = hasOtherArtists ? ` Lineup: ${lineupNames.join(", ")}.` : "";
+  if (finished) return `${when}${lineup}`;
+
   const official =
     venue && isOfficialVenue(venue)
       ? ` Somos RRPP oficial de ${venue}: acá tenés el link oficial de Bombo para comprar tus entradas.`
@@ -739,20 +756,26 @@ function buildAboutEvent(event: EventRecord, nextDate: EventRecord | null = null
   return `${when}${lineup}${official}`;
 }
 
+/** "el sábado 2 de enero de 2027 en Mute (Mar del Plata)". */
+function describeDate(event: EventRecord) {
+  const place = getEventPrimaryPlace(event);
+  const city = getEventCity(event);
+  return `el ${formatSeoDate(event.starts_at)}${place ? ` en ${place}` : ""}${city ? ` (${city})` : ""}`;
+}
+
 function buildEventFaq(
   event: EventRecord,
   isSoldOut: boolean,
   finished: boolean,
-  nextDate: EventRecord | null
+  nextDate: EventRecord | null,
+  upcomingEvents: EventRecord[]
 ): EventFaqItem[] {
   if (finished && nextDate) return buildFinishedWithNextDateFaq(event, nextDate);
 
+  const label = getEventLabel(event);
   const place = getEventPrimaryPlace(event) || "venue a confirmar";
-  // Fuera de CABA, "SOLOMUN en Mute" en vez de "SOLOMUN": las preguntas son texto indexable,
-  // alimentan el FAQPage del JSON-LD y son las frases que la gente escribe en Google. Las
-  // fechas porteñas conservan sus preguntas de siempre.
-  const outsideCaba = Boolean(getDistinctCity(event));
-  const label = outsideCaba ? getEventLabel(event) : event.title;
+  const city = getEventCity(event);
+  const address = formatAddress(event);
 
   const buyAnswer = finished
     ? `${label} ya finalizó. Podés ver las próximas fechas en la agenda de ElectroTickets o pedir avisos por WhatsApp.`
@@ -760,24 +783,27 @@ function buildEventFaq(
       ? `La fecha figura como Sold Out en Bombo. Podés escribirnos por WhatsApp para que te avisemos si se libera alguna entrada o si quedan mesas para ${label}.`
       : `Tocá "Comprar en Bombo" y te abrimos el link oficial del evento. El precio, la disponibilidad y el pago se completan en Bombo.`;
 
-  // Fuera de CABA y con más de un artista en el título, una pregunta por artista: se busca
-  // "massano entradas" o "kevin de vries entradas", no el título entero del b2b.
-  const headliners = outsideCaba && !finished ? getHeadliners(event) : [];
-  const city = getDistinctCity(event);
-  const artistItems: EventFaqItem[] =
-    headliners.length > 1
-      ? headliners.map((artist) => {
-          const others = headliners.filter((other) => other !== artist).join(" y ");
+  // Una pregunta por artista del título con todas sus fechas vigentes en el país. Es la
+  // búsqueda que más impresiones trae ("solomun argentina", "miss monique argentina 2026") y
+  // la que un b2b no cubría: se busca "massano", no el título entero.
+  const artistItems: EventFaqItem[] = finished
+    ? []
+    : getHeadliners(event)
+        .slice(0, 3)
+        .map((artist) => {
+          const dates = getArtistUpcomingEvents(artist, upcomingEvents);
+          const list = dates.some((date) => date.id === event.id) ? dates : [event, ...dates];
+          const others = getHeadliners(event).filter((other) => other !== artist);
+          const withOthers = others.length ? ` junto a ${joinList(others)}` : "";
+
           return {
-            question: `¿Cuándo toca ${artist} en ${city}?`,
-            answer: `${artist} toca junto a ${others} en ${label}, ${city}, el ${formatSeoDate(event.starts_at)}. ${
-              isSoldOut
-                ? "Las entradas figuran agotadas en Bombo: escribinos por WhatsApp y te avisamos si se libera alguna."
-                : `Las entradas para ${artist} en ${city} se compran desde esta página, con el link oficial de Bombo.`
-            }`
+            question: `¿Cuándo toca ${artist} en Argentina?`,
+            answer:
+              list.length > 1
+                ? `${artist} tiene ${list.length} fechas en Argentina: ${joinList(list.map(describeDate))}. Las entradas de cada fecha están en ElectroTickets, con el link oficial de Bombo.`
+                : `${artist} toca${withOthers} ${describeDate(event)}. Las entradas para ${artist} en ${city || "Argentina"} se compran desde esta página, con el link oficial de Bombo.`
           };
-        })
-      : [];
+        });
 
   return [
     {
@@ -787,13 +813,11 @@ function buildEventFaq(
     ...artistItems,
     {
       question: `¿Cuándo es ${label}?`,
-      answer: outsideCaba
-        ? `${label} ${finished ? "fue" : "es"} el ${formatSeoDate(event.starts_at)}, a las ${formatTime(event.starts_at)}.`
-        : `${event.title} ${finished ? "fue" : "es"} el ${formatEventLongDate(event.starts_at)}.`
+      answer: `${label} ${finished ? "fue" : "es"} el ${formatSeoDate(event.starts_at)}, a las ${formatTime(event.starts_at)}.`
     },
     {
       question: `¿Dónde se realiza ${event.title}?`,
-      answer: `El evento se realiza en ${place}${event.venue_address ? `, en ${event.venue_address}` : ""}.`
+      answer: `El evento se realiza en ${place}${address ? `, ${address}` : city ? `, ${city}` : ""}.`
     },
     {
       question: "¿ElectroTickets procesa el pago?",
@@ -816,7 +840,7 @@ function buildEventFaq(
 function buildFinishedWithNextDateFaq(event: EventRecord, nextDate: EventRecord): EventFaqItem[] {
   const place = getEventPrimaryPlace(event) || "el venue";
   const artist = sharedArtistName(event, nextDate) || event.title;
-  const nextCity = getDistinctCity(nextDate);
+  const nextCity = getEventCity(nextDate);
   const nextLabel = `${getEventLabel(nextDate)}${nextCity ? ` (${nextCity})` : ""}`;
   const nextWhen = formatSeoDate(nextDate.starts_at);
 
@@ -826,7 +850,7 @@ function buildFinishedWithNextDateFaq(event: EventRecord, nextDate: EventRecord)
       answer: `La fecha de ${place} ya finalizó. La próxima fecha de ${artist} es ${nextLabel}, el ${nextWhen}: las entradas están en su página de ElectroTickets, con el link oficial de Bombo.`
     },
     {
-      question: `¿Cuándo vuelve a tocar ${artist}?`,
+      question: `¿Cuándo vuelve a tocar ${artist} en Argentina?`,
       answer: `${artist} vuelve el ${nextWhen}, a las ${formatTime(nextDate.starts_at)}, en ${nextLabel}.`
     },
     {
@@ -839,68 +863,6 @@ function buildFinishedWithNextDateFaq(event: EventRecord, nextDate: EventRecord)
         "No. ElectroTickets es una agenda especializada que centraliza la información y te lleva al link oficial de compra. El pago y la emisión del ticket se completan en Bombo."
     }
   ];
-}
-
-function getEventPrimaryPlace(event: EventRecord) {
-  return event.venue_name?.trim() || event.city?.trim() || "";
-}
-
-function shouldAppendPlaceToTitle(title: string, place: string) {
-  if (!place) return false;
-  return !normalizeText(title).includes(normalizeText(place));
-}
-
-/** "SOLOMUN en Mute". Si el título ya nombra el lugar, queda como está. */
-function getEventLabel(event: EventRecord) {
-  const place = getEventPrimaryPlace(event);
-  return shouldAppendPlaceToTitle(event.title, place) ? `${event.title} en ${place}` : event.title;
-}
-
-/**
- * Ciudades que no distinguen nada: casi todo el inventario es CABA y `city` viene con ese
- * valor por defecto. Sumarlas al título solo lo alargaría.
- */
-const DEFAULT_CITIES = new Set(["caba", "buenos aires", "ciudad de buenos aires", "ciudad autonoma de buenos aires"]);
-
-/**
- * La ciudad, solo cuando agrega información: "Mar del Plata" para Mute sí, "CABA" no. Es la
- * palabra con la que se completa la búsqueda ("solomun mute mar del plata") y la que separa
- * dos fechas del mismo artista en ciudades distintas.
- */
-function getDistinctCity(event: EventRecord) {
-  const city = event.city?.trim();
-  const venue = event.venue_name?.trim();
-  if (!city || !venue) return "";
-
-  const normalized = normalizeText(city);
-  if (DEFAULT_CITIES.has(normalized) || normalizeText(venue).includes(normalized)) return "";
-
-  return formatCityName(city);
-}
-
-/** "Mar del plata" → "Mar del Plata". El admin la carga a mano y llega con mayúsculas sueltas. */
-function formatCityName(city: string) {
-  const minor = new Set(["de", "del", "la", "las", "los", "y"]);
-
-  return city
-    .split(/\s+/)
-    .map((word, index) =>
-      index > 0 && minor.has(word.toLowerCase()) ? word.toLowerCase() : word.charAt(0).toUpperCase() + word.slice(1)
-    )
-    .join(" ");
-}
-
-/** "sábado 2 de enero de 2027". Con año: las fechas de enero se venden desde octubre. */
-function formatSeoDate(date: string) {
-  return new Intl.DateTimeFormat("es-AR", {
-    timeZone: "America/Argentina/Buenos_Aires",
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric"
-  })
-    .format(new Date(date))
-    .replace(",", "");
 }
 
 /** "Mandarine Park" cuenta como "Mandarine": `credentials` guarda el nombre corto del venue. */

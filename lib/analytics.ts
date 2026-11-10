@@ -37,7 +37,9 @@ export type CtaPlacement =
   | "vacio_proxima"
   | "mis_entradas_card"
   // Sección "Fechas destacadas" de la home: las `featured` que quedan fuera del finde.
-  | "home_destacadas";
+  | "home_destacadas"
+  // Cards de `/artistas/[slug]`. Abren el detalle, como `listado_card`.
+  | "artista_card";
 
 /**
  * Los seis placements nuevos se dividen en dos familias, y la diferencia importa para leer
@@ -53,7 +55,13 @@ export type CtaPlacement =
  *   `click_buy` porque no van a `/go/`, así que disparan `select_date`: mide qué superficie
  *   empuja al detalle sin inflar la métrica de compra contando dos veces la misma intención.
  */
-export const CARD_PLACEMENTS = ["listado_card", "vacio_proxima", "mis_entradas_card", "home_destacadas"] as const;
+export const CARD_PLACEMENTS = [
+  "listado_card",
+  "vacio_proxima",
+  "mis_entradas_card",
+  "home_destacadas",
+  "artista_card"
+] as const;
 
 /** De dónde salió una consulta de WhatsApp. Se manda como `wa_source` a GA4. */
 export type WhatsappSource =
@@ -70,6 +78,8 @@ export type WhatsappSource =
   // Botón del grupo de difusión dentro de la credencial RRPP del detalle.
   | "event_group"
   | "empty_results"
+  // Grupo de WhatsApp en `/artistas/[slug]` cuando el artista no tiene fechas vigentes.
+  | "artist_page"
   | "past_event";
 
 export function buildGoUrl(slug: string, placement: CtaPlacement) {

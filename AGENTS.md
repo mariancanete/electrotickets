@@ -29,6 +29,7 @@ Priorities:
 - `/`
 - `/eventos`
 - `/eventos/[slug]`
+- `/artistas/[slug]`
 - `/destacados`
 - `/quienes-somos`
 - `/contacto`
@@ -85,6 +86,11 @@ The admin route must not be visible in public navigation.
 - WhatsApp previews must show a valid image.
 - Use event flyer as `og:image` when available.
 - Use the dynamic `/og-logo` route as fallback.
+- Event titles carry artist, venue, city and year: `SOLOMUN en Mandarine Park, Buenos Aires 2026 | Entradas`.
+  "CABA" is shown as "Buenos Aires" (that is how people search).
+- Every lineup artist links to `/artistas/[slug]`: the artist URL never expires, so ranking
+  accumulates from one date to the next. It targets "[artista] argentina" / "[artista] entradas".
+- `/go/[slug]` answers with `X-Robots-Tag: noindex` and does not record clicks from bots.
 - **Never 404 a past event.** Its URL keeps ranking and backlinks; render the "finalizado"
   state with alternatives instead.
 
