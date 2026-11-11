@@ -17,6 +17,16 @@ export async function GET(request: NextRequest, { params }: RouteProps) {
 
   const sessionId = request.cookies.get(SESSION_COOKIE)?.value || crypto.randomUUID();
   const userAgent = request.headers.get("user-agent") || "";
+
+  // Los buscadores también siguen estos links: Search Console mostraba `/go/...` indexadas
+  // (311 impresiones en octubre de 2026) y cada pasada de un crawler quedaba como una fila
+  // en `event_clicks`, inflando los clics contra las ventas cargadas a mano. A un bot se lo
+  // redirige igual, pero sin registrar nada y con `noindex`.
+  if (isBot(userAgent)) {
+    const botTarget = (await lookupTargetUrl(slug)) || fallbackUrl(slug);
+    return noindex(NextResponse.redirect(new URL(botTarget, request.url)));
+  }
+
   const click = {
     placement: searchParams.get("placement"),
     // UTM de la visita entrante (Instagram, campañas), distinto de la UTM que le ponemos
@@ -40,7 +50,7 @@ export async function GET(request: NextRequest, { params }: RouteProps) {
     if (click.placement) url.searchParams.set("utm_content", click.placement);
   }
 
-  const response = NextResponse.redirect(url);
+  const response = noindex(NextResponse.redirect(url));
   response.cookies.set(SESSION_COOKIE, sessionId, {
     httpOnly: true,
     sameSite: "lax",
@@ -109,6 +119,37 @@ async function resolveTargetUrl(slug: string, click: ClickContext) {
   }
 
   return null;
+}
+
+/** Link de Bombo sin registrar el clic. Solo para bots. */
+async function lookupTargetUrl(slug: string) {
+  if (!isSupabaseAdminConfigured) return null;
+
+  try {
+    const { data } = await getSupabaseAdminClient()
+      .from("events")
+      .select("bombo_url")
+      .eq("slug", slug)
+      .limit(1)
+      .maybeSingle();
+    return typeof data?.bombo_url === "string" && data.bombo_url ? data.bombo_url : null;
+  } catch (error) {
+    console.error("Bot redirect lookup error", error);
+    return null;
+  }
+}
+
+/** `/go/` es un paso intermedio, no una página: no tiene que aparecer en Google. */
+function noindex(response: NextResponse) {
+  response.headers.set("X-Robots-Tag", "noindex, nofollow");
+  return response;
+}
+
+const BOT_PATTERN =
+  /bot|crawl|spider|slurp|facebookexternalhit|whatsapp|telegram|preview|lighthouse|headless|python-requests|curl|wget|httpclient|axios|node-fetch|go-http-client|semrush|ahrefs|mj12|dataforseo/i;
+
+function isBot(userAgent: string) {
+  return !userAgent || BOT_PATTERN.test(userAgent);
 }
 
 function fallbackUrl(slug: string) {

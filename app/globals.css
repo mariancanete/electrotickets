@@ -695,15 +695,17 @@ select {
  *
  * Los umbrales salen del alto real de la columna: el flyer va a su medida pero con tope
  * 4:5 en desktop (`FlyerFrame`), así que sobre 470px mide como mucho 587px, más los botones,
- * el CTA y la línea de link oficial; a 1440 el flyer es de 540px y la columna crece.
+ * el CTA, la línea de link oficial y "Consultar por mesas VIP"; a 1440 el flyer es de 540px y
+ * la columna crece. Cuenta: alto de la columna + 100 de `top` + 24 de aire. Medido con el
+ * botón de mesas VIP (PR #39): 805px a 1280 y 892px a 1440. Antes eran 860 y 950.
  */
-@media (min-width: 1024px) and (max-height: 859.98px) {
+@media (min-width: 1024px) and (max-height: 928.98px) {
   .sticky-detalle {
     position: static;
   }
 }
 
-@media (min-width: 1440px) and (max-height: 949.98px) {
+@media (min-width: 1440px) and (max-height: 1015.98px) {
   .sticky-detalle {
     position: static;
   }

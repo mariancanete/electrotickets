@@ -356,8 +356,8 @@ condicionado por alto, la trama).
   interno. Nunca se convierte en drawer.
 - Barra de búsqueda de Buscar: pegada al header, mismo fondo ink y su borde.
 - Columna izquierda del detalle: `top: 100px`, y lleva el CTA adentro. **Si la columna es más
-  alta que el viewport, libera el sticky** (`@media (max-height: 859.98px)` a 1024 y 949.98px
-  a 1440) y scrollea con la página: antes que recortar el único punto de conversión de la
+  alta que el viewport, libera el sticky** (`@media (max-height: 928.98px)` a 1024 y 1015.98px a 1440;
+  hasta el PR #39 eran 859.98 y 949.98px) y scrollea con la página: antes que recortar el único punto de conversión de la
   pantalla, se pierde el pegado. Verificado a 1280×720.
 
 **Hover y foco.** Todo detrás de `@media (hover: hover)`, incluidos los `:active` — en un touch
@@ -560,11 +560,11 @@ Incluye el panel de Conversión con filtro Vigentes/Finalizados/Todos.
 
 ### Decisiones de oct–nov 2026
 
-- **Mandarine Park no se toca en SEO.** Las mejoras de título/h1/descripción/FAQ del detalle
-  aplican solo a fechas con ciudad fuera de CABA (`getDistinctCity` en
-  `app/eventos/[slug]/page.tsx`). Para las porteñas **vigentes** el HTML tiene que quedar
-  idéntico. Excepción (PR #38): las **finalizadas con el mismo artista de nuevo en agenda**,
-  de cualquier ciudad (ver abajo).
+- ~~Mandarine Park no se toca en SEO.~~ **Reemplazada en el PR #39** por decisión del dueño
+  ("la prioridad es que entre más gente"), con los datos de Search Console de octubre 2026:
+  el 38 % de las impresiones tenía "argentina" y el 23 % "buenos aires", y ningún título de
+  una fecha porteña nombraba la ciudad ni el país. "solomun buenos aires" (3.028
+  impresiones) estaba en posición 6,8 con 1 % de CTR. Ver "SEO por intención" abajo.
 - **SEO de Massano B2B Kevin de Vries (PR #38).** "kevin de vries entradas" traía primero la
   finalizada de Mandarine: su FAQ decía literal "¿Dónde comprar entradas para KEVIN DE VRIES?"
   y respondía "ya finalizó", y el link a la fecha nueva estaba al pie, debajo del FAQ.
@@ -580,6 +580,45 @@ Incluye el panel de Conversión con filtro Vigentes/Finalizados/Todos.
     Plata?"), que es como se busca un b2b.
   - El JSON-LD `MusicEvent` no cambia de forma; solo su `description`, que siempre salió de
     `buildSeoDescription`.
+- **SEO por intención (PR #39).** Una misma fecha tiene que salir para varias búsquedas, y
+  cada tipo de búsqueda tiene su página:
+  - **Detalle de evento** (`/eventos/[slug]`) — "[artista] [venue]", "[artista] [ciudad]",
+    "[artista] [fecha]". Título `SOLOMUN en Mandarine Park, Buenos Aires 2026 | Entradas`
+    para **todas** las fechas; h1 con "en Mandarine Park, Buenos Aires"; descripción con
+    "(Buenos Aires, Argentina)"; FAQ "¿Cuándo toca X en Argentina?" por cada artista del
+    título, con todas sus fechas vigentes. "CABA" se muestra "Buenos Aires" (`getEventCity`).
+  - **Página de artista** (`/artistas/[slug]`, nueva) — "[artista] argentina", "[artista]
+    argentina 2026", "[artista] entradas". Título `SOLOMUN en Argentina 2026 y 2027: fechas y
+    entradas`. Lista fechas vigentes (`DateCard`/`GridCard`, placement `artista_card`) y hasta
+    6 anteriores. **Es una URL que no vence**: el posicionamiento se acumula entre fechas en
+    vez de arrancar de cero con cada slug nuevo. Sin fechas vigentes no da 404: muestra el
+    grupo de WhatsApp (`wa_source: artist_page`). Sale del `lineup`, no hay tabla de artistas.
+    Cada chip del lineup del detalle enlaza acá, y la finalizada suma "Todas las fechas de X".
+  - Los helpers de texto viven en `lib/event-seo.ts`; la consulta de artistas en
+    `lib/artists.ts`. Placeholders ("TBA", "a confirmar"…) nunca generan página ni link.
+- **`/go/` fuera de Google (PR #39).** Search Console tenía `/go/...` indexadas (311
+  impresiones) y la ruta registraba en `event_clicks` cada pasada de un crawler. Ahora
+  responde con `X-Robots-Tag: noindex, nofollow`, a los bots los redirige sin registrar nada
+  (`isBot` en `app/go/[slug]/route.ts`) y `BuyCta` lleva `rel="nofollow"`. **Los clics de
+  `event_clicks` pueden bajar desde este PR: es la limpieza, no una caída de ventas.**
+- **Ciudad y provincia en el panel (PR #39).** La regla de carga es provincia = "Buenos Aires"
+  y ciudad = "CABA", "Mar del Plata"… En vivo había filas invertidas (Miss Monique: ciudad
+  "Buenos Aires", provincia "Mar del plata"; Green Velvet y Emiliano Demarco: ciudad "Buenos
+  Aires", provincia "CABA") y una en Uruguay con el país en la ciudad (Music On: "URUGUAY",
+  "Maldonado"). `resolvePlace` en `lib/event-seo.ts` lo tolera: "Buenos Aires" en ciudad con
+  una ciudad real en provincia se invierte, y un país en cualquiera de los dos campos pasa a
+  ser el país ("MUSIC ON en Open Park, Maldonado, Uruguay 2027"). Las preguntas por artista
+  dicen "en Uruguay" y solo listan fechas de ese país; la página de artista dice "en
+  Argentina y Uruguay" si corresponde. **El JSON-LD sigue leyendo los campos crudos**: conviene
+  corregir las filas en Supabase igual.
+- **"Consultar por mesas VIP" (PR #39)** debajo de "Comprar en Bombo" en el detalle, mobile y
+  desktop (`VipWhatsappCta`, `wa_source: event_vip`). Delineado y de 44px: segunda acción del
+  bloque, nunca chartreuse. Abre el WhatsApp de contacto con `buildVipWhatsappMessage` y la
+  fecha escrita ("…para MASSANO B2B KEVIN DE VRIES en Mute, Mar del Plata (sábado 23 de
+  enero)"). No va en agotadas: "Avisame por WhatsApp" ya pregunta por mesas. Costos de
+  layout: la barra fija de mobile pasa de ~110 a 163px (espaciador 185, o 132 en agotada) y
+  los umbrales del sticky de desktop suben a 928.98 / 1015.98 (columna de 805 / 892px). En
+  ventanas de 900px de alto la columna ahora scrollea con la página.
 - **Agotada nunca queda sin acción:** WhatsApp de lista de espera, delineado. El "agotado" lo
   dice el sello del flyer, no el botón.
 - **Los flyers no pasan por el optimizador de Vercel** (cupo agotado → 402). Van por wsrv.
