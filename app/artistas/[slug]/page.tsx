@@ -26,7 +26,8 @@ import { absoluteUrl } from "@/lib/site";
 import { normalizeText } from "@/lib/slugify";
 import type { EventFaqItem, EventRecord } from "@/types/event";
 
-export const revalidate = 60;
+// Una hora; los cambios del panel se publican al instante (ver `revalidatePublicPages`).
+export const revalidate = 3600;
 
 type PageProps = {
   params: Promise<{ slug: string }>;

@@ -66,8 +66,8 @@ function normalizeVenue(input: Record<string, unknown>) {
   return {
     name,
     address: optionalString(input.address),
-    city: optionalString(input.city) || "Buenos Aires",
-    province: optionalString(input.province) || "CABA",
+    city: optionalString(input.city) || "CABA",
+    province: optionalString(input.province) || "Buenos Aires",
     map_url: optionalString(input.map_url),
     active: true,
     sort_order: Number(input.sort_order || 0)

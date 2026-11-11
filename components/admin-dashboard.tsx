@@ -55,8 +55,8 @@ const emptyForm: FormState = {
   venue_id: "",
   venue_name: "",
   venue_address: "",
-  city: "Buenos Aires",
-  province: "CABA",
+  city: "CABA",
+  province: "Buenos Aires",
   map_url: "",
   starts_at: "",
   price_label: "",
@@ -72,8 +72,8 @@ const emptyForm: FormState = {
 const emptyVenueForm: VenueFormState = {
   name: "",
   address: "",
-  city: "Buenos Aires",
-  province: "CABA",
+  city: "CABA",
+  province: "Buenos Aires",
   map_url: ""
 };
 
@@ -211,8 +211,8 @@ export function AdminDashboard({
       venue_id: matchedVenue?.id || "",
       venue_name: event.venue_name || "",
       venue_address: event.venue_address || "",
-      city: event.city || "Buenos Aires",
-      province: event.province || "CABA",
+      city: event.city || "CABA",
+      province: event.province || "Buenos Aires",
       map_url: event.map_url || "",
       starts_at: toDatetimeLocal(event.starts_at),
       price_label: event.price_label || "",
@@ -241,8 +241,8 @@ export function AdminDashboard({
       venue_id: venue.id,
       venue_name: venue.name,
       venue_address: venue.address || "",
-      city: venue.city || current.city || "Buenos Aires",
-      province: venue.province || current.province || "CABA",
+      city: venue.city || current.city || "CABA",
+      province: venue.province || current.province || "Buenos Aires",
       map_url: venue.map_url || ""
     }));
   }
@@ -268,8 +268,8 @@ export function AdminDashboard({
         venue_id: saved.id,
         venue_name: saved.name,
         venue_address: saved.address || "",
-        city: saved.city || current.city || "Buenos Aires",
-        province: saved.province || current.province || "CABA",
+        city: saved.city || current.city || "CABA",
+        province: saved.province || current.province || "Buenos Aires",
         map_url: saved.map_url || ""
       }));
     } catch (error) {

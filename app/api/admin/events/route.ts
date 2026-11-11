@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
 import { findCanonicalName, getAdminCatalog } from "@/lib/catalog";
 import { buildEventSlug } from "@/lib/slugify";
+import { revalidatePublicPages } from "@/lib/revalidate";
 import { getSupabaseAdminClient } from "@/lib/supabase";
 import type { EventInput } from "@/types/event";
 
@@ -23,6 +24,7 @@ export async function POST(request: Request) {
     const { data, error } = await supabase.from("events").insert(payload).select("*").single();
 
     if (error) throw error;
+    revalidatePublicPages();
     return NextResponse.json({ event: data });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Error creating event" }, { status: 400 });
@@ -42,6 +44,7 @@ export async function PUT(request: Request) {
     const { data, error } = await supabase.from("events").update(payload).eq("id", body.id).select("*").single();
 
     if (error) throw error;
+    revalidatePublicPages();
     return NextResponse.json({ event: data });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Error updating event" }, { status: 400 });
@@ -60,6 +63,7 @@ export async function DELETE(request: Request) {
     const { error } = await supabase.from("events").delete().eq("id", id);
     if (error) throw error;
 
+    revalidatePublicPages();
     return NextResponse.json({ ok: true });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Error deleting event" }, { status: 400 });
@@ -86,8 +90,8 @@ async function normalizePayload(input: EventInput) {
     lineup: Array.isArray(input.lineup) ? input.lineup : [],
     venue_name: venueName || null,
     venue_address: input.venue_address?.trim() || null,
-    city: input.city?.trim() || "Buenos Aires",
-    province: input.province?.trim() || "CABA",
+    city: input.city?.trim() || "CABA",
+    province: input.province?.trim() || "Buenos Aires",
     map_url: input.map_url?.trim() || null,
     starts_at: input.starts_at,
     end_at: input.end_at || null,

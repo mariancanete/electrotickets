@@ -22,7 +22,8 @@ import {
 } from "@/lib/filters";
 import { groupByDay } from "@/lib/weekend";
 
-export const revalidate = 60;
+// Una hora; los cambios del panel se publican al instante (ver `revalidatePublicPages`).
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "Eventos de música electrónica",

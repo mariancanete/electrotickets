@@ -6,7 +6,8 @@ import { getUpcomingPublishedEvents } from "@/lib/events";
 import { getWeekendDays } from "@/lib/weekend";
 import { DesktopHeader } from "@/components/desktop-header";
 
-export const revalidate = 60;
+// Una hora; los cambios del panel se publican al instante (ver `revalidatePublicPages`).
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "Mis entradas",

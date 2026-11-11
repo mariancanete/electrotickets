@@ -627,6 +627,23 @@ Incluye el panel de Conversión con filtro Vigentes/Finalizados/Todos.
   completa con el mismo flyer difuminado.
 - **"Últimas entradas" sin animación:** urgencia que se lee, no que molesta.
 
+### Noviembre 2026 — PR #40: ciudad/provincia del panel e ISR Writes
+
+- **El panel guardaba ciudad y provincia al revés.** Los valores por defecto "Buenos Aires" /
+  "CABA" estaban invertidos en el formulario, en la edición, al elegir un venue y en las
+  APIs (`components/admin-dashboard.tsx`, `app/api/admin/events`, `app/api/admin/catalog`).
+  Cambiar el default de la columna en Supabase no alcanzaba: el panel siempre manda su
+  propio valor. Ahora: ciudad "CABA", provincia "Buenos Aires".
+  `supabase/07-city-province.sql` arregla los defaults de columna y da vuelta las filas
+  invertidas de `venues` y `events`. `resolvePlace` (PR #39) sigue tolerando filas viejas.
+- **ISR Writes en 110K de 200K.** Todas las páginas públicas tenían `revalidate = 60`. Ahora
+  `3600`, y cada alta/edición/baja de evento llama a `revalidatePublicPages()`
+  (`revalidatePath("/", "layout")`), así que los cambios del panel aparecen **al instante**
+  en vez de hasta un minuto después. Vercel cobra la escritura solo si la página cambió y en
+  unidades de 8 KB; las páginas pesan 85–135 KB de HTML más el RSC. Una prueba en vivo
+  regenerando `/`, un detalle y una página de artista dio salida idéntica, así que el resto
+  del consumo hay que buscarlo en el desglose de Usage de Vercel (deploys, rutas).
+
 ### Descartado a propósito de la referencia visual
 
 Banderas de país (el sitio es solo Argentina), fila de estadísticas (requeriría inventar
