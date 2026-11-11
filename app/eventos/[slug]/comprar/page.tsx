@@ -12,7 +12,8 @@ import { getEventBySlug, isPastEvent } from "@/lib/events";
 import { buildPriceWhatsappMessage, whatsappUrlOrGroup } from "@/lib/whatsapp";
 import { DesktopHeader } from "@/components/desktop-header";
 
-export const revalidate = 60;
+// Una hora; los cambios del panel se publican al instante (ver `revalidatePublicPages`).
+export const revalidate = 3600;
 
 type PageProps = {
   params: Promise<{ slug: string }>;

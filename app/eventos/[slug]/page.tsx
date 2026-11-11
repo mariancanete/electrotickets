@@ -55,7 +55,14 @@ import {
 import type { EventFaqItem, EventRecord } from "@/types/event";
 import { DesktopHeader } from "@/components/desktop-header";
 
-export const revalidate = 60;
+/**
+ * Una hora, no un minuto. Con 60 s cada página se regeneraba en cuanto la visitaba alguien (o
+ * un crawler) y el cupo de ISR Writes de Vercel llegó a 110K de 200K. El contenido solo
+ * cambia cuando se edita un evento, y eso ahora se publica al instante desde el panel
+ * (`revalidatePublicPages` en `lib/revalidate.ts`). Lo único que depende del reloj —que una
+ * fecha pase a "finalizada", la sección "Este finde"— tolera una hora de demora.
+ */
+export const revalidate = 3600;
 
 type PageProps = {
   params: Promise<{ slug: string }>;

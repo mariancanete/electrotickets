@@ -9,7 +9,8 @@ import { getWeekendDays, groupByDay } from "@/lib/weekend";
 import type { EventRecord } from "@/types/event";
 import { DesktopHeader } from "@/components/desktop-header";
 
-export const revalidate = 60;
+// Una hora; los cambios del panel se publican al instante (ver `revalidatePublicPages`).
+export const revalidate = 3600;
 
 /** Cuántas fechas adelanta el estado vacío del finde. */
 const PROXIMAS_FECHAS = 5;
