@@ -15,7 +15,8 @@ import { formatDato, formatTime } from "@/lib/dates";
 import {
   formatSeoDate,
   formatShortSeoDate,
-  getEventCity,
+  getEventCityLine,
+  getEventCountry,
   getEventLabel,
   getEventPrimaryPlace,
   getEventYear,
@@ -58,7 +59,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       siteName: "ElectroTickets",
       type: "website",
       url: canonicalUrl,
-      images: [{ url: image, alt: `${artist.name} en Argentina` }]
+      images: [{ url: image, alt: `${artist.name} en ${getRegion(artist.upcoming)}` }]
     },
     twitter: {
       card: "summary_large_image",
@@ -87,6 +88,7 @@ export default async function ArtistPage({ params }: PageProps) {
   if (!artist) notFound();
 
   const { name, upcoming, past } = artist;
+  const region = getRegion(upcoming);
   const faqItems = buildArtistFaq(artist);
   const pageUrl = absoluteUrl(`/artistas/${artist.slug}`);
 
@@ -105,7 +107,7 @@ export default async function ArtistPage({ params }: PageProps) {
   const listJsonLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: `Fechas de ${name} en Argentina`,
+    name: `Fechas de ${name} en ${region}`,
     url: pageUrl,
     itemListElement: upcoming.map((event, index) => ({
       "@type": "ListItem",
@@ -124,7 +126,7 @@ export default async function ArtistPage({ params }: PageProps) {
           <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(listJsonLd) }} />
         ) : null}
 
-        <ScreenHeader title={`${name} en Argentina`} backHref="/eventos" />
+        <ScreenHeader title={`${name} en ${region}`} backHref="/eventos" />
 
         <div className="gutter flex-none">
           <p className="dato-seccion">
@@ -187,7 +189,7 @@ export default async function ArtistPage({ params }: PageProps) {
                       <span className="block truncate text-[14px] font-semibold leading-[1.25]">{getEventLabel(event)}</span>
                       <span className="mt-1 block font-mono text-[11px] font-bold uppercase leading-none tracking-[0.05em] text-white/50">
                         {formatDato(event.starts_at).split(" · ")[0]}.{getEventYear(event.starts_at).slice(2)}
-                        {getEventCity(event) ? ` · ${getEventCity(event)}` : ""}
+                        {getEventCityLine(event) ? ` · ${getEventCityLine(event)}` : ""}
                       </span>
                     </span>
                     <span className="flex-none text-white/40">
@@ -224,10 +226,21 @@ export default async function ArtistPage({ params }: PageProps) {
 function getCities(events: EventRecord[]) {
   const seen = new Map<string, string>();
   for (const event of events) {
-    const city = getEventCity(event) || getEventPrimaryPlace(event);
+    const city = getEventCityLine(event) || getEventPrimaryPlace(event);
     if (city && !seen.has(normalizeText(city))) seen.set(normalizeText(city), city);
   }
   return Array.from(seen.values());
+}
+
+/**
+ * "Argentina", o "Argentina y Uruguay" si alguna fecha es afuera (Music On en Maldonado).
+ * Argentina va siempre primero y, sin fechas vigentes, es la única: es la palabra que se busca.
+ */
+function getRegion(events: EventRecord[]) {
+  const countries = new Set(events.map(getEventCountry));
+  const others = Array.from(countries).filter((country) => country !== "Argentina");
+  if (!events.length || !others.length) return "Argentina";
+  return joinList(countries.has("Argentina") ? ["Argentina", ...others] : others);
 }
 
 /** "2026 y 2027". Las búsquedas con año son las que mejor posicionan. */
@@ -238,13 +251,13 @@ function getYears(events: EventRecord[]) {
 /** "SOLOMUN en Argentina 2026 y 2027: fechas y entradas". */
 function buildArtistTitle({ name, upcoming }: Artist) {
   const years = upcoming.length ? ` ${getYears(upcoming)}` : "";
-  return `${name} en Argentina${years}: fechas y entradas`;
+  return `${name} en ${getRegion(upcoming)}${years}: fechas y entradas`;
 }
 
 /** "31 de diciembre de 2026 en Mandarine Park (Buenos Aires)". */
 function describeShort(event: EventRecord) {
   const place = getEventPrimaryPlace(event);
-  const city = getEventCity(event);
+  const city = getEventCityLine(event);
   return `${formatShortSeoDate(event.starts_at)}${place ? ` en ${place}` : ""}${city ? ` (${city})` : ""}`;
 }
 
@@ -256,7 +269,7 @@ function buildArtistDescription({ name, upcoming }: Artist) {
   const shown = upcoming.slice(0, 3).map(describeShort);
   const more = upcoming.length > 3 ? ` y ${upcoming.length - 3} más` : "";
 
-  return `Entradas para ${name} en Argentina: ${joinList(shown)}${more}. Link oficial de Bombo y consulta por mesas VIP en ElectroTickets.`;
+  return `Entradas para ${name} en ${getRegion(upcoming)}: ${joinList(shown)}${more}. Link oficial de Bombo y consulta por mesas VIP en ElectroTickets.`;
 }
 
 function buildArtistIntro({ name, upcoming, past }: Artist) {
@@ -267,12 +280,12 @@ function buildArtistIntro({ name, upcoming, past }: Artist) {
   if (upcoming.length === 1) {
     const [only] = upcoming;
     const place = getEventPrimaryPlace(only);
-    const city = getEventCity(only);
-    return `${name} toca en Argentina el ${formatSeoDate(only.starts_at)}${place ? ` en ${place}` : ""}${city ? `, ${city}` : ""}.${official}`;
+    const city = getEventCityLine(only);
+    return `${name} toca en ${getRegion(upcoming)} el ${formatSeoDate(only.starts_at)}${place ? ` en ${place}` : ""}${city ? `, ${city}` : ""}.${official}`;
   }
 
   if (upcoming.length > 1) {
-    return `${name} tiene ${upcoming.length} fechas en Argentina: ${joinList(upcoming.map(describeShort))}.${official}`;
+    return `${name} tiene ${upcoming.length} fechas en ${getRegion(upcoming)}: ${joinList(upcoming.map(describeShort))}.${official}`;
   }
 
   const last = past[0];
@@ -286,9 +299,9 @@ function buildArtistFaq({ name, upcoming, past }: Artist): EventFaqItem[] {
 
   const items: EventFaqItem[] = [
     {
-      question: `¿Cuándo toca ${name} en Argentina?`,
+      question: `¿Cuándo toca ${name} en ${getRegion(upcoming)}?`,
       answer: upcoming.length
-        ? `${name} tiene ${upcoming.length === 1 ? "una fecha" : `${upcoming.length} fechas`} en Argentina: ${joinList(
+        ? `${name} tiene ${upcoming.length === 1 ? "una fecha" : `${upcoming.length} fechas`} en ${getRegion(upcoming)}: ${joinList(
             upcoming.map((event) => `${describeShort(event)}, a las ${formatTime(event.starts_at)}`)
           )}.`
         : past[0]
@@ -308,7 +321,7 @@ function buildArtistFaq({ name, upcoming, past }: Artist): EventFaqItem[] {
       question: `¿Dónde toca ${name}?`,
       answer: `${joinList(
         upcoming.map((event) => {
-          const city = getEventCity(event);
+          const city = getEventCityLine(event);
           return `${getEventPrimaryPlace(event)}${city ? `, ${city}` : ""}${event.venue_address ? ` (${event.venue_address})` : ""}`;
         })
       )}.`

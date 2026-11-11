@@ -92,21 +92,88 @@ export function getEventLabel(event: Pick<EventRecord, "title" | "venue_name" | 
 /** Formas en que el panel carga Capital. Todas se muestran como "Buenos Aires". */
 const CABA_CITIES = new Set(["caba", "buenos aires", "ciudad de buenos aires", "ciudad autonoma de buenos aires", "capital federal", "bs as", "bsas"]);
 
+/** Valores de provincia, no de ciudad: si aparecen en `province`, `city` ya es la ciudad. */
+const PROVINCE_LEVEL = new Set([...CABA_CITIES, "provincia de buenos aires", "pba"]);
+
+/** Fechas fuera del país: el panel carga el país en `city` o en `province` ("URUGUAY"). */
+const COUNTRIES: Record<string, string> = {
+  argentina: "Argentina",
+  uruguay: "Uruguay",
+  chile: "Chile",
+  brasil: "Brasil",
+  brazil: "Brasil",
+  paraguay: "Paraguay"
+};
+
+type Place = Pick<EventRecord, "city" | "province" | "venue_name">;
+
+/**
+ * Ciudad y país reales a partir de lo que cargó el panel, que no siempre respeta los campos.
+ * La regla es provincia = "Buenos Aires" y ciudad = "CABA", "Mar del Plata"…, pero en vivo
+ * había filas invertidas (Miss Monique: ciudad "Buenos Aires", provincia "Mar del plata") y
+ * una en Uruguay con el país en la ciudad ("URUGUAY", provincia "Maldonado"). Sin esto, el
+ * título decía "Mute, Buenos Aires" y la descripción "(URUGUAY, Argentina)".
+ */
+function resolvePlace(event: Place) {
+  let city = event.city?.trim() || "";
+  let province = event.province?.trim() || "";
+  let country = "Argentina";
+
+  const cityCountry = COUNTRIES[normalizeText(city)];
+  const provinceCountry = COUNTRIES[normalizeText(province)];
+  if (cityCountry) {
+    country = cityCountry;
+    city = province;
+    province = "";
+  } else if (provinceCountry) {
+    country = provinceCountry;
+    province = "";
+  }
+
+  // Campos invertidos: "Buenos Aires" en ciudad y la ciudad real en provincia.
+  if (normalizeText(city) === "buenos aires" && province && !PROVINCE_LEVEL.has(normalizeText(province))) {
+    city = province;
+  }
+
+  if (!city && country === "Argentina") city = siteConfig.defaultCity;
+
+  return { city: CABA_CITIES.has(normalizeText(city)) ? "Buenos Aires" : formatCityName(city), country };
+}
+
 /**
  * La ciudad tal como se busca. "CABA" pasa a "Buenos Aires": es como escribe la gente
  * ("solomun buenos aires", 3.000 impresiones en octubre, ninguna con "caba"). Vacía si el
  * venue ya la nombra, para no repetirla.
  */
-export function getEventCity(event: Pick<EventRecord, "city" | "venue_name">) {
-  const raw = event.city?.trim() || siteConfig.defaultCity;
-  const city = CABA_CITIES.has(normalizeText(raw)) ? "Buenos Aires" : formatCityName(raw);
-
-  if (normalizeText(event.venue_name).includes(normalizeText(city))) return "";
+export function getEventCity(event: Place) {
+  const { city } = resolvePlace(event);
+  if (!city || normalizeText(event.venue_name).includes(normalizeText(city))) return "";
   return city;
+}
+
+/** "Argentina" salvo que la fecha sea en otro país. */
+export function getEventCountry(event: Place) {
+  return resolvePlace(event).country;
+}
+
+/** "Mar del Plata" o, fuera del país, "Maldonado, Uruguay". Para títulos y listados. */
+export function getEventCityLine(event: Place) {
+  const city = getEventCity(event);
+  const country = getEventCountry(event);
+  if (country === "Argentina") return city;
+  return city ? `${city}, ${country}` : country;
+}
+
+/** "Mar del Plata, Argentina" o "Maldonado, Uruguay". Para descripciones. */
+export function getEventCityAndCountry(event: Place) {
+  const city = getEventCity(event);
+  const country = getEventCountry(event);
+  return city ? `${city}, ${country}` : country;
 }
 
 /** "Mar del plata" → "Mar del Plata". El admin la carga a mano y llega con mayúsculas sueltas. */
 export function formatCityName(city: string) {
+  if (!city) return "";
   const minor = new Set(["de", "del", "la", "las", "los", "y"]);
 
   return city

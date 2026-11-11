@@ -133,6 +133,36 @@ export function SoldOutWhatsappCta({
 }
 
 /**
+ * "Consultar por mesas VIP" — debajo de "Comprar en Bombo" en el detalle.
+ *
+ * Abre el WhatsApp de contacto con la fecha ya escrita, así el RRPP sabe de qué evento le
+ * hablan sin preguntar. Delineado y más bajo que el CTA (44px contra 56): es la segunda
+ * acción del bloque, y si pesara lo mismo competiría con la compra. `wa_source: event_vip`.
+ */
+export function VipWhatsappCta({
+  href,
+  eventSlug,
+  className = ""
+}: {
+  href: string;
+  eventSlug: string;
+  className?: string;
+}) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={() => track("click_whatsapp", { wa_source: "event_vip", event_slug: eventSlug })}
+      className={`btn-out t150 flex h-11 items-center justify-center gap-2 rounded-full border border-white/[0.18] text-[13.5px] font-bold leading-none text-white ${className}`}
+    >
+      <Icon name="chat" size={17} />
+      Consultar por mesas VIP
+    </a>
+  );
+}
+
+/**
  * WhatsApp secundario — 58px, delineado, **nunca relleno**.
  *
  * Va al lado del CTA de compra y no compite con él: si el verde de WhatsApp se rellenara,

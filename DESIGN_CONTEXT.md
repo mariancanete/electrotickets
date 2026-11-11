@@ -356,8 +356,8 @@ condicionado por alto, la trama).
   interno. Nunca se convierte en drawer.
 - Barra de búsqueda de Buscar: pegada al header, mismo fondo ink y su borde.
 - Columna izquierda del detalle: `top: 100px`, y lleva el CTA adentro. **Si la columna es más
-  alta que el viewport, libera el sticky** (`@media (max-height: 859.98px)` a 1024 y 949.98px
-  a 1440) y scrollea con la página: antes que recortar el único punto de conversión de la
+  alta que el viewport, libera el sticky** (`@media (max-height: 928.98px)` a 1024 y 1015.98px a 1440;
+  hasta el PR #39 eran 859.98 y 949.98px) y scrollea con la página: antes que recortar el único punto de conversión de la
   pantalla, se pierde el pegado. Verificado a 1280×720.
 
 **Hover y foco.** Todo detrás de `@media (hover: hover)`, incluidos los `:active` — en un touch
@@ -601,6 +601,24 @@ Incluye el panel de Conversión con filtro Vigentes/Finalizados/Todos.
   responde con `X-Robots-Tag: noindex, nofollow`, a los bots los redirige sin registrar nada
   (`isBot` en `app/go/[slug]/route.ts`) y `BuyCta` lleva `rel="nofollow"`. **Los clics de
   `event_clicks` pueden bajar desde este PR: es la limpieza, no una caída de ventas.**
+- **Ciudad y provincia en el panel (PR #39).** La regla de carga es provincia = "Buenos Aires"
+  y ciudad = "CABA", "Mar del Plata"… En vivo había filas invertidas (Miss Monique: ciudad
+  "Buenos Aires", provincia "Mar del plata"; Green Velvet y Emiliano Demarco: ciudad "Buenos
+  Aires", provincia "CABA") y una en Uruguay con el país en la ciudad (Music On: "URUGUAY",
+  "Maldonado"). `resolvePlace` en `lib/event-seo.ts` lo tolera: "Buenos Aires" en ciudad con
+  una ciudad real en provincia se invierte, y un país en cualquiera de los dos campos pasa a
+  ser el país ("MUSIC ON en Open Park, Maldonado, Uruguay 2027"). Las preguntas por artista
+  dicen "en Uruguay" y solo listan fechas de ese país; la página de artista dice "en
+  Argentina y Uruguay" si corresponde. **El JSON-LD sigue leyendo los campos crudos**: conviene
+  corregir las filas en Supabase igual.
+- **"Consultar por mesas VIP" (PR #39)** debajo de "Comprar en Bombo" en el detalle, mobile y
+  desktop (`VipWhatsappCta`, `wa_source: event_vip`). Delineado y de 44px: segunda acción del
+  bloque, nunca chartreuse. Abre el WhatsApp de contacto con `buildVipWhatsappMessage` y la
+  fecha escrita ("…para MASSANO B2B KEVIN DE VRIES en Mute, Mar del Plata (sábado 23 de
+  enero)"). No va en agotadas: "Avisame por WhatsApp" ya pregunta por mesas. Costos de
+  layout: la barra fija de mobile pasa de ~110 a 163px (espaciador 185, o 132 en agotada) y
+  los umbrales del sticky de desktop suben a 928.98 / 1015.98 (columna de 805 / 892px). En
+  ventanas de 900px de alto la columna ahora scrollea con la página.
 - **Agotada nunca queda sin acción:** WhatsApp de lista de espera, delineado. El "agotado" lo
   dice el sello del flyer, no el botón.
 - **Los flyers no pasan por el optimizador de Vercel** (cupo agotado → 402). Van por wsrv.

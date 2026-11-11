@@ -3,7 +3,13 @@ import Link from "next/link";
 import { Fragment } from "react";
 import { notFound } from "next/navigation";
 import { Chip, InfoBlock, UrgencyChip } from "@/components/chips";
-import { BuyCta, SoldOutWhatsappCta, WhatsappGroupButton, WhatsappIconButton } from "@/components/cta";
+import {
+  BuyCta,
+  SoldOutWhatsappCta,
+  VipWhatsappCta,
+  WhatsappGroupButton,
+  WhatsappIconButton
+} from "@/components/cta";
 import { DateCard } from "@/components/date-card";
 import { DetailActions } from "@/components/detail-actions";
 import { FlyerFrame } from "@/components/flyer-image";
@@ -19,6 +25,9 @@ import {
   formatShortSeoDate,
   getEventArtists,
   getEventCity,
+  getEventCityAndCountry,
+  getEventCityLine,
+  getEventCountry,
   getEventLabel,
   getEventPrimaryPlace,
   getEventYear,
@@ -40,6 +49,7 @@ import { normalizeText } from "@/lib/slugify";
 import { getYoutubeEmbedUrl, getYoutubeVideoId } from "@/lib/video";
 import {
   buildPriceWhatsappMessage,
+  buildVipWhatsappMessage,
   whatsappUrlOrGroup
 } from "@/lib/whatsapp";
 import type { EventFaqItem, EventRecord } from "@/types/event";
@@ -123,6 +133,11 @@ export default async function EventDetailPage({ params }: PageProps) {
   const hasLastTickets = Boolean(event.last_tickets) && !isSoldOut && !finished;
 
   const priceUrl = whatsappUrlOrGroup(buildPriceWhatsappMessage(event.title));
+  // "…para MASSANO B2B KEVIN DE VRIES en Mute, Mar del Plata (sábado 23 de enero)": con la
+  // fecha y el lugar, el RRPP sabe qué noche le consultan sin tener que preguntar.
+  const vipUrl = whatsappUrlOrGroup(
+    buildVipWhatsappMessage(`${getLabelWithCity(event)} (${formatLongDay(event.starts_at).toLowerCase()})`)
+  );
 
   const seoDescription = buildSeoDescription(event, finished, sameArtistEvent);
   const aboutEvent = buildAboutEvent(event, sameArtistEvent, finished);
@@ -138,7 +153,7 @@ export default async function EventDetailPage({ params }: PageProps) {
   // nombraba nunca el lugar ni la ciudad, que son justo las palabras con las que se busca.
   // Cada parte se corta entera: "EN MANDARINE PARK, / BUENOS AIRES" y nunca "EN MANDARINE /
   // PARK, BUENOS AIRES".
-  const placeLine = [shouldAppendPlaceToTitle(event.title, placeName) ? `en ${placeName}` : "", getEventCity(event)].filter(
+  const placeLine = [shouldAppendPlaceToTitle(event.title, placeName) ? `en ${placeName}` : "", getEventCityLine(event)].filter(
     Boolean
   );
 
@@ -247,6 +262,10 @@ export default async function EventDetailPage({ params }: PageProps) {
           </>
         )}
       </div>
+
+      {/* Mesas VIP, debajo del CTA en los dos anchos. En agotada no va: el botón de lista de
+          espera ya pregunta por mesas, y dos chats de WhatsApp seguidos confunden. */}
+      {isSoldOut ? null : <VipWhatsappCta href={vipUrl} eventSlug={event.slug} className="lg:order-3" />}
     </>
   );
 
@@ -499,7 +518,8 @@ export default async function EventDetailPage({ params }: PageProps) {
         <div
           aria-hidden="true"
           className="lg:hidden"
-          style={{ height: "calc(132px + env(safe-area-inset-bottom))" }}
+          // 132 + 53 del botón de mesas VIP (44 + 9 de separación), que en agotada no va.
+          style={{ height: `calc(${isSoldOut ? 132 : 185}px + env(safe-area-inset-bottom))` }}
         />
 
         {finished ? null : (
@@ -547,7 +567,7 @@ function InfoRow({
  */
 function NextDateBanner({ event, nextDate }: { event: EventRecord; nextDate: EventRecord }) {
   const artist = sharedArtistName(event, nextDate) || nextDate.title;
-  const city = getEventCity(nextDate);
+  const city = getEventCityLine(nextDate);
 
   return (
     <Link
@@ -668,7 +688,7 @@ function sharedArtistName(event: EventRecord, candidate: EventRecord) {
 
 /** "SOLOMUN en Mandarine Park, Buenos Aires". */
 function getLabelWithCity(event: EventRecord) {
-  const city = getEventCity(event);
+  const city = getEventCityLine(event);
   return `${getEventLabel(event)}${city ? `, ${city}` : ""}`;
 }
 
@@ -706,15 +726,14 @@ function buildSeoTitle(event: EventRecord, finished: boolean, nextDate: EventRec
 
 function buildSeoDescription(event: EventRecord, finished: boolean, nextDate: EventRecord | null = null) {
   const label = getEventLabel(event);
-  const city = getEventCity(event);
-  const where = city ? `${city}, Argentina` : "Argentina";
+  const where = getEventCityAndCountry(event);
 
   if (finished) {
     if (nextDate) {
-      const nextCity = getEventCity(nextDate);
+      const nextCity = getEventCityLine(nextDate);
       return `${label} ya finalizó. Próxima fecha: ${getEventLabel(nextDate)}${nextCity ? ` (${nextCity})` : ""}, el ${formatSeoDate(nextDate.starts_at)}. Entradas con link oficial de Bombo en ElectroTickets.`;
     }
-    return `${label} (${where}) fue el ${formatSeoDate(event.starts_at)}. Mirá las próximas fechas de electrónica en Argentina y recibí avisos por WhatsApp desde ElectroTickets.`;
+    return `${label} (${where}) fue el ${formatSeoDate(event.starts_at)}. Mirá las próximas fechas de electrónica y recibí avisos por WhatsApp desde ElectroTickets.`;
   }
 
   // "Argentina" y la ciudad van en la descripción: Google las resalta cuando coinciden con
@@ -730,7 +749,7 @@ function buildAboutEvent(event: EventRecord, nextDate: EventRecord | null, finis
   if (nextDate) {
     const place = getEventPrimaryPlace(event) || "el venue";
     const artist = sharedArtistName(event, nextDate) || event.title;
-    const nextCity = getEventCity(nextDate);
+    const nextCity = getEventCityLine(nextDate);
 
     return `${event.title} fue en ${place} el ${formatSeoDate(event.starts_at)}${event.genre ? `, una noche de ${event.genre}` : ""}. La próxima fecha de ${artist} es ${getEventLabel(nextDate)}${nextCity ? ` (${nextCity})` : ""}, el ${formatSeoDate(nextDate.starts_at)}: las entradas están en su página, con el link oficial de Bombo.`;
   }
@@ -739,12 +758,11 @@ function buildAboutEvent(event: EventRecord, nextDate: EventRecord | null, finis
   // y la credencial RRPP. El de antes ("X llega a Y, con una propuesta de Z con X") no decía
   // ni la ciudad ni el año y repetía el artista como lineup.
   const label = getEventLabel(event);
-  const city = getEventCity(event);
   const venue = event.venue_name?.trim() || "";
   const lineupNames = getEventArtists(event);
   const hasOtherArtists = lineupNames.some((artist) => normalizeText(artist) !== normalizeText(event.title));
 
-  const when = `${label} (${city ? `${city}, ` : ""}Argentina) ${finished ? "fue" : "es"} el ${formatSeoDate(event.starts_at)}, con puertas a las ${formatTime(event.starts_at)}${event.genre ? `: una noche de ${event.genre}` : ""}.`;
+  const when = `${label} (${getEventCityAndCountry(event)}) ${finished ? "fue" : "es"} el ${formatSeoDate(event.starts_at)}, con puertas a las ${formatTime(event.starts_at)}${event.genre ? `: una noche de ${event.genre}` : ""}.`;
   const lineup = hasOtherArtists ? ` Lineup: ${lineupNames.join(", ")}.` : "";
   if (finished) return `${when}${lineup}`;
 
@@ -759,7 +777,7 @@ function buildAboutEvent(event: EventRecord, nextDate: EventRecord | null, finis
 /** "el sábado 2 de enero de 2027 en Mute (Mar del Plata)". */
 function describeDate(event: EventRecord) {
   const place = getEventPrimaryPlace(event);
-  const city = getEventCity(event);
+  const city = getEventCityLine(event);
   return `el ${formatSeoDate(event.starts_at)}${place ? ` en ${place}` : ""}${city ? ` (${city})` : ""}`;
 }
 
@@ -775,6 +793,7 @@ function buildEventFaq(
   const label = getEventLabel(event);
   const place = getEventPrimaryPlace(event) || "venue a confirmar";
   const city = getEventCity(event);
+  const country = getEventCountry(event);
   const address = formatAddress(event);
 
   const buyAnswer = finished
@@ -791,17 +810,20 @@ function buildEventFaq(
     : getHeadliners(event)
         .slice(0, 3)
         .map((artist) => {
-          const dates = getArtistUpcomingEvents(artist, upcomingEvents);
+          // Solo fechas del mismo país: la pregunta dice "en Argentina" (o "en Uruguay").
+          const dates = getArtistUpcomingEvents(artist, upcomingEvents).filter(
+            (date) => getEventCountry(date) === country
+          );
           const list = dates.some((date) => date.id === event.id) ? dates : [event, ...dates];
           const others = getHeadliners(event).filter((other) => other !== artist);
           const withOthers = others.length ? ` junto a ${joinList(others)}` : "";
 
           return {
-            question: `¿Cuándo toca ${artist} en Argentina?`,
+            question: `¿Cuándo toca ${artist} en ${country}?`,
             answer:
               list.length > 1
-                ? `${artist} tiene ${list.length} fechas en Argentina: ${joinList(list.map(describeDate))}. Las entradas de cada fecha están en ElectroTickets, con el link oficial de Bombo.`
-                : `${artist} toca${withOthers} ${describeDate(event)}. Las entradas para ${artist} en ${city || "Argentina"} se compran desde esta página, con el link oficial de Bombo.`
+                ? `${artist} tiene ${list.length} fechas en ${country}: ${joinList(list.map(describeDate))}. Las entradas de cada fecha están en ElectroTickets, con el link oficial de Bombo.`
+                : `${artist} toca${withOthers} ${describeDate(event)}. Las entradas para ${artist} en ${city || country} se compran desde esta página, con el link oficial de Bombo.`
           };
         });
 
@@ -850,7 +872,7 @@ function buildFinishedWithNextDateFaq(event: EventRecord, nextDate: EventRecord)
       answer: `La fecha de ${place} ya finalizó. La próxima fecha de ${artist} es ${nextLabel}, el ${nextWhen}: las entradas están en su página de ElectroTickets, con el link oficial de Bombo.`
     },
     {
-      question: `¿Cuándo vuelve a tocar ${artist} en Argentina?`,
+      question: `¿Cuándo vuelve a tocar ${artist}?`,
       answer: `${artist} vuelve el ${nextWhen}, a las ${formatTime(nextDate.starts_at)}, en ${nextLabel}.`
     },
     {
