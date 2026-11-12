@@ -601,6 +601,11 @@ export function AdminDashboard({
             <textarea value={form.lineup} onChange={(event) => updateField("lineup", event.target.value)} className="input min-h-24" placeholder="Un artista por línea" />
           </Field>
 
+          {/* Opcional. Si queda vacía, la página arma sola un texto con fecha, venue y lineup.
+              Un texto propio es lo que distingue a la página en Google de las demás fechas. */}
+          <Field label="Descripción (opcional)">
+            <textarea value={form.description} onChange={(event) => updateField("description", event.target.value)} className="input min-h-32" placeholder="Contá la fecha con tus palabras: quién toca, dónde y por qué no hay que perdérsela. Si lo dejás vacío, el texto se arma solo." />
+          </Field>
 
           <Field label="Videoset YouTube URL">
             <input value={form.video_url} onChange={(event) => updateField("video_url", event.target.value)} className="input" placeholder="https://youtube.com/watch?v=..." />
