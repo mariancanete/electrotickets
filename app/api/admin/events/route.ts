@@ -2,11 +2,14 @@ import { NextResponse } from "next/server";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
 import { findCanonicalName, getAdminCatalog } from "@/lib/catalog";
 import { buildEventSlug } from "@/lib/slugify";
+import { generateEventDescription } from "@/lib/generate-description";
 import { revalidatePublicPages } from "@/lib/revalidate";
 import { getSupabaseAdminClient } from "@/lib/supabase";
 import type { EventInput } from "@/types/event";
 
 export const runtime = "nodejs";
+// La descripción automática puede tardar unos segundos (ver `generateEventDescription`).
+export const maxDuration = 60;
 
 async function guard() {
   const authenticated = await isAdminAuthenticated();
@@ -82,16 +85,35 @@ async function normalizePayload(input: EventInput) {
   const genre = findCanonicalName(catalog.genres, input.genre) ?? input.genre?.trim() ?? null;
   const venueName = findCanonicalName(catalog.venues, input.venue_name) ?? input.venue_name?.trim() ?? null;
 
+  const lineup = Array.isArray(input.lineup) ? input.lineup : [];
+  const city = input.city?.trim() || "CABA";
+  const province = input.province?.trim() || "Buenos Aires";
+
+  // Descripción vacía = la escribe Claude. Una escrita o editada a mano nunca se pisa. Si la
+  // generación falla, el evento se guarda igual y la página usa el texto de plantilla.
+  const description =
+    input.description?.trim() ||
+    (await generateEventDescription({
+      title: input.title.trim(),
+      lineup,
+      venue_name: venueName || null,
+      venue_address: input.venue_address?.trim() || null,
+      city,
+      province,
+      starts_at: input.starts_at,
+      genre: genre || null
+    }));
+
   return {
     title: input.title.trim(),
     slug: input.slug?.trim() || buildEventSlug(input.title, input.starts_at),
-    description: input.description?.trim() || null,
+    description: description || null,
     flyer_url: input.flyer_url?.trim() || null,
-    lineup: Array.isArray(input.lineup) ? input.lineup : [],
+    lineup,
     venue_name: venueName || null,
     venue_address: input.venue_address?.trim() || null,
-    city: input.city?.trim() || "CABA",
-    province: input.province?.trim() || "Buenos Aires",
+    city,
+    province,
     map_url: input.map_url?.trim() || null,
     starts_at: input.starts_at,
     end_at: input.end_at || null,
