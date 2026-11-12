@@ -97,11 +97,8 @@ The admin route must not be visible in public navigation.
 ## Admin rules
 
 - Keep event creation simple.
-- `Descripción`: if left empty on save, the server writes it with Claude
-  (`lib/generate-description.ts`, needs `ANTHROPIC_API_KEY` in Vercel). A description typed or
-  edited by hand is never overwritten. Without the key, or if the call fails, the event saves
-  anyway and the page falls back to its template text. The prompt forbids invented facts
-  (prices, attendance, sold-out claims, artist bio it is not sure about): keep that rule.
+- The event form has an optional `Descripción` field. Empty = the page builds its own text.
+  A hand-written description is the unique content that separates the page from the rest.
 - City and province: `province` = "Buenos Aires", `city` = "CABA", "Mar del Plata"…
 - Every event create/update/delete calls `revalidatePublicPages()` (`lib/revalidate.ts`).
   Public pages use `revalidate = 3600`; do not lower it back to 60 (Vercel ISR Writes quota).
