@@ -392,7 +392,7 @@ export default async function EventDetailPage({ params }: PageProps) {
 
               {/* La descripción sube arriba de las filas de dato en desktop, que es donde el
                   mockup la pone: primero qué es la fiesta, después la logística. */}
-              <p className="mt-5 hidden max-w-[640px] text-[15px] leading-[1.65] text-white/[0.62] lg:block">
+              <p className="mt-5 hidden max-w-[640px] text-[15px] leading-[1.65] whitespace-pre-line text-white/[0.62] lg:block">
                 {aboutEvent}
               </p>
             </div>
@@ -478,7 +478,7 @@ export default async function EventDetailPage({ params }: PageProps) {
              */}
             <section className="gutter flex-none pt-6 lg:hidden">
               <h2 className="text-[18px] font-bold leading-none tracking-[-0.02em]">Sobre la fecha</h2>
-              <p className="mt-3 text-[13.5px] leading-[1.65] text-white/60">{aboutEvent}</p>
+              <p className="mt-3 whitespace-pre-line text-[13.5px] leading-[1.65] text-white/60">{aboutEvent}</p>
             </section>
 
             {embedUrl && videoId ? (

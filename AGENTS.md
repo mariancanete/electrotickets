@@ -97,6 +97,8 @@ The admin route must not be visible in public navigation.
 ## Admin rules
 
 - Keep event creation simple.
+- The event form has an optional `Descripción` field. Empty = the page builds its own text.
+  A hand-written description is the unique content that separates the page from the rest.
 - City and province: `province` = "Buenos Aires", `city` = "CABA", "Mar del Plata"…
 - Every event create/update/delete calls `revalidatePublicPages()` (`lib/revalidate.ts`).
   Public pages use `revalidate = 3600`; do not lower it back to 60 (Vercel ISR Writes quota).
