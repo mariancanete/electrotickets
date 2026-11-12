@@ -644,6 +644,32 @@ Incluye el panel de Conversión con filtro Vigentes/Finalizados/Todos.
   regenerando `/`, un detalle y una página de artista dio salida idéntica, así que el resto
   del consumo hay que buscarlo en el desglose de Usage de Vercel (deploys, rutas).
 
+### Noviembre 2026 — PR #41: experimento de SEO "por búsqueda real" (Solomun NYE)
+
+Solomun NYE (Teatro Griego Frank Romero Day, Mendoza) era la fecha de peor rendimiento. Google
+mostraba "SOLOMUN NYEen Teatro Griego Frank Romero Day, Mendoza": el título tenía 70
+caracteres, Google lo descartó y usó el h1, que no tenía espacio entre el título y la bajada.
+
+- **Bug corregido en todas las fechas:** espacio en el h1 antes de la bajada. No se ve (la
+  bajada es otra línea), pero es el texto que lee Google.
+- **Experimento solo en `solomun-nye-2026-12-31`** (`lib/seo-search-intent.ts`,
+  `EXPERIMENT_SLUGS`). En octubre la fecha se buscó **solo** como "solomun mendoza" (629
+  impresiones, posición 8,0), "solomun mendoza entradas" (3,0), "solomun mendoza 2026" (4,8) y
+  "solomun mendoza año nuevo". Nadie buscó "NYE" ni "Teatro Griego". Reglas:
+  - Título con **artista + ciudad**, no título del evento + venue, y como mucho 60 caracteres:
+    `SOLOMUN en Mendoza · Año Nuevo 2026 | Entradas`.
+  - "Año Nuevo" cuando la noche es la del 31/12 (`isNewYearsEve`, con la corrección de noche).
+  - h1 "SOLOMUN NYE / Año Nuevo en Mendoza"; el venue queda en la fila de lugar.
+  - Descripción y primer párrafo que arrancan con la búsqueda literal.
+  - FAQ con las búsquedas como preguntas: "¿Dónde comprar entradas para SOLOMUN en
+    Mendoza?", "¿Dónde toca SOLOMUN en Mendoza?", "¿Dónde pasar Año Nuevo con SOLOMUN?".
+- **Cómo medirlo:** Search Console → Rendimiento → filtro de página
+  `/eventos/solomun-nye-2026-12-31`, consulta "solomun mendoza". Base de octubre: posición
+  8,0 y CTR 0,6 %. Mirarlo 2–3 semanas después de pedir la reindexación.
+- **Para replicar:** sumar slugs a `EXPERIMENT_SLUGS`. Ojo con Mute: ahí el venue sí se busca
+  ("solomun mute", 233 impresiones), así que en lugar de sacar el venue conviene que entre al
+  final del título. `buildSearchIntentTitle` ya lo agrega si hay lugar.
+
 ### Descartado a propósito de la referencia visual
 
 Banderas de país (el sitio es solo Argentina), fila de estadísticas (requeriría inventar
