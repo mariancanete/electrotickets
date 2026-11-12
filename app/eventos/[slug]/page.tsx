@@ -18,6 +18,14 @@ import { Icon } from "@/components/icons";
 import { SoldOutStamp } from "@/components/sold-out-stamp";
 import { YoutubeFacade } from "@/components/youtube-facade";
 import { getArtistUpcomingEvents } from "@/lib/artists";
+import {
+  buildSearchIntentAbout,
+  buildSearchIntentDescription,
+  buildSearchIntentFaq,
+  buildSearchIntentPlaceLine,
+  buildSearchIntentTitle,
+  usesSearchIntentSeo
+} from "@/lib/seo-search-intent";
 import { formatDatoRange, formatLongDay, formatTime } from "@/lib/dates";
 import {
   artistPath,
@@ -160,9 +168,12 @@ export default async function EventDetailPage({ params }: PageProps) {
   // nombraba nunca el lugar ni la ciudad, que son justo las palabras con las que se busca.
   // Cada parte se corta entera: "EN MANDARINE PARK, / BUENOS AIRES" y nunca "EN MANDARINE /
   // PARK, BUENOS AIRES".
-  const placeLine = [shouldAppendPlaceToTitle(event.title, placeName) ? `en ${placeName}` : "", getEventCityLine(event)].filter(
-    Boolean
-  );
+  const placeLine =
+    usesSearchIntentSeo(event) && !finished
+      ? buildSearchIntentPlaceLine(event)
+      : [shouldAppendPlaceToTitle(event.title, placeName) ? `en ${placeName}` : "", getEventCityLine(event)].filter(
+          Boolean
+        );
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -350,6 +361,9 @@ export default async function EventDetailPage({ params }: PageProps) {
                   que se busca ("solomun mute", "solomun buenos aires"). */}
               <h1 className="display titular-detalle mt-[14px] text-[40px] leading-[0.92] tracking-[-0.045em] lg:mt-[18px]">
                 {event.title}
+                {/* El espacio no se ve (la bajada es otra línea) pero sí lo lee Google: sin él, el
+                    texto del h1 era "SOLOMUN NYEen Teatro Griego…" y Google lo usó de título. */}
+                {placeLine.length ? " " : null}
                 {placeLine.length ? (
                   <span className="mt-2 block text-[24px] leading-none tracking-[-0.02em] text-white/70 lg:mt-3 lg:text-[34px]">
                     {placeLine.map((part, index) => (
@@ -728,6 +742,8 @@ function buildSeoTitle(event: EventRecord, finished: boolean, nextDate: EventRec
     return `${base}${getTitleYear(event)} | Evento finalizado`;
   }
 
+  if (usesSearchIntentSeo(event)) return buildSearchIntentTitle(event);
+
   return `${base}${getTitleYear(event)} | Entradas`;
 }
 
@@ -742,6 +758,8 @@ function buildSeoDescription(event: EventRecord, finished: boolean, nextDate: Ev
     }
     return `${label} (${where}) fue el ${formatSeoDate(event.starts_at)}. Mirá las próximas fechas de electrónica y recibí avisos por WhatsApp desde ElectroTickets.`;
   }
+
+  if (usesSearchIntentSeo(event)) return buildSearchIntentDescription(event);
 
   // "Argentina" y la ciudad van en la descripción: Google las resalta cuando coinciden con
   // la búsqueda, y son las dos palabras que más se repiten en las consultas.
@@ -768,6 +786,10 @@ function buildAboutEvent(event: EventRecord, nextDate: EventRecord | null, finis
   const venue = event.venue_name?.trim() || "";
   const lineupNames = getEventArtists(event);
   const hasOtherArtists = lineupNames.some((artist) => normalizeText(artist) !== normalizeText(event.title));
+
+  if (usesSearchIntentSeo(event) && !finished) {
+    return buildSearchIntentAbout(event, { official: Boolean(venue) && isOfficialVenue(venue) });
+  }
 
   const when = `${label} (${getEventCityAndCountry(event)}) ${finished ? "fue" : "es"} el ${formatSeoDate(event.starts_at)}, con puertas a las ${formatTime(event.starts_at)}${event.genre ? `: una noche de ${event.genre}` : ""}.`;
   const lineup = hasOtherArtists ? ` Lineup: ${lineupNames.join(", ")}.` : "";
@@ -833,6 +855,10 @@ function buildEventFaq(
                 : `${artist} toca${withOthers} ${describeDate(event)}. Las entradas para ${artist} en ${city || country} se compran desde esta página, con el link oficial de Bombo.`
           };
         });
+
+  if (usesSearchIntentSeo(event) && !finished) {
+    return buildSearchIntentFaq(event, { buyAnswer, address, artistItems });
+  }
 
   return [
     {
