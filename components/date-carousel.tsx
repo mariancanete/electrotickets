@@ -11,9 +11,10 @@ import { getDateRail } from "@/lib/dates";
 import { getEventCity } from "@/lib/event-seo";
 import type { EventRecord } from "@/types/event";
 
-/** Velocidad del loop, en px por segundo, y cuánto espera después de que alguien lo soltó. */
+/** Velocidad del loop, en px por segundo. */
 const VELOCIDAD = 34;
-const PAUSA_MS = 1800;
+/** Cuánto tiene que estar quieto después de soltarlo para retomar: lo justo para no pisar la inercia. */
+const QUIETO_MS = 140;
 
 /**
  * Carrusel de próximas fechas (mobile).
@@ -25,7 +26,8 @@ const PAUSA_MS = 1800;
  * llegar nunca a un borde.
  *
  * Es scroll nativo: el dedo lo mueve como cualquier lista, y nunca muestra barra. Se frena
- * mientras lo tocan, fuera de pantalla y con la pestaña en segundo plano. Con
+ * solo mientras el dedo está apoyado y **retoma apenas se suelta** (si se soltó con envión,
+ * apenas termina la inercia). También se frena fuera de pantalla y en segundo plano. Con
  * `prefers-reduced-motion` no se mueve solo (sigue siendo arrastrable).
  */
 export function DateCarousel({ events }: { events: EventRecord[] }) {
@@ -69,6 +71,8 @@ export function DateCarousel({ events }: { events: EventRecord[] }) {
         // Mientras lo mueve el dedo (o su inercia) solo se cuida que no llegue a un borde.
         const fixed = wrap(el.scrollLeft);
         if (fixed !== el.scrollLeft) el.scrollLeft = fixed;
+        // Si todavía se está moviendo por la inercia del dedo, se espera a que frene.
+        else if (!touching && Math.abs(el.scrollLeft - pos) > 0.5) pausedUntil = now + QUIETO_MS;
         pos = el.scrollLeft;
         return;
       }
@@ -84,10 +88,10 @@ export function DateCarousel({ events }: { events: EventRecord[] }) {
     };
     const release = () => {
       touching = false;
-      pausedUntil = performance.now() + PAUSA_MS;
+      pausedUntil = performance.now() + QUIETO_MS;
     };
     const nudge = () => {
-      pausedUntil = performance.now() + PAUSA_MS;
+      pausedUntil = performance.now() + QUIETO_MS * 4;
     };
 
     const observer = new IntersectionObserver(([entry]) => (visible = entry.isIntersecting), { threshold: 0.2 });
@@ -97,6 +101,9 @@ export function DateCarousel({ events }: { events: EventRecord[] }) {
     el.addEventListener("touchstart", hold, opts);
     el.addEventListener("touchend", release, opts);
     el.addEventListener("touchcancel", release, opts);
+    // Si el dedo se levanta fuera del carrusel, el `touchend` igual tiene que soltarlo.
+    window.addEventListener("touchend", release, opts);
+    window.addEventListener("touchcancel", release, opts);
     el.addEventListener("wheel", nudge, opts);
     el.addEventListener("focusin", nudge);
 
@@ -108,6 +115,8 @@ export function DateCarousel({ events }: { events: EventRecord[] }) {
       el.removeEventListener("touchstart", hold);
       el.removeEventListener("touchend", release);
       el.removeEventListener("touchcancel", release);
+      window.removeEventListener("touchend", release);
+      window.removeEventListener("touchcancel", release);
       el.removeEventListener("wheel", nudge);
       el.removeEventListener("focusin", nudge);
     };
@@ -141,10 +150,12 @@ function CarouselCard({ event, priority }: { event: EventRecord; priority: boole
         <FlyerFrame
           src={event.flyer_url}
           alt={`Flyer de ${event.title}`}
-          sizes="264px"
-          // Todas las cards miden lo mismo: recuadro 4:5 fijo. El flyer se ve entero y, si es
-          // de otra proporción, se completa con el mismo flyer difuminado (nunca se recorta).
-          ratio={null}
+          sizes="560px"
+          // Todas las cards miden lo mismo: recuadro 4:5 fijo que el flyer llena entero, sin
+          // bandas y sin deformar. `sizes` pide de más a propósito: un flyer apaisado se
+          // escala hasta cubrir el alto, y con el ancho justo se vería blando.
+          cover
+          ratio={event.flyer_ratio}
           maxRatio={1.25}
           priority={priority}
           className="rounded-[20px]"

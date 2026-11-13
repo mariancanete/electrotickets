@@ -29,7 +29,8 @@ export function EventRow({ event, placement }: { event: EventRecord; placement: 
       <FlyerFrame
         src={event.flyer_url}
         alt=""
-        sizes="56px"
+        sizes="128px"
+        cover
         ratio={event.flyer_ratio}
         maxRatio={1.25}
         className={`w-14 flex-none rounded-[12px] ${soldOut ? "opacity-45" : ""}`}
