@@ -48,9 +48,9 @@ export function BuyCta({
         track("click_buy", { ...eventParams(event), cta_placement: placement });
         saveDate(event.slug, event.starts_at);
       }}
-      className={`cta-hov t150 flex h-14 items-center justify-center gap-[9px] rounded-full bg-cta text-ink active:bg-cta-pressed ${className}`}
+      className={`cta-hov t150 flex h-14 items-center justify-center gap-[9px] rounded-full bg-cta text-ink shadow-[0_8px_28px_rgba(61,232,245,0.22)] active:bg-cta-pressed ${className}`}
     >
-      <span className="text-[15px] font-bold leading-none tracking-[-0.01em]">{label}</span>
+      <span className="text-[17px] font-extrabold leading-none tracking-[-0.01em]">{label}</span>
       <span className="cta-icon t150 flex">
         <Icon name="out" size={18} />
       </span>
@@ -86,7 +86,7 @@ export function CardCta({
       onClick={() => track("select_date", { ...eventParams(event), cta_placement: placement })}
       className={`cta-hov t150 flex h-11 items-center justify-center gap-2 rounded-full bg-cta text-ink active:bg-cta-pressed ${className}`}
     >
-      <span className="text-[13px] font-bold leading-none">{label}</span>
+      <span className="text-[13.5px] font-extrabold leading-none">{label}</span>
       <span className="cta-icon t150 flex">
         <Icon name="arrow" size={16} />
       </span>

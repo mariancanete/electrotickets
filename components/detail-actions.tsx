@@ -1,17 +1,18 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
 import { track } from "@/lib/analytics";
 
 /**
- * Controles flotantes sobre el flyer del detalle: volver, guardar y compartir.
+ * Acciones del detalle que no son comprar: volver y compartir.
  *
- * **Guardar (corazón) está sin función a propósito.** El ícono ocupa su lugar en el diseño
- * pero todavía no dispara ninguna acción: el comportamiento de guardado quedó pendiente de
- * definición de producto, y una estrella que no hace nada se descubre en un toque. Se
- * renderiza como `<span>` y no como `<button>` para no anunciar a un lector de pantalla una
- * acción que no existe; el día que se defina, pasa a `<button>` y se conecta.
+ *   `flotante`  círculos de vidrio sobre el flyer, en mobile.
+ *   `boton`     "Compartir" con etiqueta, debajo de la fecha, en todos los anchos.
+ *
+ * Compartir usa la hoja nativa del teléfono (WhatsApp, Instagram, copiar…). Donde no existe
+ * copia el link y lo dice. Nunca usa cian: no lleva a comprar.
  */
 export function DetailActions({
   title,
@@ -20,14 +21,10 @@ export function DetailActions({
 }: {
   title: string;
   slug: string;
-  /**
-   * `flotante` es el de mobile, sobre el flyer. `desktop` los baja a botones delineados con
-   * etiqueta, debajo del flyer y dentro de la columna sticky. Siguen sin usar chartreuse: no
-   * llevan a comprar.
-   */
-  variant?: "flotante" | "desktop";
+  variant?: "flotante" | "boton";
 }) {
   const router = useRouter();
+  const [copied, setCopied] = useState(false);
 
   async function share() {
     const url = window.location.href;
@@ -39,46 +36,36 @@ export function DetailActions({
         return;
       }
       await navigator.clipboard.writeText(url);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2200);
     } catch {
       // Cancelar el diálogo de compartir lanza; no es un error que haya que mostrar.
     }
   }
 
-  const circle =
-    "grid h-[42px] w-[42px] place-items-center rounded-full bg-ink/60 text-white backdrop-blur-sm";
-
-  if (variant === "desktop") {
-    const pill =
-      "btn-out t150 flex h-12 flex-1 items-center justify-center gap-[9px] rounded-full border border-white/[0.18] text-[13.5px] font-semibold text-white";
-
+  if (variant === "boton") {
     return (
-      <div className="flex gap-3">
-        <span aria-hidden="true" className={pill}>
-          <Icon name="heart" size={17} />
-          Guardar
-        </span>
-        <button type="button" onClick={share} className={pill}>
-          <Icon name="share" size={17} />
-          Compartir
-        </button>
-      </div>
+      <button
+        type="button"
+        onClick={share}
+        className="btn-out t150 flex h-11 items-center justify-center gap-2 rounded-full border border-white/30 px-5 text-[14px] font-extrabold text-white"
+      >
+        <Icon name={copied ? "check" : "share"} size={17} />
+        <span aria-live="polite">{copied ? "Link copiado" : "Compartir"}</span>
+      </button>
     );
   }
 
+  const circle = "vidrio-barra grid h-11 w-11 place-items-center rounded-full text-white";
+
   return (
-    <div className="absolute inset-x-[18px] top-[52px] flex justify-between">
+    <div className="absolute inset-x-4 top-4 flex justify-between">
       <button type="button" onClick={() => router.back()} aria-label="Volver" className={circle}>
         <Icon name="back" size={19} />
       </button>
-
-      <span className="flex gap-[9px]">
-        <span aria-hidden="true" className={circle}>
-          <Icon name="heart" size={19} />
-        </span>
-        <button type="button" onClick={share} aria-label="Compartir esta fecha" className={circle}>
-          <Icon name="share" size={19} />
-        </button>
-      </span>
+      <button type="button" onClick={share} aria-label="Compartir esta fecha" className={circle}>
+        <Icon name="share" size={19} />
+      </button>
     </div>
   );
 }

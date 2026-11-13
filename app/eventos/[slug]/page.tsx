@@ -10,6 +10,7 @@ import {
   WhatsappGroupButton,
   WhatsappIconButton
 } from "@/components/cta";
+import { BuySteps } from "@/components/buy-steps";
 import { DateCard } from "@/components/date-card";
 import { DetailActions } from "@/components/detail-actions";
 import { FlyerFrame } from "@/components/flyer-image";
@@ -226,64 +227,39 @@ export default async function EventDetailPage({ params }: PageProps) {
     }))
   };
 
-  // Bloque de compra. Se renderiza dos veces con la misma información y **nunca las dos a la
-  // vez**: en mobile va en la barra fija de abajo, y en desktop viaja adentro de la columna
-  // sticky del flyer. Como se alternan con `display`, en cada ancho hay exactamente uno en el
-  // árbol de accesibilidad, así que un lector de pantalla tampoco escucha dos CTA.
-  const bloqueCompra = (
+  // Barra de compra. Es **una sola y va fija en todos los anchos**: abajo a sangre en mobile,
+  // flotando centrada en desktop. El botón queda a la vista por más que se scrollee, y los
+  // dos pasos van siempre arriba del botón, nunca debajo.
+  const bloqueCompra = isSoldOut ? (
     <>
-      {/* La expectativa va **antes** del CTA, no debajo: descubrir que la compra termina
-          afuera después del clic es donde se pierde la gente. Agotada no lleva a Bombo, así
-          que la línea cuenta qué hace el botón de WhatsApp en vez de hablar de precios. */}
-      {isSoldOut ? (
-        <p className="flex items-center justify-center gap-[6px] text-[11.5px] leading-none text-white/50 lg:order-2 lg:mt-1 lg:justify-start lg:text-[12.5px]">
-          <Icon name="chat" size={13} />
-          Agotado en Bombo · te aviso si se libera una entrada
-        </p>
-      ) : hasLastTickets ? (
-        // Últimas entradas: la urgencia se repite justo arriba del botón, que es donde se
-        // decide. La expectativa de que se paga en Bombo sigue en la misma línea.
-        <Link
-          href={`/eventos/${event.slug}/comprar`}
-          className="t150 flex items-center justify-center gap-[6px] text-[12px] leading-none text-white/55 hover:text-white lg:order-2 lg:mt-1 lg:justify-start lg:text-[13px]"
-        >
-          <span className="flex items-center gap-[5px] font-bold text-urgencia">
-            <Icon name="flame" size={15} />
+      <p className="flex items-center justify-center gap-[6px] text-[12.5px] font-semibold leading-none text-white/80">
+        <Icon name="chat" size={14} />
+        Agotado en Bombo · te aviso si se libera una entrada
+      </p>
+      {/* Un solo botón: el de WhatsApp ya es la acción. */}
+      <SoldOutWhatsappCta event={event} source="event_waitlist" />
+    </>
+  ) : (
+    <>
+      <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
+        {hasLastTickets ? (
+          <span className="flex items-center gap-[5px] text-[12px] font-extrabold leading-none text-urgencia">
+            <Icon name="flame" size={14} />
             Últimas entradas
           </span>
-          · link oficial de Bombo
-        </Link>
-      ) : (
-        <Link
-          href={`/eventos/${event.slug}/comprar`}
-          className="t150 flex items-center justify-center gap-[6px] text-[11.5px] leading-none text-white/50 hover:text-white lg:order-2 lg:mt-1 lg:justify-start lg:text-[12.5px]"
-        >
-          <Icon name="shield" size={13} />
-          Link oficial · precio y lotes actualizados en Bombo
-        </Link>
-      )}
-
-      <div className="flex gap-[9px] lg:order-1 lg:gap-3">
-        {isSoldOut ? (
-          // Un solo botón: el de WhatsApp ya es la acción, y repetirlo como ícono al lado
-          // abriría el mismo chat dos veces.
-          <SoldOutWhatsappCta event={event} source="event_waitlist" className="flex-1" />
-        ) : (
-          <>
-            <BuyCta event={event} placement="detalle_barra" className="flex-1" />
-            <WhatsappIconButton
-              href={priceUrl}
-              source="event_price"
-              eventSlug={event.slug}
-              label="Consultar precio por WhatsApp"
-            />
-          </>
-        )}
+        ) : null}
+        <BuySteps />
       </div>
-
-      {/* Mesas VIP, debajo del CTA en los dos anchos. En agotada no va: el botón de lista de
-          espera ya pregunta por mesas, y dos chats de WhatsApp seguidos confunden. */}
-      {isSoldOut ? null : <VipWhatsappCta href={vipUrl} eventSlug={event.slug} className="lg:order-3" />}
+      <div className="flex gap-[10px]">
+        <BuyCta event={event} placement="detalle_barra" className="!h-[58px] flex-1" />
+        <WhatsappIconButton
+          href={priceUrl}
+          source="event_price"
+          eventSlug={event.slug}
+          label="Consultar precio por WhatsApp"
+          className="!h-[58px] !w-[58px] !border-white/30"
+        />
+      </div>
     </>
   );
 
@@ -330,7 +306,7 @@ export default async function EventDetailPage({ params }: PageProps) {
               maxRatio={1.5}
               maxRatioDesktop={1.25}
               priority
-              className="flex-none lg:rounded-block lg:border lg:border-white/10"
+              className="flex-none rounded-b-[28px] lg:rounded-block lg:border lg:border-white/10"
             >
               {isSoldOut ? <SoldOutStamp size="xl" /> : null}
               <div className="lg:hidden">
@@ -338,13 +314,6 @@ export default async function EventDetailPage({ params }: PageProps) {
               </div>
             </FlyerFrame>
 
-            {/* En desktop Guardar y Compartir dejan de flotar sobre el flyer y pasan a
-                botones delineados con etiqueta. Siguen sin usar chartreuse. */}
-            <div className="hidden lg:block">
-              <DetailActions title={event.title} slug={event.slug} variant="desktop" />
-            </div>
-
-            {finished ? null : <div className="hidden lg:flex lg:flex-col lg:gap-3">{bloqueCompra}</div>}
           </div>
 
           <div className="flex flex-col">
@@ -388,6 +357,10 @@ export default async function EventDetailPage({ params }: PageProps) {
                   todo y no al pie. Estas URLs viejas son las que ya posicionan ("kevin de vries
                   entradas" traía primero la de Mandarine) y el link a la fecha nueva estaba
                   debajo del FAQ, donde no lo veía nadie ni le pasaba peso. */}
+              <div className="mt-4 flex lg:mt-5">
+                <DetailActions title={event.title} slug={event.slug} variant="boton" />
+              </div>
+
               {sameArtistEvent ? <NextDateBanner event={event} nextDate={sameArtistEvent} /> : null}
 
               {/* La descripción sube arriba de las filas de dato en desktop, que es donde el
@@ -470,6 +443,12 @@ export default async function EventDetailPage({ params }: PageProps) {
               </div>
             ) : null}
 
+            {isSoldOut || finished ? null : (
+              <div className="gutter flex-none pt-[14px] lg:max-w-[640px] lg:px-0 lg:pt-4">
+                <VipWhatsappCta href={vipUrl} eventSlug={event.slug} className="!h-12 !border-white/30" />
+              </div>
+            )}
+
             {/**
              * Contenido indexable de la fecha. El PRD no lo especifica en la pantalla, pero se
              * conserva: es el texto que sostiene el posicionamiento de la URL y las preguntas
@@ -534,22 +513,22 @@ export default async function EventDetailPage({ params }: PageProps) {
           </div>
         </div>
 
-        {/* Reserva el alto de la barra fija de mobile para que no tape el último bloque.
-            En desktop no hay barra fija, así que no reserva nada. */}
-        <div
-          aria-hidden="true"
-          className="lg:hidden"
-          // 132 + 53 del botón de mesas VIP (44 + 9 de separación), que en agotada no va.
-          style={{ height: `calc(${isSoldOut ? 132 : 185}px + env(safe-area-inset-bottom))` }}
-        />
-
-        {finished ? null : (
-          <div
-            className="fixed inset-x-0 bottom-0 z-40 flex flex-col gap-[9px] border-t border-white/10 bg-ink px-[18px] pt-[13px] lg:hidden"
-            style={{ paddingBottom: "calc(18px + env(safe-area-inset-bottom))" }}
-          >
-            {bloqueCompra}
-          </div>
+        {/* Reserva el alto de la barra fija para que no tape el último bloque. */}
+        {finished ? (
+          <div aria-hidden="true" className="h-8" />
+        ) : (
+          <>
+            <div
+              aria-hidden="true"
+              style={{ height: `calc(${isSoldOut ? 128 : 142}px + env(safe-area-inset-bottom))` }}
+            />
+            <div
+              className="vidrio-barra fixed inset-x-0 bottom-0 z-40 flex flex-col gap-3 rounded-t-[28px] !border-x-0 !border-b-0 px-4 pt-[14px] lg:inset-x-auto lg:bottom-5 lg:left-1/2 lg:w-[560px] lg:-translate-x-1/2 lg:rounded-[28px] lg:!border lg:!border-white/[0.16] lg:px-5 lg:pb-5 lg:pt-4"
+              style={{ paddingBottom: "max(18px, env(safe-area-inset-bottom))" }}
+            >
+              {bloqueCompra}
+            </div>
+          </>
         )}
       </main>
     </>

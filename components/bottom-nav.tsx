@@ -28,13 +28,12 @@ const tabs: { href: string; label: string; icon: IconName; match: (path: string)
  */
 export function BottomNav() {
   const pathname = usePathname() || "/";
-  const noChartreuse = pathname.startsWith("/preguntas-frecuentes");
 
   return (
     <nav
       aria-label="Navegación principal"
-      className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 items-center border-t border-white/10 bg-ink pb-3 pt-1 lg:hidden"
-      style={{ minHeight: 74, paddingBottom: "calc(12px + env(safe-area-inset-bottom))" }}
+      className="vidrio-barra fixed inset-x-3 z-40 grid grid-cols-4 items-center rounded-full px-1 lg:hidden"
+      style={{ minHeight: 64, bottom: "calc(12px + env(safe-area-inset-bottom))" }}
     >
       {tabs.map((tab) => {
         const active = tab.match(pathname);
@@ -44,12 +43,12 @@ export function BottomNav() {
             key={tab.href}
             href={tab.href}
             aria-current={active ? "page" : undefined}
-            className={`flex min-h-11 flex-col items-center justify-center gap-[5px] ${
-              active ? (noChartreuse ? "text-white" : "text-cta") : "text-white/[0.42]"
+            className={`flex min-h-11 flex-col items-center justify-center gap-[4px] ${
+              active ? "text-white" : "text-white/70"
             }`}
           >
             <Icon name={tab.icon} size={22} />
-            <span className={`text-[10px] leading-none ${active ? "font-bold" : "font-medium"}`}>{tab.label}</span>
+            <span className={`text-[10.5px] leading-none ${active ? "font-extrabold" : "font-semibold"}`}>{tab.label}</span>
           </Link>
         );
       })}
@@ -70,7 +69,7 @@ export function NavSpacer() {
     <div
       aria-hidden="true"
       className="lg:hidden"
-      style={{ height: "calc(86px + env(safe-area-inset-bottom))" }}
+      style={{ height: "calc(96px + env(safe-area-inset-bottom))" }}
     />
   );
 }

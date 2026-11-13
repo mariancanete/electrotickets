@@ -1,63 +1,58 @@
 @import "tailwindcss";
 
 /**
- * Sistema visual de ElectroTickets — **Hora Pico**.
+ * Sistema visual de ElectroTickets — **Vidrio**.
  *
- * Reemplaza al sistema anterior (violeta + cyan, Archivo + DM Mono) por el del rediseño de
- * 9 pantallas: ultramar + chartreuse + coral sobre negro, trama de semitono, íconos sólidos.
+ * Fondo casi negro con un ambiente de color detrás, superficies de vidrio encima y un solo
+ * color con significado: **el cian es el color de comprar** (y de la marca: isotipo, fecha).
+ * Selección y navegación van en blanco; "Últimas entradas" en ámbar y nada más lo usa.
  *
- * La regla que sostiene todo: **el chartreuse es el color de comprar**. Si un elemento es
- * `#CBFF1F`, lleva a comprar. Nada más lo usa: ni filtros, ni selección, ni alertas. Cuando
- * hace falta destacar algo que no es una compra, se usa blanco (selección) o ultramar
- * (marca, informativo). El coral avisa escasez y nada más.
+ * Rendimiento: el ambiente es un degradado fijo, no un `filter: blur`. El `backdrop-filter`
+ * queda solo en las barras (nav, header, barra de compra); las cards son translúcidas sin
+ * blur, que en un Android de gama media es lo que tira abajo el scroll.
  */
 
 @theme {
-  /* Space Grotesk cubre display y cuerpo; JetBrains Mono, los datos que genera la máquina. */
-  --font-sans: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+  /* Manrope cubre display y cuerpo; JetBrains Mono, los datos que genera la máquina.
+     Space Grotesk queda solo para el lockup del logo, que no se toca. */
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, monospace;
 
   /**
-   * Color. Cada token tiene un uso único y cerrado; no hay tokens "de apoyo".
-   *
-   *   cta        → CTA de compra y tab activo del nav. Nada más en toda la app.
-   *   marca      → header, riel de fecha, badges informativos.
-   *   urgencia   → solo "Últimas entradas".
-   *   ink        → fondo de app y texto sobre chartreuse.
-   *   surface    → cards y campos.
-   *   surface-alt→ botón deshabilitado y riel de fecha agotada.
+   *   cta         → comprar, isotipo y fecha en mono. Nunca selección ni filtros.
+   *   marca       → tile neutro de ícono (vidrio).
+   *   urgencia    → solo "Últimas entradas".
+   *   ink         → fondo de app y texto sobre cian.
+   *   surface     → vidrio de cards y campos.
+   *   surface-alt → deshabilitado / agotado.
    */
-  --color-cta: #cbff1f;
-  --color-cta-pressed: #b2e30a;
-  --color-marca: #2b34ff;
-  --color-urgencia: #ff5a3c;
-  --color-ink: #0a0a14;
-  --color-surface: #15151f;
-  --color-surface-alt: #1f1f2c;
+  --color-cta: #3de8f5;
+  --color-cta-pressed: #1fcfdd;
+  --color-marca: rgba(255, 255, 255, 0.1);
+  --color-urgencia: #ffc457;
+  --color-ink: #080a10;
+  --color-surface: rgba(255, 255, 255, 0.07);
+  --color-surface-alt: rgba(255, 255, 255, 0.04);
 
-  /* Tinte ultramar de los bloques informativos (credencial, alertas, aviso de Bombo). */
-  --color-marca-tint: rgba(43, 52, 255, 0.14);
-  --color-marca-edge: rgba(154, 160, 255, 0.3);
-  --color-marca-ink: #c3c7ff;
+  /* Tinte cian de los bloques informativos (credencial, aviso de Bombo). */
+  --color-marca-tint: rgba(61, 232, 245, 0.08);
+  --color-marca-edge: rgba(61, 232, 245, 0.28);
+  --color-marca-ink: #a6f4fa;
 
-  --radius-card: 16px;
-  --radius-block: 20px;
+  --radius-card: 22px;
+  --radius-block: 28px;
 }
 
 :root {
   color-scheme: dark;
-  --background: #0a0a14;
-  --foreground: #ffffff;
+  --background: #080a10;
+  --foreground: #f4f6fa;
 
-  /* Bordes: .10 en cards, .18 en botones delineados. Dos valores, no una escala. */
-  --edge: rgba(255, 255, 255, 0.1);
-  --edge-strong: rgba(255, 255, 255, 0.18);
+  --edge: rgba(255, 255, 255, 0.14);
+  --edge-strong: rgba(255, 255, 255, 0.22);
 
-  /* Padding lateral de pantalla y ritmo vertical de la §5. */
-  --gutter: 18px;
-
-  /* Alto del nav inferior + safe area, para reservar espacio al final de cada pantalla. */
+  --gutter: 16px;
   --nav-h: 74px;
 }
 
@@ -67,56 +62,89 @@
 
 html {
   scroll-behavior: smooth;
+  background: var(--background);
 }
 
 body {
   margin: 0;
-  background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
   font-synthesis-weight: none;
   -webkit-font-smoothing: antialiased;
 }
 
-/**
- * Trama de semitono.
- *
- * Es el gesto de afiche de festival del sistema y reemplaza a la foto cuando no hay flyer.
- * Va **solo sobre ultramar**: sobre negro desaparece y sobre chartreuse ensucia, así que no
- * existe variante para esos dos fondos.
- */
-.trama {
-  background-color: var(--color-marca);
-  background-image: radial-gradient(rgba(255, 255, 255, 0.22) 1.2px, transparent 1.4px);
-  background-size: 7px 7px;
+/** Nada scrollea en horizontal a nivel página: ni una barra, ni un rebote lateral. */
+html,
+body {
+  overflow-x: clip;
 }
 
-/** Variante para superficies chicas (riel de fecha, tiles), donde la trama necesita más punto. */
+/**
+ * Ambiente. Tres manchas de color fijas detrás de todo: es lo que el vidrio deja ver.
+ * Degradados radiales y no `blur()`: se pintan una vez y no cuestan nada al scrollear.
+ */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(70% 45% at 0% 8%, rgba(43, 63, 168, 0.42), transparent 70%),
+    radial-gradient(60% 40% at 100% 48%, rgba(106, 44, 122, 0.32), transparent 70%),
+    radial-gradient(70% 45% at 8% 100%, rgba(14, 107, 116, 0.3), transparent 70%);
+}
+
+/** Vidrio de card: translúcido, borde fino y un brillo arriba. Sin blur (ver cabecera). */
+.vidrio {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+/**
+ * Vidrio de barra: el único con `backdrop-filter`. Sin soporte, o si el usuario pidió menos
+ * transparencia, queda casi opaco: se pierde el efecto, nunca la legibilidad.
+ */
+.vidrio-barra {
+  background: rgba(12, 15, 23, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 12px 36px rgba(0, 0, 0, 0.32);
+}
+
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .vidrio-barra {
+    background: rgba(14, 17, 26, 0.72);
+    -webkit-backdrop-filter: blur(24px) saturate(170%);
+    backdrop-filter: blur(24px) saturate(170%);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .vidrio-barra {
+    background: rgba(12, 15, 23, 0.98);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+/* Las superficies heredadas del sistema anterior pasan a vidrio sin tocar cada pantalla. */
+.trama,
 .trama-fuerte {
-  background-color: var(--color-marca);
-  background-image: radial-gradient(rgba(255, 255, 255, 0.26) 1.2px, transparent 1.4px);
-  background-size: 7px 7px;
+  background-color: rgba(255, 255, 255, 0.08);
 }
 
-/**
- * Placeholder de flyer.
- *
- * Franjas a 135° sobre surface. Aparece cuando el evento no tiene `flyer_url` cargado desde
- * el admin. Reemplaza al tile "ET" con degradado del sistema anterior: un placeholder que
- * dice "acá va un flyer" se lee mejor que uno que pretende ser un logo.
- */
-.rayado {
-  background-color: var(--color-surface);
-  background-image: repeating-linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.07) 0 6px,
-    rgba(255, 255, 255, 0.02) 6px 12px
-  );
+.trama {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
 }
 
-/** Variante de 7px para superficies grandes (flyer del detalle, hero del destacado). */
+/** Placeholder de flyer: aparece cuando el evento no tiene `flyer_url` cargado. */
+.rayado,
 .rayado-lg {
-  background-color: var(--color-surface);
+  background-color: rgba(255, 255, 255, 0.05);
   background-image: repeating-linear-gradient(
     135deg,
     rgba(255, 255, 255, 0.07) 0 7px,
@@ -124,45 +152,35 @@ body {
   );
 }
 
-/**
- * Dato duro. Fechas, horas, contadores, estados, IDs: todo lo que genera la máquina.
- * Lo que escribe una persona va en Space Grotesk, sin excepción.
- */
+/** Dato duro: fechas, horas, contadores, estados. */
 .dato {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
   text-transform: uppercase;
 }
 
-/** Encabezado de sección en mono: "SÁBADO 31.10", "LO PRÓXIMO CONFIRMADO", "4 RESULTADOS". */
 .dato-seccion {
   font-family: var(--font-mono);
-  font-weight: 800;
-  font-size: 11px;
+  font-weight: 700;
+  font-size: 11.5px;
   line-height: 1;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(255, 255, 255, 0.72);
 }
 
-/**
- * Display / hero. Mayúsculas, tracking negativo fuerte, interlínea cerrada: es la letra de
- * afiche. Se aplica por clase y no a todos los h1 porque no todos los títulos son display.
- */
+/** Display: nombres de fecha y titulares. Mayúsculas en 800, sin el apretado de afiche. */
 .display {
   font-family: var(--font-display);
-  font-weight: 700;
-  letter-spacing: -0.04em;
-  line-height: 0.94;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.04;
   text-transform: uppercase;
 }
 
-/**
- * Lockup del wordmark. El logo *es* la tipografía: "ELECTRO" en Space Grotesk 700 con una
- * regla chartreuse debajo, y "TICKETS" en mono con tracking abierto.
- */
+/** Lockup del logo. No se toca: Space Grotesk 700 + mono con tracking abierto. */
 .wordmark-electro {
-  font-family: var(--font-display);
+  font-family: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
   font-weight: 700;
   letter-spacing: -0.03em;
 }
@@ -172,40 +190,63 @@ body {
   font-weight: 700;
   letter-spacing: 0.34em;
   text-transform: uppercase;
-  /* El tracking deja aire después de la última letra: sin compensarlo, el bloque mide más
-     de lo que se ve y "TICKETS" queda descentrado respecto de "ELECTRO". */
   margin-right: -0.34em;
 }
 
-/**
- * Foco visible. Sobre fondo casi negro el contorno por defecto del navegador es
- * prácticamente invisible, así que sin esta regla no se puede navegar con teclado.
- *
- * El anillo es **blanco, nunca chartreuse**: el chartreuse significa comprar, y un anillo de
- * foco recorriendo filtros y links lo diluiría. Se dibuja siempre como anillo y nunca como
- * cambio de relleno, para que se distinga del hover a simple vista.
- */
+/** Foco visible: anillo blanco, nunca cian (el cian significa comprar). */
 :focus-visible {
   outline: 2px solid #fff;
   outline-offset: 3px;
   border-radius: 8px;
 }
 
-/** El chip activo ya es blanco, así que su anillo va en ultramar para poder verse. */
 .chip-activo:focus-visible {
-  outline-color: var(--color-marca);
+  outline-color: var(--color-cta);
   outline-offset: 2px;
 }
 
-/** Fila de chips que scrollea en horizontal sin mostrar barra. */
-.chips-scroll {
+/** Fila que scrollea en horizontal sin mostrar barra (chips, carrusel). */
+.chips-scroll,
+.sin-barra {
   overflow-x: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
 
-.chips-scroll::-webkit-scrollbar {
+.chips-scroll::-webkit-scrollbar,
+.sin-barra::-webkit-scrollbar {
   display: none;
+}
+
+/** Carrusel de próximas fechas: se arrastra con el dedo y cada card encaja al soltar. */
+.carrusel {
+  display: flex;
+  gap: 12px;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 16px;
+  padding-inline: 16px;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.carrusel > * {
+  flex: none;
+  scroll-snap-align: start;
+}
+
+@media (min-width: 1024px) {
+  .carrusel {
+    gap: 20px;
+    padding-inline: 44px;
+    scroll-padding-inline: 44px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .carrusel {
+    padding-inline: 60px;
+    scroll-padding-inline: 60px;
+  }
 }
 
 .text-balance {
@@ -235,18 +276,14 @@ select {
 }
 
 .input option {
-  background: #0a0a14;
+  background: #080a10;
   color: white;
 }
 
-/**
- * Superficie de tarjeta heredada. La siguen usando las páginas que el rediseño no cubre
- * (`/quienes-somos`, `/contacto`, `/privacidad`, `/destacados`, `/admin`), que heredan los
- * tokens nuevos pero conservan su layout.
- */
 .glass {
   border: 1px solid var(--edge);
-  background: rgba(255, 255, 255, 0.055);
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
 }
 
 /* ===================================================================================== *
@@ -265,8 +302,8 @@ select {
  * tres breakpoints en cada contenedor.
  */
 .gutter {
-  padding-left: 18px;
-  padding-right: 18px;
+  padding-left: 16px;
+  padding-right: 16px;
 }
 
 @media (min-width: 1024px) {
