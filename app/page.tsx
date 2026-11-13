@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { AgendaScreen, type DayTile } from "@/components/agenda-screen";
+import { HomeScreen } from "@/components/home-screen";
 import { BottomNav } from "@/components/bottom-nav";
 import { formatRange, getDayKey, getDayTile } from "@/lib/dates";
 import { getUpcomingPublishedEvents } from "@/lib/events";
@@ -14,6 +15,9 @@ export const revalidate = 3600;
 
 /** Cuántas fechas adelanta el estado vacío del finde. */
 const PROXIMAS_FECHAS = 5;
+
+/** Tope de cards del carrusel de próximas fechas (mobile). */
+const CARRUSEL_HOME = 8;
 
 /** Tope de destacadas en la home. Si hay más, la sección enlaza a `/destacados`. */
 const DESTACADAS_HOME = 8;
@@ -73,10 +77,22 @@ export default async function HomePage() {
   );
   const featuredEvents = allFeatured.slice(0, DESTACADAS_HOME);
 
+  // Carrusel de mobile: primero las que el dueño marcó como destacadas, después lo más
+  // cercano. Las agotadas van al final: siguen visibles, pero no ocupan la primera card.
+  const carouselEvents = [...events.filter((event) => event.featured), ...events.filter((event) => !event.featured)]
+    .slice(0, CARRUSEL_HOME)
+    .sort((a, b) => Number(Boolean(a.sold_out)) - Number(Boolean(b.sold_out)));
+  const alertsHref = whatsappUrlOrGroup(buildAlertsWhatsappMessage());
+
+  // Dos homes, una por ancho, y **nunca las dos a la vez**: Vidrio hasta 1023px y Hora Pico
+  // desde 1024px. Se alternan con `display`, igual que las cards mobile/desktop del resto del
+  // sitio, así que en cada ancho hay una sola en pantalla y en el árbol de accesibilidad.
   return (
     <>
       <DesktopHeader />
       <main>
+        <HomeScreen events={events} carouselEvents={carouselEvents} activeCount={events.length} alertsHref={alertsHref} />
+        <div className="hidden lg:block">
         <AgendaScreen
           days={days}
           eventsByDay={eventsByDay}
@@ -84,8 +100,9 @@ export default async function HomePage() {
           nextEvents={nextEvents}
           featuredEvents={featuredEvents}
           hasMoreFeatured={allFeatured.length > featuredEvents.length}
-          alertsHref={whatsappUrlOrGroup(buildAlertsWhatsappMessage())}
+          alertsHref={alertsHref}
         />
+        </div>
       </main>
       <BottomNav />
     </>
