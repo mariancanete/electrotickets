@@ -37,7 +37,7 @@ export function HomeScreen({
   const groups = groupByNight(agenda);
 
   return (
-    <div className="app-shell flex min-h-screen flex-col">
+    <div className="app-shell flex min-h-screen flex-col lg:hidden">
       <div className="gutter flex flex-none items-center justify-between pb-[6px] pt-[14px] lg:hidden">
         <Link href="/" aria-label="ElectroTickets, inicio" className="flex min-h-11 items-center">
           <Wordmark />

@@ -9,7 +9,8 @@ import { track } from "@/lib/analytics";
  * Acciones del detalle que no son comprar: volver y compartir.
  *
  *   `flotante`  círculos de vidrio sobre el flyer, en mobile.
- *   `boton`     "Compartir" con etiqueta, debajo de la fecha, en todos los anchos.
+ *   `boton`     "Compartir" con etiqueta, debajo de la fecha, en mobile.
+ *   `desktop`   los botones delineados de Hora Pico, debajo del flyer (sin cambios).
  *
  * Compartir usa la hoja nativa del teléfono (WhatsApp, Instagram, copiar…). Donde no existe
  * copia el link y lo dice. Nunca usa cian: no lleva a comprar.
@@ -21,7 +22,7 @@ export function DetailActions({
 }: {
   title: string;
   slug: string;
-  variant?: "flotante" | "boton";
+  variant?: "flotante" | "boton" | "desktop";
 }) {
   const router = useRouter();
   const [copied, setCopied] = useState(false);
@@ -53,6 +54,24 @@ export function DetailActions({
         <Icon name={copied ? "check" : "share"} size={17} />
         <span aria-live="polite">{copied ? "Link copiado" : "Compartir"}</span>
       </button>
+    );
+  }
+
+  if (variant === "desktop") {
+    const pill =
+      "btn-out t150 flex h-12 flex-1 items-center justify-center gap-[9px] rounded-full border border-white/[0.18] text-[13.5px] font-semibold text-white";
+
+    return (
+      <div className="flex gap-3">
+        <span aria-hidden="true" className={pill}>
+          <Icon name="heart" size={17} />
+          Guardar
+        </span>
+        <button type="button" onClick={share} className={pill}>
+          <Icon name="share" size={17} />
+          Compartir
+        </button>
+      </div>
     );
   }
 

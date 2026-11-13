@@ -11,67 +11,115 @@ import { getDateRail } from "@/lib/dates";
 import { getEventCity } from "@/lib/event-seo";
 import type { EventRecord } from "@/types/event";
 
-/** Cada cuánto avanza solo, y cuánto espera después de que alguien lo tocó. */
-const AVANCE_MS = 4000;
-const PAUSA_MS = 7000;
+/** Velocidad del loop, en px por segundo, y cuánto espera después de que alguien lo soltó. */
+const VELOCIDAD = 34;
+const PAUSA_MS = 1800;
 
 /**
- * Carrusel de próximas fechas.
+ * Carrusel de próximas fechas (mobile).
  *
- * Avanza solo, una card por vez, y al llegar al final vuelve al principio. Con el dedo se
- * arrastra normalmente (es scroll nativo con `scroll-snap`, no un slider propio) y **nunca
- * muestra barra de scroll**. Se frena mientras lo tocan, cuando no está en pantalla, con la
- * pestaña en segundo plano y con `prefers-reduced-motion`.
+ * **Loop continuo, sin principio ni final.** La lista se renderiza dos veces seguidas y el
+ * scroll avanza solo a velocidad constante; al pasar el ancho de una copia retrocede
+ * exactamente ese ancho, y como las dos copias son idénticas el salto no se ve. Hacia atrás
+ * funciona igual, así que con el dedo también se puede arrastrar para cualquier lado sin
+ * llegar nunca a un borde.
+ *
+ * Es scroll nativo: el dedo lo mueve como cualquier lista, y nunca muestra barra. Se frena
+ * mientras lo tocan, fuera de pantalla y con la pestaña en segundo plano. Con
+ * `prefers-reduced-motion` no se mueve solo (sigue siendo arrastrable).
  */
 export function DateCarousel({ events }: { events: EventRecord[] }) {
   const ref = useRef<HTMLDivElement>(null);
-  const pausedUntil = useRef(0);
+  const loop = events.length > 1;
 
   useEffect(() => {
     const el = ref.current;
-    if (!el || events.length < 2) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (!el || !loop) return;
 
+    const auto = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     let visible = false;
-    const observer = new IntersectionObserver(([entry]) => (visible = entry.isIntersecting), { threshold: 0.4 });
+    let touching = false;
+    let pausedUntil = 0;
+    let pos = el.scrollLeft;
+    let last = 0;
+    let frame = 0;
+
+    /** Ancho de una copia de la lista: de la primera card a su gemela. */
+    const span = () => {
+      const first = el.children[0] as HTMLElement | undefined;
+      const twin = el.children[events.length] as HTMLElement | undefined;
+      return first && twin ? twin.offsetLeft - first.offsetLeft : 0;
+    };
+
+    /** Mantiene el scroll dentro de la primera copia. Devuelve la posición corregida. */
+    const wrap = (value: number) => {
+      const width = span();
+      if (!width) return value;
+      if (value >= width) return value - width;
+      if (value <= 0) return value + width;
+      return value;
+    };
+
+    const tick = (now: number) => {
+      frame = requestAnimationFrame(tick);
+      const dt = last ? Math.min(now - last, 64) : 0;
+      last = now;
+
+      if (touching || now < pausedUntil) {
+        // Mientras lo mueve el dedo (o su inercia) solo se cuida que no llegue a un borde.
+        const fixed = wrap(el.scrollLeft);
+        if (fixed !== el.scrollLeft) el.scrollLeft = fixed;
+        pos = el.scrollLeft;
+        return;
+      }
+
+      if (!auto || !visible || document.hidden) return;
+
+      pos = wrap(pos + (VELOCIDAD * dt) / 1000);
+      el.scrollLeft = pos;
+    };
+
+    const hold = () => {
+      touching = true;
+    };
+    const release = () => {
+      touching = false;
+      pausedUntil = performance.now() + PAUSA_MS;
+    };
+    const nudge = () => {
+      pausedUntil = performance.now() + PAUSA_MS;
+    };
+
+    const observer = new IntersectionObserver(([entry]) => (visible = entry.isIntersecting), { threshold: 0.2 });
     observer.observe(el);
 
-    const pause = () => (pausedUntil.current = Date.now() + PAUSA_MS);
     const opts = { passive: true } as const;
-    el.addEventListener("touchstart", pause, opts);
-    el.addEventListener("pointerdown", pause, opts);
-    el.addEventListener("wheel", pause, opts);
-    el.addEventListener("focusin", pause);
-    el.addEventListener("mouseenter", pause);
-    el.addEventListener("mousemove", pause, opts);
+    el.addEventListener("touchstart", hold, opts);
+    el.addEventListener("touchend", release, opts);
+    el.addEventListener("touchcancel", release, opts);
+    el.addEventListener("wheel", nudge, opts);
+    el.addEventListener("focusin", nudge);
 
-    const timer = window.setInterval(() => {
-      if (!visible || document.hidden || Date.now() < pausedUntil.current) return;
-
-      const card = el.firstElementChild as HTMLElement | null;
-      if (!card) return;
-      const step = card.offsetWidth + parseFloat(getComputedStyle(el).columnGap || "12");
-      const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 8;
-
-      el.scrollTo({ left: atEnd ? 0 : el.scrollLeft + step, behavior: "smooth" });
-    }, AVANCE_MS);
+    frame = requestAnimationFrame(tick);
 
     return () => {
-      window.clearInterval(timer);
+      cancelAnimationFrame(frame);
       observer.disconnect();
-      el.removeEventListener("touchstart", pause);
-      el.removeEventListener("pointerdown", pause);
-      el.removeEventListener("wheel", pause);
-      el.removeEventListener("focusin", pause);
-      el.removeEventListener("mouseenter", pause);
-      el.removeEventListener("mousemove", pause);
+      el.removeEventListener("touchstart", hold);
+      el.removeEventListener("touchend", release);
+      el.removeEventListener("touchcancel", release);
+      el.removeEventListener("wheel", nudge);
+      el.removeEventListener("focusin", nudge);
     };
-  }, [events.length]);
+  }, [events.length, loop]);
+
+  // La segunda copia es la que hace posible el loop. Con una sola fecha no hay loop ni copia.
+  const cards = loop ? [...events, ...events] : events;
 
   return (
-    <div ref={ref} className="carrusel sin-barra" role="list" aria-label="Próximas fechas">
-      {events.map((event, index) => (
-        <CarouselCard key={event.id} event={event} priority={index < 2} />
+    <div ref={ref} className={`carrusel ${loop ? "" : "px-[18px]"}`} role="list" aria-label="Próximas fechas">
+      {cards.map((event, index) => (
+        <CarouselCard key={`${event.id}-${index}`} event={event} priority={index < 2} />
       ))}
     </div>
   );
@@ -83,7 +131,7 @@ function CarouselCard({ event, priority }: { event: EventRecord; priority: boole
   const place = [event.venue_name, getEventCity(event)].filter(Boolean).join(" · ");
 
   return (
-    <article role="listitem" className="vidrio flex w-[264px] flex-col gap-3 rounded-block p-[10px] lg:w-[300px] lg:p-3">
+    <article role="listitem" className="vidrio flex w-[264px] flex-col gap-3 rounded-block p-[10px]">
       <Link
         href={`/eventos/${event.slug}`}
         aria-label={`Ver ${event.title}`}
@@ -93,7 +141,7 @@ function CarouselCard({ event, priority }: { event: EventRecord; priority: boole
         <FlyerFrame
           src={event.flyer_url}
           alt={`Flyer de ${event.title}`}
-          sizes="(min-width:1024px) 300px, 264px"
+          sizes="264px"
           // Todas las cards miden lo mismo: recuadro 4:5 fijo. El flyer se ve entero y, si es
           // de otra proporción, se completa con el mismo flyer difuminado (nunca se recorta).
           ratio={null}

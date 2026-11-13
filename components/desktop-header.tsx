@@ -37,7 +37,7 @@ export function DesktopHeader() {
   // Ayuda es la única pantalla sin chartreuse propio. Su tab activo sigue el sistema y usa
   // chartreuse igual que los demás: el header es cromo de la app, no contenido de la pantalla.
   return (
-    <header className="sticky top-0 z-50 hidden h-[76px] flex-none items-center justify-between gap-7 vidrio-barra !border-x-0 !border-t-0 lg:flex gutter-lg">
+    <header className="sticky top-0 z-50 hidden h-[76px] flex-none items-center justify-between gap-7 border-b border-white/10 bg-ink lg:flex gutter-lg">
       <Link href="/" aria-label="ElectroTickets, ir a la agenda">
         <Wordmark size="md" />
       </Link>
@@ -52,11 +52,11 @@ export function DesktopHeader() {
               href={destino.href}
               aria-current={activo ? "page" : undefined}
               className={`nav-link t150 flex flex-col items-center gap-[7px] text-[14px] leading-none ${
-                activo ? "font-extrabold text-white" : "font-semibold text-white/70"
+                activo ? "font-bold text-cta" : "font-medium text-white/60"
               }`}
             >
               {destino.label}
-              <span className={`h-[2px] w-full ${activo ? "bg-white" : "bg-transparent"}`} />
+              <span className={`h-[2px] w-full ${activo ? "bg-cta" : "bg-transparent"}`} />
             </Link>
           );
         })}
@@ -68,8 +68,8 @@ export function DesktopHeader() {
             href="/buscar"
             className="btn-out t150 flex h-[42px] min-w-[210px] items-center gap-[10px] rounded-full border border-white/[0.18] bg-black/30 px-4"
           >
-            <Icon name="search" size={17} className="text-white/70" />
-            <span className="text-[13.5px] leading-none text-white/70">Buscar artista o club</span>
+            <Icon name="search" size={17} className="text-white/[0.48]" />
+            <span className="text-[13.5px] leading-none text-white/[0.42]">Buscar artista o club</span>
           </Link>
         )}
         <Link

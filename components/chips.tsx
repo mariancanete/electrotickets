@@ -35,7 +35,7 @@ export function Chip({
       className={`t150 inline-flex items-center gap-[6px] whitespace-nowrap rounded-full leading-none ${sizes[size]} ${
         active
           ? "chip-activo bg-white font-bold text-ink"
-          : "chip-inactivo border border-white/[0.18] bg-white/[0.06] font-semibold text-white/80"
+          : "chip-inactivo border border-white/[0.18] font-medium text-white/[0.72]"
       } ${className}`}
     >
       {children}
@@ -66,7 +66,7 @@ export function UrgencyChip({ size = "sm" }: { size?: keyof typeof urgencySizes 
 
   return (
     <span
-      className={`inline-flex items-center whitespace-nowrap rounded-full bg-urgencia font-bold leading-none text-ink ${box}`}
+      className={`inline-flex items-center whitespace-nowrap rounded-full bg-urgencia font-bold leading-none text-ink shadow-[0_0_0_3px_rgba(255,90,60,0.22),0_6px_18px_rgba(255,90,60,0.35)] max-lg:shadow-none ${box}`}
     >
       <Icon name="flame" size={icon} />
       Últimas entradas
