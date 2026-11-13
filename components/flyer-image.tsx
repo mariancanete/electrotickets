@@ -94,7 +94,6 @@ export function FlyerFrame({
   maxRatio = 4 / 3,
   maxRatioDesktop,
   priority = false,
-  cover = false,
   className = "",
   imageClassName = "",
   children
@@ -106,24 +105,16 @@ export function FlyerFrame({
   maxRatio?: number;
   maxRatioDesktop?: number;
   priority?: boolean;
-  /**
-   * Recuadro de medida fija (`maxRatio`) que el flyer **llena entero**: sin bandas arriba,
-   * abajo ni a los costados, sin deformar. Lo que no entra en la proporción se recorta
-   * centrado. Es para las superficies donde todas las piezas tienen que medir lo mismo
-   * (carrusel, filas de agenda); el flyer completo se ve siempre en el detalle.
-   */
-  cover?: boolean;
   className?: string;
   imageClassName?: string;
   children?: React.ReactNode;
 }) {
   const natural = ratio && ratio > 0 ? ratio : null;
   const fit = (cap: number) => Math.min(Math.max(natural ?? DEFAULT_RATIO, MIN_RATIO), cap);
-  const mobile = cover ? maxRatio : fit(maxRatio);
-  const desktop = cover ? (maxRatioDesktop ?? maxRatio) : fit(maxRatioDesktop ?? maxRatio);
+  const mobile = fit(maxRatio);
+  const desktop = fit(maxRatioDesktop ?? maxRatio);
   const needsBackdrop =
-    !cover &&
-    (natural === null || Math.abs(natural - mobile) > 0.01 || Math.abs(natural - desktop) > 0.01);
+    natural === null || Math.abs(natural - mobile) > 0.01 || Math.abs(natural - desktop) > 0.01;
 
   return (
     <div
@@ -141,7 +132,7 @@ export function FlyerFrame({
               className="scale-110 object-cover object-center opacity-45 blur-xl"
             />
           ) : null}
-          <FlyerImage src={src} alt={alt} sizes={sizes} priority={priority} className={cover ? "object-cover object-center" : "object-contain object-center"} />
+          <FlyerImage src={src} alt={alt} sizes={sizes} priority={priority} className="object-contain object-center" />
         </div>
       ) : (
         <FlyerFallback large />

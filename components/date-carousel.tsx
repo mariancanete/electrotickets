@@ -11,6 +11,18 @@ import { getDateRail } from "@/lib/dates";
 import { getEventCity } from "@/lib/event-seo";
 import type { EventRecord } from "@/types/event";
 
+/**
+ * Alto del flyer en el carrusel. **Todas las cards miden lo mismo de alto y cada una toma el
+ * ancho de su flyer**: así el flyer se ve completo, sin bandas, sin recortar y sin deformar,
+ * sea 4:5, cuadrado o story. El ancho se acota para que una card no quede ni ilegible ni más
+ * ancha que la pantalla; solo en esos extremos el recuadro se completa con el flyer difuminado.
+ */
+const ALTO_FLYER = 330;
+const ANCHO_MIN = 204;
+const ANCHO_MAX = 318;
+/** Padding de la card (10px por lado): el ancho de la card es el del flyer más esto. */
+const PADDING_CARD = 20;
+
 /** Velocidad del loop, en px por segundo. */
 const VELOCIDAD = 34;
 /** Cuánto tiene que estar quieto después de soltarlo para retomar: lo justo para no pisar la inercia. */
@@ -139,24 +151,30 @@ function CarouselCard({ event, priority }: { event: EventRecord; priority: boole
   const soldOut = Boolean(event.sold_out);
   const place = [event.venue_name, getEventCity(event)].filter(Boolean).join(" · ");
 
+  const ratio = event.flyer_ratio && event.flyer_ratio > 0 ? event.flyer_ratio : 1.25;
+  const flyerWidth = Math.round(Math.min(Math.max(ALTO_FLYER / ratio, ANCHO_MIN), ANCHO_MAX));
+
   return (
-    <article role="listitem" className="vidrio flex w-[264px] flex-col gap-3 rounded-block p-[10px]">
+    <article
+      role="listitem"
+      className="vidrio flex flex-col gap-3 rounded-block p-[10px]"
+      style={{ width: flyerWidth + PADDING_CARD }}
+    >
       <Link
         href={`/eventos/${event.slug}`}
         aria-label={`Ver ${event.title}`}
         onClick={() => track("select_date", { ...eventParams(event), cta_placement: "home_destacadas" })}
-        className="block"
+        // Alto fijo: si un flyer apaisado no llega a los 330px, queda centrado en su lugar.
+        className="flex flex-col justify-center"
+        style={{ minHeight: ALTO_FLYER }}
       >
         <FlyerFrame
           src={event.flyer_url}
           alt={`Flyer de ${event.title}`}
-          sizes="560px"
-          // Todas las cards miden lo mismo: recuadro 4:5 fijo que el flyer llena entero, sin
-          // bandas y sin deformar. `sizes` pide de más a propósito: un flyer apaisado se
-          // escala hasta cubrir el alto, y con el ancho justo se vería blando.
-          cover
+          sizes={`${flyerWidth}px`}
           ratio={event.flyer_ratio}
-          maxRatio={1.25}
+          // Tope = alto fijo sobre el ancho de esta card: el recuadro nunca pasa de 330px.
+          maxRatio={ALTO_FLYER / flyerWidth}
           priority={priority}
           className="rounded-[20px]"
         >
@@ -169,7 +187,7 @@ function CarouselCard({ event, priority }: { event: EventRecord; priority: boole
         </FlyerFrame>
       </Link>
 
-      <div className="flex flex-col gap-[6px] px-[6px]">
+      <div className="mt-auto flex flex-col gap-[6px] px-[6px]">
         <span className="font-mono text-[12px] font-bold uppercase leading-none tracking-[0.08em] text-cta">
           {rail.month} {Number(rail.day)} · {rail.time}
         </span>
@@ -180,9 +198,9 @@ function CarouselCard({ event, priority }: { event: EventRecord; priority: boole
       </div>
 
       {soldOut ? (
-        <SoldOutWhatsappCta event={event} source="soldout" compact className="mt-auto !h-[52px]" />
+        <SoldOutWhatsappCta event={event} source="soldout" compact className="!h-[52px]" />
       ) : (
-        <BuyCta event={event} placement="home_destacado" className="mt-auto !h-[52px]" />
+        <BuyCta event={event} placement="home_destacado" className="!h-[52px]" />
       )}
     </article>
   );
