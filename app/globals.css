@@ -385,25 +385,33 @@ select {
 }
 
 /**
- * Carrusel de próximas fechas (mobile). Se mueve solo, en loop, y se arrastra con el dedo:
- * es scroll nativo, sin snap (el snap pelearía con el movimiento continuo) y sin barra.
+ * Carrusel de próximas fechas (mobile). No es un contenedor scrolleable: la tira se mueve con
+ * `transform` y el arrastre lo maneja `DateCarousel`, así que no hay barra de scroll posible.
+ * `pan-y` deja el scroll vertical de la página al navegador.
  */
 .carrusel {
+  overflow: hidden;
+  touch-action: pan-y;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.carrusel-tira {
   display: flex;
   gap: 12px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  overscroll-behavior-x: contain;
-  -webkit-overflow-scrolling: touch;
+  width: max-content;
+  will-change: transform;
 }
 
-.carrusel::-webkit-scrollbar {
-  display: none;
-}
-
-.carrusel > * {
+.carrusel-tira > * {
   flex: none;
+}
+
+/* Sin esto iOS abre el menú de "guardar imagen" y arrastra el flyer en vez de la tira. */
+.carrusel img,
+.carrusel a {
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
 }
 
 /* ===================================================================================== *

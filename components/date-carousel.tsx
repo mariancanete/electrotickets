@@ -25,53 +25,74 @@ const PADDING_CARD = 20;
 
 /** Velocidad del loop, en px por segundo. */
 const VELOCIDAD = 34;
-/** Cuánto tiene que estar quieto después de soltarlo para retomar: lo justo para no pisar la inercia. */
-const QUIETO_MS = 140;
+/** Tope del envión al soltar, y cuánto tarda en volver a la velocidad del loop (ms). */
+const ENVION_MAX = 2600;
+const FRENADO_MS = 520;
+/** Cuánto tiene que moverse el dedo en horizontal para que sea un arrastre y no un toque. */
+const UMBRAL_ARRASTRE = 6;
 
 /**
  * Carrusel de próximas fechas (mobile).
  *
- * **Loop continuo, sin principio ni final.** La lista se renderiza dos veces seguidas y el
- * scroll avanza solo a velocidad constante; al pasar el ancho de una copia retrocede
- * exactamente ese ancho, y como las dos copias son idénticas el salto no se ve. Hacia atrás
- * funciona igual, así que con el dedo también se puede arrastrar para cualquier lado sin
- * llegar nunca a un borde.
+ * **Loop continuo, sin principio ni final.** La lista se renderiza dos veces seguidas y la
+ * tira se desplaza con `transform`; al pasar el ancho de una copia retrocede exactamente ese
+ * ancho, y como las dos copias son idénticas el salto no se ve.
  *
- * Es scroll nativo: el dedo lo mueve como cualquier lista, y nunca muestra barra. Se frena
- * solo mientras el dedo está apoyado y **retoma apenas se suelta** (si se soltó con envión,
- * apenas termina la inercia). También se frena fuera de pantalla y en segundo plano. Con
- * `prefers-reduced-motion` no se mueve solo (sigue siendo arrastrable).
+ * **No usa el scroll del navegador, a propósito.** La primera versión movía `scrollLeft` y
+ * dejaba que el dedo scrolleara nativo: en Android andaba, pero en iOS Safari escribir
+ * `scrollLeft` mientras el sistema maneja el gesto (y su inercia) corta el gesto, y el
+ * carrusel se trababa todo el tiempo. Acá hay **un solo dueño de la posición**: este
+ * componente. El dedo arrastra la tira 1:1, al soltar sigue con el envión y se va frenando
+ * hasta empalmar con la velocidad del loop, sin pausa. Como no hay contenedor scrolleable,
+ * tampoco hay barra de scroll posible.
+ *
+ * `touch-action: pan-y` deja el scroll vertical de la página al navegador: arrastrar para
+ * arriba o abajo sobre el carrusel scrollea la página como siempre.
+ *
+ * Con `prefers-reduced-motion` no se mueve solo (sigue siendo arrastrable). Fuera de pantalla
+ * y con la pestaña en segundo plano se frena.
  */
 export function DateCarousel({ events }: { events: EventRecord[] }) {
-  const ref = useRef<HTMLDivElement>(null);
+  const viewport = useRef<HTMLDivElement>(null);
+  const track = useRef<HTMLDivElement>(null);
   const loop = events.length > 1;
 
   useEffect(() => {
-    const el = ref.current;
-    if (!el || !loop) return;
+    const box = viewport.current;
+    const strip = track.current;
+    if (!box || !strip || !loop) return;
 
-    const auto = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const base = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : VELOCIDAD;
+
+    let x = 0; // desplazamiento de la tira, en px
+    let vel = base; // velocidad actual, px/s
     let visible = false;
-    let touching = false;
-    let pausedUntil = 0;
-    let pos = el.scrollLeft;
-    let last = 0;
     let frame = 0;
+    let last = 0;
+
+    // Estado del gesto.
+    let pointerId: number | null = null;
+    let dragging = false;
+    let startX = 0;
+    let startY = 0;
+    let lastX = 0;
+    let lastT = 0;
+    let dragVel = 0;
+    let moved = false;
+    // Foco de **teclado** adentro del carrusel (no el de un toque): mientras dure, no se mueve.
+    let keyboardFocus = false;
 
     /** Ancho de una copia de la lista: de la primera card a su gemela. */
     const span = () => {
-      const first = el.children[0] as HTMLElement | undefined;
-      const twin = el.children[events.length] as HTMLElement | undefined;
+      const first = strip.children[0] as HTMLElement | undefined;
+      const twin = strip.children[events.length] as HTMLElement | undefined;
       return first && twin ? twin.offsetLeft - first.offsetLeft : 0;
     };
 
-    /** Mantiene el scroll dentro de la primera copia. Devuelve la posición corregida. */
-    const wrap = (value: number) => {
+    const paint = () => {
       const width = span();
-      if (!width) return value;
-      if (value >= width) return value - width;
-      if (value <= 0) return value + width;
-      return value;
+      if (width) x = ((x % width) + width) % width;
+      strip.style.transform = `translate3d(${-x}px,0,0)`;
     };
 
     const tick = (now: number) => {
@@ -79,58 +100,125 @@ export function DateCarousel({ events }: { events: EventRecord[] }) {
       const dt = last ? Math.min(now - last, 64) : 0;
       last = now;
 
-      if (touching || now < pausedUntil) {
-        // Mientras lo mueve el dedo (o su inercia) solo se cuida que no llegue a un borde.
-        const fixed = wrap(el.scrollLeft);
-        if (fixed !== el.scrollLeft) el.scrollLeft = fixed;
-        // Si todavía se está moviendo por la inercia del dedo, se espera a que frene.
-        else if (!touching && Math.abs(el.scrollLeft - pos) > 0.5) pausedUntil = now + QUIETO_MS;
-        pos = el.scrollLeft;
-        return;
+      // Con el dedo apoyado la tira no se mueve sola: si arrastra, la posición la lleva el
+      // dedo; si es un toque, la card no se le escapa de abajo antes de soltar.
+      if (pointerId !== null) return;
+      if (!visible || document.hidden || keyboardFocus) return;
+
+      // El envión del dedo se va frenando hasta empalmar con la velocidad del loop.
+      vel += (base - vel) * (1 - Math.exp(-dt / FRENADO_MS));
+      if (Math.abs(vel - base) < 0.5) vel = base;
+      if (!vel) return;
+
+      x += (vel * dt) / 1000;
+      paint();
+    };
+
+    const down = (event: PointerEvent) => {
+      if (event.pointerType === "mouse" && event.button !== 0) return;
+      pointerId = event.pointerId;
+      dragging = false;
+      moved = false;
+      startX = lastX = event.clientX;
+      startY = event.clientY;
+      lastT = event.timeStamp;
+      dragVel = 0;
+    };
+
+    const move = (event: PointerEvent) => {
+      if (event.pointerId !== pointerId) return;
+
+      if (!dragging) {
+        const dx = Math.abs(event.clientX - startX);
+        const dy = Math.abs(event.clientY - startY);
+        if (dx < UMBRAL_ARRASTRE || dx < dy) return;
+        dragging = true;
+        moved = true;
+        lastX = event.clientX;
+        lastT = event.timeStamp;
+        try {
+          box.setPointerCapture(event.pointerId);
+        } catch {
+          // Si el puntero ya no existe no hay nada que capturar.
+        }
       }
 
-      if (!auto || !visible || document.hidden) return;
+      const dx = event.clientX - lastX;
+      const dt = event.timeStamp - lastT;
+      if (dt > 0) dragVel = dragVel * 0.6 + ((-dx / dt) * 1000) * 0.4;
+      lastX = event.clientX;
+      lastT = event.timeStamp;
 
-      pos = wrap(pos + (VELOCIDAD * dt) / 1000);
-      el.scrollLeft = pos;
+      x -= dx;
+      paint();
     };
 
-    const hold = () => {
-      touching = true;
+    const up = (event: PointerEvent) => {
+      if (event.pointerId !== pointerId) return;
+      pointerId = null;
+      if (!dragging) return;
+      dragging = false;
+
+      // Si el dedo se quedó quieto antes de soltar, no hay envión: retoma al paso del loop.
+      const stale = event.timeStamp - lastT > 90;
+      vel = stale ? base : Math.max(-ENVION_MAX, Math.min(ENVION_MAX, dragVel));
     };
-    const release = () => {
-      touching = false;
-      pausedUntil = performance.now() + QUIETO_MS;
+
+    /** Después de arrastrar, el toque no tiene que abrir la fecha ni disparar la compra. */
+    const click = (event: MouseEvent) => {
+      if (!moved) return;
+      moved = false;
+      event.preventDefault();
+      event.stopPropagation();
     };
-    const nudge = () => {
-      pausedUntil = performance.now() + QUIETO_MS * 4;
+
+    /**
+     * Teclado: al enfocar un link fuera de la vista el navegador scrollea el contenedor
+     * (aunque sea `overflow: hidden`). Se anula y se lleva la card enfocada a la vista.
+     */
+    const focus = (event: FocusEvent) => {
+      box.scrollLeft = 0;
+      // Solo con teclado. El foco que deja un toque no tiene que mover ni frenar nada: movería
+      // la card justo antes del `click` y el toque no abriría la fecha.
+      const target = event.target as HTMLElement;
+      if (pointerId !== null || !target.matches(":focus-visible")) return;
+      keyboardFocus = true;
+      const card = (event.target as HTMLElement).closest("[role=listitem]") as HTMLElement | null;
+      if (!card) return;
+      x = card.offsetLeft - 18;
+      vel = base;
+      paint();
+    };
+
+    const blur = () => {
+      keyboardFocus = false;
     };
 
     const observer = new IntersectionObserver(([entry]) => (visible = entry.isIntersecting), { threshold: 0.2 });
-    observer.observe(el);
+    observer.observe(box);
 
-    const opts = { passive: true } as const;
-    el.addEventListener("touchstart", hold, opts);
-    el.addEventListener("touchend", release, opts);
-    el.addEventListener("touchcancel", release, opts);
-    // Si el dedo se levanta fuera del carrusel, el `touchend` igual tiene que soltarlo.
-    window.addEventListener("touchend", release, opts);
-    window.addEventListener("touchcancel", release, opts);
-    el.addEventListener("wheel", nudge, opts);
-    el.addEventListener("focusin", nudge);
+    box.addEventListener("pointerdown", down);
+    box.addEventListener("pointermove", move);
+    box.addEventListener("pointerup", up);
+    box.addEventListener("pointercancel", up);
+    box.addEventListener("click", click, true);
+    box.addEventListener("focusin", focus);
+    box.addEventListener("focusout", blur);
+    window.addEventListener("resize", paint);
 
     frame = requestAnimationFrame(tick);
 
     return () => {
       cancelAnimationFrame(frame);
       observer.disconnect();
-      el.removeEventListener("touchstart", hold);
-      el.removeEventListener("touchend", release);
-      el.removeEventListener("touchcancel", release);
-      window.removeEventListener("touchend", release);
-      window.removeEventListener("touchcancel", release);
-      el.removeEventListener("wheel", nudge);
-      el.removeEventListener("focusin", nudge);
+      box.removeEventListener("pointerdown", down);
+      box.removeEventListener("pointermove", move);
+      box.removeEventListener("pointerup", up);
+      box.removeEventListener("pointercancel", up);
+      box.removeEventListener("click", click, true);
+      box.removeEventListener("focusin", focus);
+      box.removeEventListener("focusout", blur);
+      window.removeEventListener("resize", paint);
     };
   }, [events.length, loop]);
 
@@ -138,10 +226,17 @@ export function DateCarousel({ events }: { events: EventRecord[] }) {
   const cards = loop ? [...events, ...events] : events;
 
   return (
-    <div ref={ref} className={`carrusel ${loop ? "" : "px-[18px]"}`} role="list" aria-label="Próximas fechas">
-      {cards.map((event, index) => (
-        <CarouselCard key={`${event.id}-${index}`} event={event} priority={index < 2} />
-      ))}
+    <div ref={viewport} className="carrusel">
+      <div
+        ref={track}
+        className={`carrusel-tira ${loop ? "" : "px-[18px]"}`}
+        role="list"
+        aria-label="Próximas fechas"
+      >
+        {cards.map((event, index) => (
+          <CarouselCard key={`${event.id}-${index}`} event={event} priority={index < 2} />
+        ))}
+      </div>
     </div>
   );
 }
