@@ -10,6 +10,7 @@ import {
   WhatsappGroupButton,
   WhatsappIconButton
 } from "@/components/cta";
+import { BuySteps } from "@/components/buy-steps";
 import { DateCard } from "@/components/date-card";
 import { DetailActions } from "@/components/detail-actions";
 import { FlyerFrame } from "@/components/flyer-image";
@@ -287,6 +288,34 @@ export default async function EventDetailPage({ params }: PageProps) {
     </>
   );
 
+  // Barra de compra de **mobile**: fija abajo, siempre a la vista aunque se scrollee. Los dos
+  // pasos van arriba del botón (la expectativa antes del clic), "Comprar en Bombo" ocupa todo
+  // el ancho y "Consultar por mesas VIP" va justo debajo. No lleva botón de mensaje al lado:
+  // ocupaba lugar y no traía consultas.
+  const barraMobile = isSoldOut ? (
+    <>
+      <p className="flex items-center justify-center gap-[6px] text-[12.5px] font-semibold leading-none text-white/80">
+        <Icon name="chat" size={14} />
+        Agotado en Bombo · te aviso si se libera una entrada
+      </p>
+      <SoldOutWhatsappCta event={event} source="event_waitlist" />
+    </>
+  ) : (
+    <>
+      <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
+        {hasLastTickets ? (
+          <span className="flex items-center gap-[5px] text-[12px] font-extrabold leading-none text-urgencia">
+            <Icon name="flame" size={14} />
+            Últimas entradas
+          </span>
+        ) : null}
+        <BuySteps />
+      </div>
+      <BuyCta event={event} placement="detalle_barra" className="!h-[58px]" />
+      <VipWhatsappCta href={vipUrl} eventSlug={event.slug} className="!border-white/30" />
+    </>
+  );
+
   return (
     <>
       <DesktopHeader />
@@ -330,7 +359,7 @@ export default async function EventDetailPage({ params }: PageProps) {
               maxRatio={1.5}
               maxRatioDesktop={1.25}
               priority
-              className="flex-none lg:rounded-block lg:border lg:border-white/10"
+              className="flex-none max-lg:rounded-b-[28px] lg:rounded-block lg:border lg:border-white/10"
             >
               {isSoldOut ? <SoldOutStamp size="xl" /> : null}
               <div className="lg:hidden">
@@ -388,6 +417,10 @@ export default async function EventDetailPage({ params }: PageProps) {
                   todo y no al pie. Estas URLs viejas son las que ya posicionan ("kevin de vries
                   entradas" traía primero la de Mandarine) y el link a la fecha nueva estaba
                   debajo del FAQ, donde no lo veía nadie ni le pasaba peso. */}
+              <div className="mt-4 flex lg:hidden">
+                <DetailActions title={event.title} slug={event.slug} variant="boton" />
+              </div>
+
               {sameArtistEvent ? <NextDateBanner event={event} nextDate={sameArtistEvent} /> : null}
 
               {/* La descripción sube arriba de las filas de dato en desktop, que es donde el
@@ -540,15 +573,15 @@ export default async function EventDetailPage({ params }: PageProps) {
           aria-hidden="true"
           className="lg:hidden"
           // 132 + 53 del botón de mesas VIP (44 + 9 de separación), que en agotada no va.
-          style={{ height: `calc(${isSoldOut ? 132 : 185}px + env(safe-area-inset-bottom))` }}
+          style={{ height: `calc(${isSoldOut ? 132 : 200}px + env(safe-area-inset-bottom))` }}
         />
 
         {finished ? null : (
           <div
-            className="fixed inset-x-0 bottom-0 z-40 flex flex-col gap-[9px] border-t border-white/10 bg-ink px-[18px] pt-[13px] lg:hidden"
-            style={{ paddingBottom: "calc(18px + env(safe-area-inset-bottom))" }}
+            className="vidrio-barra fixed inset-x-0 bottom-0 z-40 flex flex-col gap-[10px] rounded-t-[28px] !border-x-0 !border-b-0 px-[18px] pt-[14px] lg:hidden"
+            style={{ paddingBottom: "max(16px, env(safe-area-inset-bottom))" }}
           >
-            {bloqueCompra}
+            {barraMobile}
           </div>
         )}
       </main>

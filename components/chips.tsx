@@ -66,7 +66,7 @@ export function UrgencyChip({ size = "sm" }: { size?: keyof typeof urgencySizes 
 
   return (
     <span
-      className={`inline-flex items-center whitespace-nowrap rounded-full bg-urgencia font-bold leading-none text-ink shadow-[0_0_0_3px_rgba(255,90,60,0.22),0_6px_18px_rgba(255,90,60,0.35)] ${box}`}
+      className={`inline-flex items-center whitespace-nowrap rounded-full bg-urgencia font-bold leading-none text-ink shadow-[0_0_0_3px_rgba(255,90,60,0.22),0_6px_18px_rgba(255,90,60,0.35)] max-lg:shadow-none ${box}`}
     >
       <Icon name="flame" size={icon} />
       Últimas entradas

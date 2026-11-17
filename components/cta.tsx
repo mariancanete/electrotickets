@@ -48,9 +48,9 @@ export function BuyCta({
         track("click_buy", { ...eventParams(event), cta_placement: placement });
         saveDate(event.slug, event.starts_at);
       }}
-      className={`cta-hov t150 flex h-14 items-center justify-center gap-[9px] rounded-full bg-cta text-ink active:bg-cta-pressed ${className}`}
+      className={`cta-hov t150 flex h-14 items-center justify-center gap-[9px] rounded-full bg-cta text-ink active:bg-cta-pressed max-lg:shadow-[0_8px_28px_rgba(61,232,245,0.22)] ${className}`}
     >
-      <span className="text-[15px] font-bold leading-none tracking-[-0.01em]">{label}</span>
+      <span className="text-[15px] font-bold leading-none tracking-[-0.01em] max-lg:text-[17px] max-lg:font-extrabold">{label}</span>
       <span className="cta-icon t150 flex">
         <Icon name="out" size={18} />
       </span>
@@ -221,13 +221,19 @@ export function WhatsappGroupButton({
       target="_blank"
       rel="noopener noreferrer"
       onClick={() => track("click_whatsapp_group", { wa_source: source, event_slug: eventSlug })}
-      className={`btn-out t150 flex min-h-[52px] items-center gap-3 rounded-[14px] border border-white/30 px-[14px] py-[10px] text-white ${className}`}
+      // En mobile se destaca un punto más: fondo de vidrio, borde fuerte, ícono en verde
+      // WhatsApp y flecha. Sigue siendo delineado y nunca cian: no compite con comprar.
+      className={`btn-out t150 flex min-h-[52px] items-center gap-3 rounded-[14px] border border-white/30 px-[14px] py-[10px] text-white max-lg:min-h-[64px] max-lg:rounded-[18px] max-lg:border-white/45 max-lg:bg-white/[0.1] max-lg:py-3 ${className}`}
     >
-      <Icon name="chat" size={19} className="flex-none" />
-      <span className="flex min-w-0 flex-col gap-[3px]">
-        <span className="text-[13.5px] font-bold leading-[1.2]">Sumate al grupo de WhatsApp</span>
-        <span className="text-[12px] leading-[1.3] text-white/60">Para enterarte de los próximos eventos</span>
+      <Icon name="chat" size={19} className="flex-none lg:block max-lg:hidden" />
+      <span className="hidden h-10 w-10 flex-none place-items-center rounded-full bg-[#25D366] text-ink max-lg:grid">
+        <Icon name="chat" size={20} />
       </span>
+      <span className="flex min-w-0 flex-1 flex-col gap-[3px]">
+        <span className="text-[13.5px] font-bold leading-[1.2] max-lg:text-[15.5px] max-lg:font-extrabold">Sumate al grupo de WhatsApp</span>
+        <span className="text-[12px] leading-[1.3] text-white/60 max-lg:text-[12.5px] max-lg:text-white/75">Para enterarte de los próximos eventos</span>
+      </span>
+      <Icon name="arrow" size={18} className="flex-none lg:hidden" />
     </a>
   );
 }

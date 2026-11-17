@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { JetBrains_Mono, Space_Grotesk } from "next/font/google";
+import { JetBrains_Mono, Manrope, Space_Grotesk } from "next/font/google";
 import Script from "next/script";
 import { preconnect } from "react-dom";
 import "./globals.css";
@@ -14,6 +14,13 @@ const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   variable: "--font-space-grotesk",
+  display: "swap"
+});
+
+const manrope = Manrope({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-manrope",
   display: "swap"
 });
 
@@ -65,7 +72,7 @@ export const viewport: Viewport = {
   // Tiene que coincidir con el fondo del body (`ink`). Si no coincide, la barra del navegador
   // queda de un negro distinto al del sitio y en mobile se ve una costura arriba de todo,
   // justo en la plataforma de la que entra la mayoría del tráfico.
-  themeColor: "#0A0A14",
+  themeColor: "#080A10",
   width: "device-width",
   initialScale: 1,
   // El diseño es mobile-first a 390px y el nav inferior se apoya en la safe area.
@@ -81,7 +88,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   preconnect("https://wsrv.nl");
 
   return (
-    <html lang="es-AR" className={`${spaceGrotesk.variable} ${jetbrainsMono.variable}`}>
+    <html lang="es-AR" className={`${manrope.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable}`}>
       <body className="min-h-screen antialiased">
         {/* El sprite de íconos va una sola vez por documento; cada ícono es un `<use>`. */}
         <IconSprite />
