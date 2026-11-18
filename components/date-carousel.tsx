@@ -82,15 +82,27 @@ export function DateCarousel({ events }: { events: EventRecord[] }) {
     // Foco de **teclado** adentro del carrusel (no el de un toque): mientras dure, no se mueve.
     let keyboardFocus = false;
 
-    /** Ancho de una copia de la lista: de la primera card a su gemela. */
-    const span = () => {
+    /**
+     * Ancho de una copia de la lista: de la primera card a su gemela. Se mide una vez y se
+     * vuelve a medir solo si la tira cambia de tamaño. Antes se leía `offsetLeft` en cada
+     * cuadro, justo después de escribir el `transform`: eso forzaba un recálculo de estilos
+     * 60 veces por segundo mientras el carrusel estuviera en pantalla.
+     */
+    let width = 0;
+    const measure = () => {
       const first = strip.children[0] as HTMLElement | undefined;
       const twin = strip.children[events.length] as HTMLElement | undefined;
-      return first && twin ? twin.offsetLeft - first.offsetLeft : 0;
+      width = first && twin ? twin.offsetLeft - first.offsetLeft : 0;
     };
+    measure();
+    // El `transform` no cambia el tamaño de la tira, así que esto no se dispara por moverla.
+    const resizeObserver = new ResizeObserver(() => {
+      measure();
+      paint();
+    });
+    resizeObserver.observe(strip);
 
     const paint = () => {
-      const width = span();
       if (width) x = ((x % width) + width) % width;
       strip.style.transform = `translate3d(${-x}px,0,0)`;
     };
@@ -204,7 +216,7 @@ export function DateCarousel({ events }: { events: EventRecord[] }) {
     box.addEventListener("click", click, true);
     box.addEventListener("focusin", focus);
     box.addEventListener("focusout", blur);
-    window.addEventListener("resize", paint);
+    window.addEventListener("resize", measure);
 
     frame = requestAnimationFrame(tick);
 
@@ -218,7 +230,8 @@ export function DateCarousel({ events }: { events: EventRecord[] }) {
       box.removeEventListener("click", click, true);
       box.removeEventListener("focusin", focus);
       box.removeEventListener("focusout", blur);
-      window.removeEventListener("resize", paint);
+      window.removeEventListener("resize", measure);
+      resizeObserver.disconnect();
     };
   }, [events.length, loop]);
 
@@ -236,14 +249,26 @@ export function DateCarousel({ events }: { events: EventRecord[] }) {
         aria-label="Próximas fechas"
       >
         {cards.map((event, index) => (
-          <CarouselCard key={`${event.id}-${index}`} event={event} priority={index < 2} />
+          <CarouselCard
+            key={`${event.id}-${index}`}
+            event={event}
+            priority={index < 2}
+            clone={index >= events.length}
+          />
         ))}
       </ul>
     </div>
   );
 }
 
-function CarouselCard({ event, priority }: { event: EventRecord; priority: boolean }) {
+/**
+ * `clone`: card de la segunda copia, la que existe solo para que el loop no tenga final.
+ * Para un lector de pantalla y para el teclado no existe (`aria-hidden` y fuera del Tab), así
+ * cada fecha se anuncia y se recorre una sola vez. Se sigue viendo y se puede tocar: no usa
+ * `inert`, que también bloquearía el toque.
+ */
+function CarouselCard({ event, priority, clone }: { event: EventRecord; priority: boolean; clone: boolean }) {
+  const skip = clone ? -1 : undefined;
   const rail = getDateRail(event.starts_at);
   const soldOut = Boolean(event.sold_out);
   const place = [event.venue_name, getEventCity(event)].filter(Boolean).join(" · ");
@@ -253,12 +278,14 @@ function CarouselCard({ event, priority }: { event: EventRecord; priority: boole
 
   return (
     <li
+      aria-hidden={clone || undefined}
       className="vidrio flex flex-col gap-3 rounded-block p-[10px]"
       style={{ width: flyerWidth + PADDING_CARD }}
     >
       <Link
         href={`/eventos/${event.slug}`}
         aria-label={`Ver ${event.title}`}
+        tabIndex={skip}
         onClick={() => track("select_date", { ...eventParams(event), cta_placement: "home_destacadas" })}
         // Alto fijo: si un flyer apaisado no llega a los 330px, queda centrado en su lugar.
         className="flex flex-col justify-center"
@@ -294,9 +321,9 @@ function CarouselCard({ event, priority }: { event: EventRecord; priority: boole
       </div>
 
       {soldOut ? (
-        <SoldOutWhatsappCta event={event} source="soldout" compact className="!h-[52px]" />
+        <SoldOutWhatsappCta event={event} source="soldout" compact className="!h-[52px]" tabIndex={skip} />
       ) : (
-        <BuyCta event={event} placement="home_destacado" className="!h-[52px]" />
+        <BuyCta event={event} placement="home_destacado" className="!h-[52px]" tabIndex={skip} />
       )}
     </li>
   );
