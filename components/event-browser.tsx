@@ -107,6 +107,9 @@ export function EventBrowser({
       <div className="lg:hidden">
         <TabHeader title="Buscar" />
       </div>
+      {/* En desktop el título visible lo reemplaza el header; el h1 queda para lectores de
+          pantalla, que si no llegaban a una página sin encabezado principal. */}
+      <h1 className="sr-only max-lg:hidden">Buscar</h1>
 
       {/**
        * Barra superior. En desktop queda pegada al header con el mismo fondo ink y su borde,
@@ -114,10 +117,32 @@ export function EventBrowser({
        */}
       <div className="contents lg:sticky lg:top-[76px] lg:z-30 lg:flex lg:flex-col lg:gap-[18px] lg:border-b lg:border-white/10 lg:bg-ink gutter-lg lg:pb-7 lg:pt-7">
         <div className="gutter flex flex-none items-center gap-[14px] pb-3 lg:px-0 lg:pb-0">
-          <div className="flex h-12 flex-1 items-center gap-[11px] rounded-full border border-white/[0.18] bg-black/30 px-[18px] lg:h-14 lg:gap-[14px] lg:px-[22px]">
+          {/* `<search>` + `<form>`: el campo queda identificado como búsqueda y la tecla
+              "Buscar" del teclado del celular cierra el teclado en vez de no hacer nada. El
+              filtrado sigue siendo en vivo; el submit no navega. */}
+          <search className="flex min-w-0 flex-1">
+          <form
+            action="/buscar"
+            method="get"
+            onSubmit={(event) => {
+              event.preventDefault();
+              (event.currentTarget.elements.namedItem("q") as HTMLInputElement | null)?.blur();
+            }}
+            className="flex h-12 flex-1 items-center gap-[11px] rounded-full border border-white/[0.18] bg-black/30 px-[18px] lg:h-14 lg:gap-[14px] lg:px-[22px]"
+          >
             <Icon name="search" size={18} className="text-white/[0.48] lg:hidden" />
             <Icon name="search" size={20} className="hidden text-white/50 lg:block" />
+            {/* Sin autocorrección: en iPhone cambiaba nombres de artistas ("Solomun" → "Solomon")
+                y de clubes. `type="search"` pide la tecla "Buscar"; la "x" nativa se oculta en
+                globals.css porque ya hay un botón de limpiar propio. */}
             <input
+              type="search"
+              name="q"
+              enterKeyHint="search"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="none"
+              spellCheck={false}
               value={filters.q}
               onChange={(event) => setFilters((current) => ({ ...current, q: event.target.value }))}
               placeholder="DJ, venue, género…"
@@ -134,7 +159,8 @@ export function EventBrowser({
                 <Icon name="x" size={13} />
               </button>
             ) : null}
-          </div>
+          </form>
+          </search>
 
           <button
             type="button"
@@ -194,6 +220,7 @@ export function EventBrowser({
 
         {masFiltros ? (
           <div className="hidden gap-8 rounded-block border border-white/10 bg-surface p-5 lg:flex">
+            <h2 className="sr-only">Más filtros</h2>
             <Grupo titulo="Día">
               {dias.map((dia) => (
                 <button key={dia.iso} type="button" onClick={() => toggle("dia", dia.iso)}>
@@ -219,12 +246,12 @@ export function EventBrowser({
       {results.length ? (
         <div className="gutter flex flex-col gap-3 pt-[14px] lg:gap-5 lg:pb-[46px] lg:pt-[26px]">
           <div className="flex items-center gap-[10px] lg:gap-[14px]">
-            <span className="dato-seccion lg:!text-[11.5px]">
+            <h2 className="dato-seccion lg:!text-[11.5px]">
               {results.length} {results.length === 1 ? "resultado" : "resultados"}
               {filters.q.trim() ? (
                 <span className="hidden lg:inline"> para «{filters.q.trim()}»</span>
               ) : null}
-            </span>
+            </h2>
             <span className="h-px flex-1 bg-white/10" />
             {active ? (
               <button

@@ -31,16 +31,20 @@ export function BuyCta({
   event,
   placement,
   label = "Comprar en Bombo",
-  className = ""
+  className = "",
+  tabIndex
 }: {
   event: CtaEvent;
   placement: CtaPlacement;
   label?: string;
   className?: string;
+  /** `-1` saca el botón del orden de Tab sin dejar de ser tocable (copia del carrusel). */
+  tabIndex?: number;
 }) {
   return (
     <a
       href={buildGoUrl(event.slug, placement)}
+      tabIndex={tabIndex}
       // `/go/` redirige a Bombo y registra el clic: no es contenido para que un buscador lo
       // siga ni lo indexe.
       rel="nofollow"
@@ -109,16 +113,19 @@ export function SoldOutWhatsappCta({
   event,
   source,
   compact = false,
-  className = ""
+  className = "",
+  tabIndex
 }: {
   event: Pick<EventRecord, "slug" | "title">;
   source: "event_waitlist" | "soldout";
   compact?: boolean;
   className?: string;
+  tabIndex?: number;
 }) {
   return (
     <a
       href={whatsappUrlOrGroup(buildWaitlistWhatsappMessage(event.title))}
+      tabIndex={tabIndex}
       target="_blank"
       rel="noopener noreferrer"
       onClick={() => track("click_whatsapp", { wa_source: source, event_slug: event.slug })}

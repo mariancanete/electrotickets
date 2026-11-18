@@ -59,6 +59,10 @@ export function FilterSidebar({
       aria-label="Filtros"
       className={`sticky-col sticky-filtros flex flex-col gap-6 rounded-block border border-white/10 bg-surface p-[22px] ${className}`}
     >
+      {/* Encabezado solo para lectores de pantalla: los grupos son h3 y sin un h2 arriba
+          quedaban colgando directo del h1 de la página. `sr-only` es absoluto, así que no
+          suma un hueco de `gap` en el flex. */}
+      <h2 className="sr-only">Filtros</h2>
       {grupos.map((grupo, index) => (
         <div key={grupo.campo} className="flex flex-col gap-3">
           {index > 0 ? <span className="-mt-3 h-px bg-white/10" /> : null}
