@@ -219,6 +219,14 @@ select {
   color-scheme: dark;
 }
 
+/* El buscador usa `type="search"` por el teclado del celular, pero ya tiene su propio botón de
+   limpiar: la "x" nativa de Chrome y Safari se oculta para que no aparezcan dos. */
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
 /* Campos del panel de administración, que no entra en el rediseño. */
 .input {
   width: 100%;

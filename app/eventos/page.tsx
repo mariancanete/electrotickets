@@ -101,7 +101,7 @@ export default async function EventsPage({ searchParams }: PageProps) {
 
           {groups.length ? (
             <div className="flex flex-col gap-3 lg:gap-[26px]">
-              {groups.map(([key, dayEvents]) => (
+              {groups.map(([key, dayEvents], groupIndex) => (
                 <section key={key} className="flex flex-col gap-3 lg:gap-5">
                   {/* El encabezado de día ocupa la fila completa; la grilla arranca debajo. */}
                   <div className="flex items-center gap-[10px] lg:gap-[14px]">
@@ -120,9 +120,17 @@ export default async function EventsPage({ searchParams }: PageProps) {
 
                   {/* Una fecha agotada se muestra atenuada con el botón deshabilitado; nunca se
                       oculta: si desapareciera, el usuario la seguiría buscando. */}
+                  {/* Prioridad alta solo para la primera fecha de la primera noche: es la única
+                      que puede ser el LCP. Antes iba una por noche (y por variante) y el listado
+                      precargaba decenas de flyers que competían entre sí. */}
                   <div className="flex flex-col gap-3 lg:hidden">
                     {dayEvents.map((event, index) => (
-                      <DateCard key={event.id} event={event} placement="listado_card" priority={index === 0} />
+                      <DateCard
+                        key={event.id}
+                        event={event}
+                        placement="listado_card"
+                        priority={groupIndex === 0 && index === 0}
+                      />
                     ))}
                   </div>
 
@@ -130,7 +138,12 @@ export default async function EventsPage({ searchParams }: PageProps) {
                       rellena con eventos de otro día, que rompería la agrupación. */}
                   <div className="grilla-cards-con-sidebar hidden">
                     {dayEvents.map((event, index) => (
-                      <GridCard key={event.id} event={event} placement="listado_card" priority={index === 0} />
+                      <GridCard
+                        key={event.id}
+                        event={event}
+                        placement="listado_card"
+                        priority={groupIndex === 0 && index === 0}
+                      />
                     ))}
                   </div>
                 </section>

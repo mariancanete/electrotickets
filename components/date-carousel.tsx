@@ -54,7 +54,7 @@ const UMBRAL_ARRASTRE = 6;
  */
 export function DateCarousel({ events }: { events: EventRecord[] }) {
   const viewport = useRef<HTMLDivElement>(null);
-  const track = useRef<HTMLDivElement>(null);
+  const track = useRef<HTMLUListElement>(null);
   const loop = events.length > 1;
 
   useEffect(() => {
@@ -183,7 +183,7 @@ export function DateCarousel({ events }: { events: EventRecord[] }) {
       const target = event.target as HTMLElement;
       if (pointerId !== null || !target.matches(":focus-visible")) return;
       keyboardFocus = true;
-      const card = (event.target as HTMLElement).closest("[role=listitem]") as HTMLElement | null;
+      const card = (event.target as HTMLElement).closest("li") as HTMLElement | null;
       if (!card) return;
       x = card.offsetLeft - 18;
       vel = base;
@@ -227,16 +227,18 @@ export function DateCarousel({ events }: { events: EventRecord[] }) {
 
   return (
     <div ref={viewport} className="carrusel">
-      <div
+      <ul
         ref={track}
         className={`carrusel-tira ${loop ? "" : "px-[18px]"}`}
+        // `role="list"` explícito: Safari quita la semántica de lista a un `<ul>` con
+        // `display: flex` y `list-style: none`.
         role="list"
         aria-label="Próximas fechas"
       >
         {cards.map((event, index) => (
           <CarouselCard key={`${event.id}-${index}`} event={event} priority={index < 2} />
         ))}
-      </div>
+      </ul>
     </div>
   );
 }
@@ -250,8 +252,7 @@ function CarouselCard({ event, priority }: { event: EventRecord; priority: boole
   const flyerWidth = Math.round(Math.min(Math.max(ALTO_FLYER / ratio, ANCHO_MIN), ANCHO_MAX));
 
   return (
-    <article
-      role="listitem"
+    <li
       className="vidrio flex flex-col gap-3 rounded-block p-[10px]"
       style={{ width: flyerWidth + PADDING_CARD }}
     >
@@ -297,6 +298,6 @@ function CarouselCard({ event, priority }: { event: EventRecord; priority: boole
       ) : (
         <BuyCta event={event} placement="home_destacado" className="!h-[52px]" />
       )}
-    </article>
+    </li>
   );
 }
