@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { serializeJsonLd } from "@/lib/json-ld";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ScreenHeader } from "@/components/app-header";
@@ -122,9 +123,9 @@ export default async function ArtistPage({ params }: PageProps) {
     <>
       <DesktopHeader />
       <main className="app-shell flex min-h-screen flex-col pt-2 lg:pt-0">
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(faqJsonLd) }} />
         {upcoming.length ? (
-          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(listJsonLd) }} />
+          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(listJsonLd) }} />
         ) : null}
 
         <ScreenHeader title={`${name} en ${region}`} backHref="/eventos" />
