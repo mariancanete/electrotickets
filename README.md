@@ -76,7 +76,10 @@ ADMIN_SESSION_SECRET=un-string-largo-random
 1. Crear repo en GitHub.
 2. Subir este proyecto.
 3. Importar repo en Vercel.
-4. Cargar las mismas variables de entorno en Vercel.
+4. Cargar las mismas variables de entorno en Vercel. `ADMIN_SESSION_SECRET` es obligatoria
+   (en Production y, si se usa el panel en las previews, también en Preview): sin ella el login
+   responde "El panel todavía no está listo para entrar". Tiene que ser un valor largo y
+   distinto de la contraseña, por ejemplo el resultado de `openssl rand -base64 32`.
 5. Deploy.
 
 Cuando compres el dominio `electrotickets.com.ar`, cambiar:
@@ -86,6 +89,14 @@ NEXT_PUBLIC_SITE_URL=https://electrotickets.com.ar
 ```
 
 Y agregar el dominio desde Vercel > Project > Settings > Domains.
+
+### Límite de intentos del login
+
+`/api/admin/login` corta a los 5 intentos fallidos por IP durante 15 minutos, pero ese contador
+vive en la memoria de cada instancia de la función. El límite que vale para todo el proyecto es
+una regla del Firewall de Vercel: Firewall > Configure > + New Rule, condición
+**Request Path** igual a `/api/admin/login`, acción **Rate Limit**, **Fixed Window** de 60 s,
+**Request Limit** 10, clave IP, respuesta **Too Many Requests (429)**.
 
 ## Flujo de carga de eventos
 

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { serializeJsonLd } from "@/lib/json-ld";
 import Link from "next/link";
 import { Fragment } from "react";
 import { notFound } from "next/navigation";
@@ -320,8 +321,8 @@ export default async function EventDetailPage({ params }: PageProps) {
     <>
       <DesktopHeader />
       <main className="app-shell flex min-h-screen flex-col">
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(faqJsonLd) }} />
 
         {/* A partir de 1024px el botón flotante de volver lo reemplaza el breadcrumb: sobre
             el flyer no hay dónde apoyarlo y en desktop la ruta se lee mejor que una flecha. */}
